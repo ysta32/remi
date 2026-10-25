@@ -16,6 +16,7 @@ export function useTimelinePoll(id: string, variant: FixtureVariant) {
   // Kept across fixture switches so processing → after-call plays the live-update moment.
   const known = useRef<{ elderId: string; ids: Set<string> } | null>(null);
   const lastBusy = useRef(false);
+  const [nonce, setNonce] = useState(0); // bump to fetch again now, e.g. after adding a question
 
   useEffect(() => {
     let cancelled = false;
@@ -48,7 +49,7 @@ export function useTimelinePoll(id: string, variant: FixtureVariant) {
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [id, variant]);
+  }, [id, variant, nonce]);
 
-  return { timeline, elder, error, newIds };
+  return { timeline, elder, error, newIds, refresh: () => setNonce((n) => n + 1) };
 }

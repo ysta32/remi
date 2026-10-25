@@ -11,13 +11,14 @@ import { ChatCard, recapHref } from './ChatCard';
 import { FunFacts } from './FunFacts';
 import { GentleNote } from './GentleNote';
 import { HowHesDoing } from './HowHesDoing';
-import { QuestionsWaiting } from './QuestionsWaiting';
+import { NextChatPanel } from './NextChatPanel';
 import { SiteNav } from './SiteNav';
 import { SnapshotCard } from './SnapshotCard';
 import { TimelineTabs } from './TimelineTabs';
 import { useTimelinePoll } from './useTimelinePoll';
 
 const FACTS_SHOWN = 3;
+const EARLIER_STEP = 6; // two rows of three; older chats are a click away (and on each recap's calendar)
 
 function FixtureBar({ elderId, current, tab }: { elderId: string; current: FixtureVariant; tab: 'chats' | 'doing' }) {
   return (
@@ -45,7 +46,8 @@ export function TimelineView({
   const variant: FixtureVariant = isFixtureVariant(query.fixture) ? query.fixture : 'drift';
   const tab = query.tab === 'doing' ? 'doing' : 'chats';
 
-  const { timeline, elder, error, newIds } = useTimelinePoll(id, variant);
+  const { timeline, elder, error, newIds, refresh } = useTimelinePoll(id, variant);
+  const [earlierShown, setEarlierShown] = useState(EARLIER_STEP);
   const [hiddenNudges, setHiddenNudges] = useState<Set<string>>(new Set());
   const [allFacts, setAllFacts] = useState(false);
 
@@ -64,6 +66,9 @@ export function TimelineView({
   const confirmed = timeline.consent.elderConfirmed;
   const [newest, ...earlier] = timeline.calls;
   const nudges = timeline.nudges.filter((n) => !hiddenNudges.has(n.id));
+  // Pair things of similar height: beside a gentle note, two facts stack; with no note, three run in a row.
+  const factsBeside = nudges.length > 0;
+  const factsShown = factsBeside ? 2 : FACTS_SHOWN;
   const fixture = USE_FIXTURES ? variant : undefined;
   const anySimulated = timeline.calls.some((c) => c.isSimulated);
   const photos = elder?.photos ?? [];
@@ -99,8 +104,12 @@ export function TimelineView({
           <>
             {!confirmed && <p className="rounded-[20px] border border-line bg-card p-5">{copy.notYetConfirmed(name)}</p>}
 
-            {/* Phones: newest, note, stories, then earlier chats. Desktop: stories sit right of the newest chat and note; earlier chats run full width below. */}
-            <div className="grid items-start gap-8 [grid-template-areas:'newest'_'note'_'side'_'earlier'] lg:grid-cols-[1.4fr_1fr] lg:grid-rows-[auto_1fr_auto] lg:[grid-template-areas:'newest_side'_'note_side'_'earlier_earlier']">
+            {/* Phones: newest, next-chat panel, note, facts, earlier. Desktop: newest | panel, then note | facts (or facts full width), then earlier chats. */}
+            <div className={`grid items-start gap-8 [grid-template-areas:'newest'_'side'_'note'_'facts'_'earlier'] lg:grid-cols-[1.4fr_1fr] ${
+              factsBeside
+                ? "lg:[grid-template-areas:'newest_side'_'note_facts'_'earlier_earlier']"
+                : "lg:[grid-template-areas:'newest_side'_'facts_facts'_'earlier_earlier']"
+            }`}>
               <div className="[grid-area:newest]">
                 {newest ? (
                   <SnapshotCard
@@ -126,24 +135,39 @@ export function TimelineView({
                 <section aria-labelledby="earlier" className="space-y-4 [grid-area:earlier]">
                   <h2 id="earlier" className="text-[30px] font-black tracking-tight">Earlier chats</h2>
                   <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                    {earlier.map((c) => (
+                    {earlier.slice(0, earlierShown).map((c) => (
                       <ChatCard key={`${c.id}:${c.status}`} call={c} href={recapHref(id, c.id, fixture)}
                         highlight={confirmed && hasHighlight(timeline, c)}
                         factCount={confirmed ? recapHighlights(timeline, c).facts.length : 0} />
                     ))}
                   </div>
+                  {earlier.length > EARLIER_STEP && (
+                    <div className="text-right">
+                      <button
+                        type="button"
+                        onClick={() => setEarlierShown((n) => (n >= earlier.length ? EARLIER_STEP : n + EARLIER_STEP))}
+                        className="text-base font-semibold text-[#7b879a] transition-colors hover:text-ink"
+                      >
+                        {earlierShown >= earlier.length
+                          ? 'Show fewer'
+                          : `Show ${Math.min(EARLIER_STEP, earlier.length - earlierShown)} more of ${earlier.length}`}
+                      </button>
+                    </div>
+                  )}
                 </section>
               )}
 
-              <div className="space-y-6 [grid-area:side]">
-                {elder && <QuestionsWaiting questions={elder.questions} name={name} />}
-                {confirmed && (
-                  <section aria-labelledby="facts" className="space-y-3">
+              <div className="[grid-area:side]">
+                {elder && <NextChatPanel elderId={id} elder={elder} name={name} onChanged={refresh} />}
+              </div>
+
+              {confirmed && (
+                  <section aria-labelledby="facts" className="space-y-3 [grid-area:facts]">
                     <h2 id="facts" className="text-[30px] font-black tracking-tight">Fun facts</h2>
-                    {/* Facts pile up with every call, so the sidebar shows the newest few; each
+                    {/* Facts pile up with every call, so this row shows the newest three; each
                         chat's recap keeps its own facts one click away. */}
-                    <FunFacts facts={allFacts ? timeline.funFacts : timeline.funFacts.slice(0, FACTS_SHOWN)} newIds={newIds} />
-                    {timeline.funFacts.length > FACTS_SHOWN && (
+                    <FunFacts facts={allFacts ? timeline.funFacts : timeline.funFacts.slice(0, factsShown)} newIds={newIds} columns={!factsBeside} />
+                    {timeline.funFacts.length > factsShown && (
                       <div className="-mt-1 text-right">
                         <button
                           type="button"
@@ -156,8 +180,7 @@ export function TimelineView({
                       </div>
                     )}
                   </section>
-                )}
-              </div>
+              )}
             </div>
           </>
         )}
