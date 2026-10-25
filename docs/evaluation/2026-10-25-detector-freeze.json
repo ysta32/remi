@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "checkpointId": "repeat-evaluation-20261025T140728Z",
+  "createdAt": "2026-10-25T14:07:28.545548+00:00",
+  "purpose": "Frozen baseline for preliminary evaluation of existing synthetic replay; not an untouched held-out test.",
+  "branch": "ws/ryan-synthetic-data",
+  "codeCommit": "13aa90883254c2c53d8d87f7ae36138c8db34cc1",
+  "detectorCodeCommit": "8e6d13cac772961454e2b2e46b85539a94897868",
+  "detectorTree": "39c9620dd8cd16084a2ec721bb31ad398175ea39",
+  "settings": {
+    "detectorVersion": "1.0.0",
+    "embeddingDimensions": 1536,
+    "embeddingModel": "text-embedding-3-small",
+    "extractionModel": "gpt-6.1-sol",
+    "isSimulated": true,
+    "promptVersion": "remi-items-v1",
+    "threshold": 0.85
+  },
+  "corpusHash": "af44a192e74c05f55aafa6a7529e3ee6ead35a2d0b36886e8e243a0d013b9b0f",
+  "settingsHash": "97f7e746b00b99e2985644119a5828f475e65881df1484eddea1e8aab0012e74",
+  "generator": {
+    "generatorVersion": "1.0.0",
+    "catalogVersion": "1.0.0",
+    "seed": 42,
+    "config": {
+      "schemaVersion": 1,
+      "seed": 42,
+      "startDate": "2026-09-28",
+      "callsPerWeek": 3,
+      "weeks": 4,
+      "timezone": "America/New_York",
+      "localHour": 10,
+      "weekdays": [
+        0,
+        2,
+        4
+      ],
+      "slotsPerCall": 5,
+      "pauseCentersMs": [
+        600,
+        850,
+        1100,
+        1400
+      ],
+      "pauseJitterMs": 75,
+      "pausesPerCall": 8,
+      "minDurationMs": 180000,
+      "maxDurationMs": 300000
+    },
+    "timingSource": "synthetic_authored"
+  },
+  "corpusManifestSha256": "4daad71d4d85558ae21d7c090f156b4d741faca8af07d30a3d243b9e8a2c7fd9",
+  "databaseSnapshotSha256": "1242c23fb2397a933717e1624e411ff31518f03d69fd73614ef7d98bd856b798",
+  "codeFileSha256": {
+    "detector/src/classify.mjs": "831e10af7f3c4bbe62539c4034537e447aaf4e3527a10da0e5a71529dfda7fee",
+    "detector/src/compare.mjs": "d4d9e36a6883141a7ac639555e5ac4e9f8246b8260ad8097eebe9e405c30a464",
+    "detector/src/contracts.mjs": "82a294ebeaee7fa8a43770580376ff66cd437ef75444f15eb90e271863270130",
+    "detector/src/embed.mjs": "473f575d99e3ab1e7e7ae643e4187ad7cd89098464efaa7f2d0204d2af46048a",
+    "detector/src/errors.mjs": "4faa778ee18a05259a81f262c3b07031edca85c2a1a18a7437cb8f4ff54afcf4",
+    "detector/src/extract.mjs": "7400971bbfb54cef828d302fd0246318896c08a9f6db62e86c855ec1ab124a77",
+    "detector/src/index.d.mts": "9c5c0315d55a20240ec35a6a280a00b96d2c1be0427e20df0e573ec8d58baf7e",
+    "detector/src/index.mjs": "5b834ba4a4ea6fc7b3c5a90db05ae521d58fbf59d51af53198030ae165fb85f0",
+    "detector/src/openai.mjs": "9ea0ce9abfa8a923bf2a7c5dc0acdb0ec0b9dab8c1a10491137c2a1e4393acc9",
+    "detector/src/types.d.ts": "2512306e7e29d09e3c5f46297b6edf9ae8dfda09a4631ac68df18a815e96f694",
+    "web/lib/server/detector-results.ts": "f839e6c2842422ca11bd70c36940a29a32cccbc8a14c0ede6fed3cf5ae528431",
+    "web/lib/server/synthetic-repeats.ts": "794497c94798d1ca9715f3f43b4e87c4ac1a456f62353971998510bf264692f6",
+    "web/scripts/analyze-synthetic-repeats.ts": "9ca5346873466e2b8baabf146a1791cbac07255ed495884c15e437af3d73849a"
+  },
+  "savedResults": {
+    "calls": 12,
+    "items": 60,
+    "counts": {
+      "total": 24,
+      "unprompted": 14,
+      "prompted": 8,
+      "uncertain": 2,
+      "stories": 16,
+      "questions": 8
+    },
+    "analyzedAt": [
+      "2026-10-25T08:51:33.992Z"
+    ],
+    "resultSha256ByCall": {
+      "call_042bf106875185e32b7954f6": "a1bd385f95c35e2ef72a1fa7add09a7127355f0ee3043f2ff767b50463cb5224",
+      "call_0d435b9d8b579caef992af4c": "64af2cbf14ddd685faefe6b3245f3d33054b48b88c5ee7cd52487a011d58755c",
+      "call_28f729dd994b7e57b825d44a": "c855c7a9d5cfc4844986139fab0d144776bf97f78257c828ef5f47762a9a1272",
+      "call_2b51685d6bec803eda4d13b7": "e36dde86372037f0957b7fe6db2cd0a277f2032b95a733e6a526ffe793def4f1",
+      "call_32418684098eb0cc9bd46374": "d51baccd0e4b5d9248f43761837443d0829bbe6856c292e134a49ec29b598e9a",
+      "call_7376f65c011e78231981b8cb": "5ae5676a9d5a7661e235f26a7adc68e3fa6c021bef99b8ccd96b141f9ec63a5b",
+      "call_7ccee5c39e359efa36d091e5": "04232c5ee2064c153bbf52c45cb0c8e9be7b46f955b85fee0048ca0ff2f7f77e",
+      "call_bce073deab79a933f9fa572b": "cb7c70839d6775f540e18a8b33f9582766045319f5bccd12c855392e7fd82717",
+      "call_c996aa7b73e32493d2dabf53": "fbc57723c38b1d8facc7a9bf65339afaea12325bc9dfddf5b6fb0c9fffad7638",
+      "call_caf721e367a11dd737f647b5": "148e26d880d1d9a0274110a2026fe200a208a8d8467e14fda4b215d4488413a8",
+      "call_edc3330b16975930950403e2": "3d38bd37c53459dfdf42113948271f4174778ed156e771ede8290d144c59a17e",
+      "call_f17a3b37da96b0ae551d8987": "731f0ed2d3fef5434c40576d06a4d51610644d3854ce0abff6dda7a3445d259f"
+    }
+  },
+  "evaluationBoundary": {
+    "history": "All strictly earlier calls from same elder; same item kind; fresh history per independent evaluation run.",
+    "repeatIdentity": "Same incident/question, with a valid earlier source; separate from elicitation classification.",
+    "labels": "planted_unreviewed; human review required before scoring.",
+    "audio": "Excluded. No generation or audio analysis required.",
+    "modelCaveat": "Recorded model names are aliases; exact replay of future provider responses is not guaranteed. Score frozen saved predictions first.",
+    "changePolicy": "Changes to code, prompt, model, threshold, corpus or labels create a separately named run; do not overwrite this checkpoint."
+  }
+}
