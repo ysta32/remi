@@ -111,3 +111,16 @@ Human smoke check: complete two consented calls with the same story, wait for pr
 then open the elder's timeline and inspect the earlier-call link. Retrying the second call
 should reuse its result. This integration was tested using mocked provider HTTP; real calls
 and fresh model accuracy still need human validation. The reviewed synthetic baseline is unchanged.
+
+## Judge-facing repeat evaluation
+
+Open `/evaluation` (the **Evaluation** navigation link). The reviewed synthetic snapshot is bundled
+with the app, so teammates need no local corpus, database import or API credentials to present it.
+It shows the 60-item outcome grid, confusion matrix, precision/recall/F1/accuracy with denominators,
+story/question breakdowns, all six misses and clickable current/prior transcript evidence.
+Use **Print / save PDF** for the browser print flow or **Download results** for the portable JSON.
+
+Suggested walkthrough and export instructions: `docs/evaluation/2026-10-25-reviewed-results.md`
+(at the repo root). Items10.2,10.5,11.2 retain the human-confirmed retelling correction while
+prompting stays unclear. The page makes no live/medical/untouched-holdout performance claim.
+Stanley owns the separate FaceTime check. No audio generation or detector tuning is part of this view.
