@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { screenText, createSafetyMonitor, resolveSafetyConfig, familyAlertText } from '../safety.mjs';
+import { screenText, createSafetyMonitor, resolveSafetyConfig, familyAlertText } from '../brain/safety.mjs';
 
 const ctx = {
   elder: { preferredName: 'Hal', displayName: 'Harold Bennett', timezone: 'America/New_York' },

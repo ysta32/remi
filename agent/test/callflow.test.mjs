@@ -1,13 +1,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { buildInstructions, openingInstructions, pickMemoryPrompts } from '../callflow.mjs';
-import { resolveSafetyConfig } from '../safety.mjs';
-import { createCallFlowTools } from '../tools.mjs';
+import { buildInstructions, openingInstructions, pickMemoryPrompts } from '../brain/callflow.mjs';
+import { resolveSafetyConfig } from '../brain/safety.mjs';
+import { createCallFlowTools } from '../brain/tools.mjs';
 
-const base = JSON.parse(readFileSync(new URL('../fixtures/context.json', import.meta.url), 'utf8'));
+const base = JSON.parse(readFileSync(new URL('../fixtures/context.v2.json', import.meta.url), 'utf8'));
 const now = new Date('2026-10-24T20:00:00Z');
-const render = (ctx) => buildInstructions(ctx, { safety: resolveSafetyConfig(ctx, {}), now });
+const render = (ctx) => buildInstructions(ctx, { safety: resolveSafetyConfig(ctx, {}), now, contractV2: true });
 
 test('opening greets by name, recalls last call, asks about the day', () => {
   const text = openingInstructions(base);
@@ -71,6 +71,7 @@ test('tools post events once and route safety through the monitor', () => {
     postEvent: (e) => events.push(e),
     elapsedMs: () => 5000,
     safety: { report: (r) => { reports.push(r); return 'ok'; } },
+    contractV2: true,
   }).map((t) => [t.name, t]));
 
   assert.equal(tools.record_memory_prompt.execute({ promptId: 'm-beagle', outcome: 'recalled_with_hint' }), 'Noted.');

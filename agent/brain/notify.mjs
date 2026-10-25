@@ -18,7 +18,7 @@ export function maskPhone(phone) {
 }
 
 function sdkCommand(args) {
-  const local = join(HERE, 'node_modules', '.bin', 'chert-sdk');
+  const local = join(HERE, '..', 'node_modules', '.bin', 'chert-sdk');
   if (existsSync(local)) return [local, args];
   return ['npx', ['--yes', '--package', SDK_PKG, 'chert-sdk', ...args]];
 }

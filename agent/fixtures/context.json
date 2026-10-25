@@ -1,6 +1,6 @@
 {
   "elder": {
-    "id": "elder-hal",
+    "id": "elder-hal-demo",
     "displayName": "Harold Bennett",
     "preferredName": "Hal",
     "language": "en",
@@ -10,14 +10,30 @@
   "family": {
     "primaryContactName": "Linda",
     "members": [
-      { "name": "Linda", "relation": "daughter" },
-      { "name": "Sam", "relation": "grandson" }
+      {
+        "name": "Linda",
+        "relation": "daughter"
+      },
+      {
+        "name": "Sam",
+        "relation": "grandson"
+      }
     ]
   },
   "consent": {
-    "proposed": { "summaries": true, "funFacts": true, "speechTrends": true, "mood": true },
+    "proposed": {
+      "summaries": true,
+      "funFacts": true,
+      "speechTrends": true,
+      "mood": true
+    },
     "elderConfirmed": true,
-    "effective": { "summaries": true, "funFacts": true, "speechTrends": true, "mood": true }
+    "effective": {
+      "summaries": true,
+      "funFacts": true,
+      "speechTrends": true,
+      "mood": true
+    }
   },
   "lastCall": {
     "id": "call-sim-12",
@@ -33,23 +49,35 @@
     "Growing Big Boy tomatoes along the back fence"
   ],
   "photos": [
-    { "id": "p-car", "caption": "Dad with his first car, 1962", "people": "Hal", "imageUrl": "file://fixtures/photos/p-car.jpg" },
-    { "id": "p-lake", "caption": "Hal and Mom at Raystown Lake, 1980", "people": "Hal, Dorothy", "imageUrl": "file://fixtures/photos/p-lake.jpg" },
-    { "id": "p-shops", "caption": "Dad at the Altoona railroad shops, 1971", "people": "Hal", "imageUrl": "file://fixtures/photos/p-shops.jpg" }
+    {
+      "id": "p-car",
+      "caption": "Dad with his first car, 1962",
+      "people": "Hal",
+      "imageUrl": "file://fixtures/photos/p-car.jpg"
+    },
+    {
+      "id": "p-lake",
+      "caption": "Hal and Mom at Raystown Lake, 1980",
+      "people": "Hal, Dorothy",
+      "imageUrl": "file://fixtures/photos/p-lake.jpg"
+    },
+    {
+      "id": "p-shops",
+      "caption": "Dad at the Altoona railroad shops, 1971",
+      "people": "Hal",
+      "imageUrl": "file://fixtures/photos/p-shops.jpg"
+    }
   ],
-  "familyQuestion": { "id": "q-car", "text": "What was your first car?", "askedBy": "Sam" },
-  "memoryPrompts": [
-    { "id": "m-honeymoon", "question": "Where did you and Mom go on your honeymoon?", "answer": "Niagara Falls, in 1965", "hint": "a famous waterfall up past Buffalo", "askedBy": "Linda" },
-    { "id": "m-beagle", "question": "What's the name of Sam's dog?", "answer": "Ziggy, a beagle", "hint": "a beagle who digs in your tomato bed", "askedBy": "Sam" },
-    { "id": "m-porch", "question": "What color did you and Linda paint the front porch last summer?", "answer": "Dark green", "hint": "the same color as your tomato cages", "askedBy": "Linda" }
-  ],
-  "emergency": {
-    "contactName": "Linda",
-    "contactPhone": "+15555550123",
-    "mode": "family",
-    "address": "123 Example St, Hollidaysburg, PA (fictional)"
+  "familyQuestion": {
+    "id": "q-car",
+    "text": "What was your first car?",
+    "askedBy": "Sam"
   },
-  "theme": { "id": "t-travel", "title": "Travel and trips", "prompt": "Where's a place you traveled that you still think about?" },
+  "theme": {
+    "id": "t-travel",
+    "title": "Travel and trips",
+    "prompt": "Where's a place you traveled that you still think about?"
+  },
   "isFirstCall": false,
   "demoMode": false
 }

@@ -1,13 +1,15 @@
 #!/usr/bin/env node
 // Print the rendered call instructions for review.
-//   node scripts/render-instructions.mjs [returning|first-call|demo|no-contact]
+//   node scripts/render-instructions.mjs [returning|first-call|demo|no-contact] [--v2]
 
 import { readFileSync } from 'node:fs';
-import { buildInstructions, openingInstructions } from '../callflow.mjs';
-import { resolveSafetyConfig } from '../safety.mjs';
+import { buildInstructions, openingInstructions } from '../brain/callflow.mjs';
+import { resolveSafetyConfig } from '../brain/safety.mjs';
 
-const base = JSON.parse(readFileSync(new URL('../fixtures/context.json', import.meta.url), 'utf8'));
-const variant = process.argv[2] ?? 'returning';
+const contractV2 = process.argv.includes('--v2');
+const fixture = contractV2 ? '../fixtures/context.v2.json' : '../fixtures/context.json';
+const base = JSON.parse(readFileSync(new URL(fixture, import.meta.url), 'utf8'));
+const variant = process.argv.slice(2).find((a) => !a.startsWith('--')) ?? 'returning';
 
 const variants = {
   returning: base,
@@ -30,7 +32,7 @@ if (!ctx) {
 
 // Ignore the operator's env here so the output is reproducible.
 const safety = resolveSafetyConfig(ctx, {});
-const text = buildInstructions(ctx, { safety, now: new Date('2026-10-24T20:00:00Z') });
+const text = buildInstructions(ctx, { safety, now: new Date('2026-10-24T20:00:00Z'), contractV2 });
 
 console.log('=== OPENING TURN ===');
 console.log(openingInstructions(ctx));

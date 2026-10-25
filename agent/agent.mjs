@@ -4,6 +4,7 @@ import { realtime } from '@livekit/agents-plugin-openai';
 import { LocalVideoTrack, TrackSource, VideoBufferType, VideoFrame, VideoSource } from '@livekit/rtc-node';
 import { drawFace, FPS, HEIGHT, WIDTH } from './face.mjs';
 import { greetOnBridgeReady } from './greet.mjs';
+import { guardEcho } from './lib/echo-guard.mjs';
 
 // Change these instructions to build your own agent. Keep replies conversational.
 const instructions = `You are a friendly AI study partner on a FaceTime video call.
@@ -31,8 +32,21 @@ export default defineAgent({
     const timer = setInterval(frame, 1000 / FPS);
 
     const session = new voice.AgentSession({
-      llm: new realtime.RealtimeModel({ model: 'gpt-realtime', voice: 'marin' }),
+      llm: new realtime.RealtimeModel({
+        model: 'gpt-realtime',
+        voice: 'marin',
+        // server_vad ends the turn after a fixed silence; the default semantic_vad waits longer.
+        turnDetection: {
+          type: 'server_vad',
+          threshold: 0.6,
+          prefix_padding_ms: 300,
+          silence_duration_ms: Number(process.env.TURN_SILENCE_MS) || 700,
+          create_response: true,
+          interrupt_response: true,
+        },
+      }),
     });
+    if (process.env.BARGE_IN !== '1') guardEcho(session, { tailMs: Number(process.env.ECHO_TAIL_MS) || 450, log: console.log });
     session.on(voice.AgentSessionEventTypes.AgentStateChanged, event => { speaking = event.newState === 'speaking'; });
     ctx.addShutdownCallback(async () => {
       clearInterval(timer);

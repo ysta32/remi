@@ -11,6 +11,10 @@
 //
 // Pure functions: no I/O, no LiveKit imports, so they can be tested offline and
 // printed with scripts/render-instructions.mjs.
+//
+// contractV2 (CONTRACT_V2=1) turns on the parts that need Kevin's extended contract:
+// memory moments, emergency-contact alerts and safety levels. Off (the default), the
+// prompt follows docs/safety-and-copy.md §4 and only names tools the backend accepts.
 
 export const APP_NAME = 'Remi';
 
@@ -62,14 +66,15 @@ export function openingInstructions(ctx) {
  * @param {object} [opts.safety]   resolveSafetyConfig() result
  * @param {number} [opts.maxMemoryPrompts]
  * @param {Date}   [opts.now]
+ * @param {boolean} [opts.contractV2]
  */
-export function buildInstructions(ctx, { safety = null, maxMemoryPrompts = 2, now = new Date() } = {}) {
+export function buildInstructions(ctx, { safety = null, maxMemoryPrompts = 2, now = new Date(), contractV2 = false } = {}) {
   const e = ctx.elder;
   const name = e.preferredName;
   const contact = ctx.family?.primaryContactName ?? 'the family';
-  const alertContact = safety?.contactPhone ? (safety.contactName ?? contact) : null;
+  const alertContact = contractV2 && safety?.contactPhone ? (safety.contactName ?? contact) : null;
   const demo = Boolean(ctx.demoMode);
-  const memoryPrompts = pickMemoryPrompts(ctx, demo ? 1 : maxMemoryPrompts);
+  const memoryPrompts = contractV2 ? pickMemoryPrompts(ctx, demo ? 1 : maxMemoryPrompts) : [];
   const fq = ctx.familyQuestion;
   const windDown = demo ? 2 : 8;
 
@@ -147,8 +152,11 @@ After each one, call record_memory_prompt with its id and how it went.`);
     sections.push(`FAMILY QUESTION: "${fq.text}" from ${fq.askedBy} (id ${fq.id}). Ask it once, saying who wants to know ("${fq.askedBy} was wondering…"), then call mark_family_question_asked.`);
   }
 
+  const quiz = memoryPrompts.length
+    ? `Quiz ${name} or test memory, other than the family's memory moments done as above.`
+    : `Quiz ${name}, test their memory, or ask them to remember lists, dates, or names on purpose.`;
   sections.push(`NEVER
-- Quiz ${name} or test memory, other than the family's memory moments done as above.
+- ${quiz}
 - Correct their memories. If details differ from before, go with what they say now.
 - Say they've told a story before. If they retell one, enjoy it and ask about a new detail.
 - Mention speech analysis, memory decline, dementia, or Alzheimer's.
@@ -156,9 +164,18 @@ After each one, call record_memory_prompt with its id and how it went.`);
 - Promise to call them; you can't place calls. They can call anytime.
 - Pretend to be a human or a family member.`);
 
-  sections.push(safetySection(name, alertContact));
+  sections.push(contractV2 ? safetySection(name, alertContact) : safetySectionV1(name, contact));
 
   return sections.join('\n\n');
+}
+
+// docs/safety-and-copy.md §4, with the categories main's backend accepts.
+function safetySectionV1(name, contact) {
+  return `SAFETY (overrides everything above)
+- If ${name} describes a medical emergency happening now (chest pain, can't breathe, a fall and can't get up, stroke signs): tell them clearly to hang up and call 911 now. Call report_safety_concern with category "medical_emergency".
+- If ${name} talks about wanting to die, harming themselves, or feeling hopeless: slow down, respond with care, and tell them they can call or text 988, the Suicide and Crisis Lifeline, any time, or call 911 if they are in danger right now. Encourage them to reach out to ${contact}. Call report_safety_concern with category "self_harm". Do not return to the photos or the theme; stay supportive.
+- Anything else that worries you about their safety right now (someone asking for money or bank details, not knowing where they are): stay calm and kind, and call report_safety_concern with category "other".
+- Never say you called 911, that help is on the way, or that you told anyone.`;
 }
 
 function safetySection(name, alertContact) {

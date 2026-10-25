@@ -16,7 +16,8 @@
   "dependencies": {
     "@livekit/agents": "1.8.0",
     "@livekit/agents-plugin-openai": "1.8.0",
-    "@livekit/rtc-node": "0.13.35"
+    "@livekit/rtc-node": "0.13.35",
+    "@napi-rs/canvas": "0.1.100"
   },
   "devDependencies": {
     "livekit-client": "2.22.4",

@@ -122,8 +122,10 @@ export function familyAlertText({ name, category, level, note, mode, address, at
  * @param {object} [o.env]
  * @param {object} [o.deps]  { sendIMessage, dispatchEmergency, now } for tests
  */
-export function createSafetyMonitor({ ctx, callId, postEvent = () => {}, elapsedMs = () => 0, env = process.env, deps = {} }) {
-  const cfg = resolveSafetyConfig(ctx, env);
+export function createSafetyMonitor({ ctx, callId, postEvent = () => {}, elapsedMs = () => 0, env = process.env, deps = {}, contractV2 = true }) {
+  // Family alerts need Kevin's extended contract (emergency contact). Off: log the
+  // concern as a v1 safety event and never text or dispatch anyone.
+  const cfg = contractV2 ? resolveSafetyConfig(ctx, env) : { ...resolveSafetyConfig(ctx, env), contactPhone: null, dispatchUrl: null };
   const send = deps.sendIMessage ?? sendIMessage;
   const dispatch = deps.dispatchEmergency ?? dispatchEmergency;
   const now = deps.now ?? (() => new Date());
@@ -134,7 +136,7 @@ export function createSafetyMonitor({ ctx, callId, postEvent = () => {}, elapsed
   const pending = new Set();
   let concernCount = 0;
 
-  if (!cfg.contactPhone) {
+  if (contractV2 && !cfg.contactPhone) {
     console.warn('[safety] no valid emergency contact phone (E.164); concerns will be logged but nobody will be texted');
   }
 
