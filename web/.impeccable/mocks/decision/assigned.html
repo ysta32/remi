@@ -1,0 +1,45 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;800&family=Patrick+Hand&display=swap" rel="stylesheet">
+<style>
+  :root{--sky:#dcebf7;--sky2:#eef6fc;--frame:#fffdf9;--butter:#ffe39b;--peach:#ffcdb8;--mint:#c9ead9;--ink:#22314a;--ink2:#56637a}
+  *{box-sizing:border-box;margin:0}
+  body{width:390px;height:844px;overflow:hidden;font-family:Figtree,sans-serif;color:var(--ink);background:var(--sky2);font-size:17px;line-height:1.45}
+  .top{background:var(--sky);padding:18px 20px 26px}
+  .bar{display:flex;justify-content:space-between;align-items:center}
+  .word{font-weight:800;font-size:22px;letter-spacing:-.02em}
+  .tabs{display:flex;gap:6px;font-size:14px;font-weight:600}
+  .tabs span{padding:6px 12px;border-radius:99px;background:#ffffffa8}
+  .tabs .on{background:var(--ink);color:#fff}
+  h1{font-size:34px;font-weight:800;letter-spacing:-.02em;margin-top:18px}
+  .sub{color:var(--ink2)}
+  .note{margin:-14px 16px 0;background:var(--butter);border-radius:18px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start;box-shadow:0 6px 16px -10px #8a6a00}
+  .note b{display:block}
+  .dot{width:34px;height:34px;border-radius:50%;background:#fff6d6;flex:none;display:grid;place-items:center;font-size:18px}
+  .label{font-family:'Patrick Hand',cursive;font-size:22px;color:var(--ink2);margin:22px 20px 8px}
+  .snap{margin:0 22px;background:var(--frame);padding:12px 12px 0;border-radius:6px;transform:rotate(-1.2deg);box-shadow:0 14px 30px -14px #22314a66, 0 0 0 4px #ffe39b55}
+  .win{height:190px;border-radius:2px;background:linear-gradient(160deg,#ffcdb8 0%,#ffe39b 55%,#c9ead9 100%);position:relative}
+  .win i{position:absolute;right:22px;top:20px;width:44px;height:44px;border-radius:50%;background:#fff6d6}
+  .win em{position:absolute;left:12px;bottom:10px;font-style:normal;font-size:13px;background:#ffffffcc;padding:3px 9px;border-radius:99px}
+  .cap{font-family:'Patrick Hand',cursive;font-size:24px;padding:10px 4px 16px;line-height:1.2}
+  .new{position:absolute;margin:-8px 0 0 300px;background:var(--ink);color:#fff;font-size:13px;font-weight:800;padding:4px 10px;border-radius:99px;transform:rotate(4deg)}
+  .sum{margin:16px 22px 0;color:var(--ink)}
+  .chips{display:flex;gap:8px;margin:14px 22px 0;flex-wrap:wrap}
+  .chip{background:var(--peach);border-radius:99px;padding:6px 12px;font-size:14px;font-weight:600}
+  .chip.m{background:var(--mint)}
+</style></head><body>
+<div class="top">
+  <div class="bar"><span class="word">Remi</span><div class="tabs"><span class="on">Chats</span><span>How he's doing</span></div></div>
+  <h1>Hal's chats</h1>
+  <p class="sub">Last chat 2 minutes ago</p>
+</div>
+<div class="note"><span class="dot">☀︎</span><p><b>A gentle note from Remi</b>A few things about how Hal talks have shifted lately. Maybe check in this week.</p></div>
+<p class="label">today's snapshot</p>
+<span class="new">NEW</span>
+<div class="snap">
+  <div class="win"><i></i><em>Dad with his first car, 1962</em></div>
+  <p class="cap">Sat · told Sam about his first car!</p>
+</div>
+<p class="sum">Hal's first car was a '57 Chevy Bel Air he bought for $300. He laughed about it getting stuck on the way to Raystown Lake.</p>
+<div class="chips"><span class="chip">Answer to Sam's question</span><span class="chip m">In good spirits</span></div>
+</body></html>

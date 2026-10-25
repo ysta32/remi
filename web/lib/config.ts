@@ -3,6 +3,9 @@ import path from 'node:path';
 
 export const APP_NAME = 'Remi';
 
+// D's UI reads fixtures/demo/*.json unless NEXT_PUBLIC_USE_FIXTURES=0 (then the live API).
+export const USE_FIXTURES = process.env.NEXT_PUBLIC_USE_FIXTURES !== '0';
+
 const flag = (name: string) => process.env[name] === '1';
 
 export const config = {

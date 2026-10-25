@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "web/.impeccable/mocks/palettes.html"
+        ],
+        "createdAt": "2026-10-25T02:35:24.182Z",
+        "reason": "assistant decided: spent palette-comparison mock (user picked B); flagged edge is the hero illustration column that bleeds to the panel edge by design, no text there"
+      }
+    ]
+  }
+}

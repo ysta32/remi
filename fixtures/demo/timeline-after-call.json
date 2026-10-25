@@ -1,0 +1,1234 @@
+{
+  "elder": {
+    "id": "elder-hal-demo",
+    "displayName": "Harold Bennett",
+    "preferredName": "Hal",
+    "language": "en"
+  },
+  "consent": {
+    "proposed": {
+      "summaries": true,
+      "funFacts": true,
+      "speechTrends": true,
+      "mood": true
+    },
+    "elderConfirmed": true,
+    "effective": {
+      "summaries": true,
+      "funFacts": true,
+      "speechTrends": true,
+      "mood": true
+    }
+  },
+  "calls": [
+    {
+      "id": "call-live",
+      "startedAt": "2026-10-25T02:45:22.330Z",
+      "durationS": 74,
+      "status": "done",
+      "summary": "Hal told Sam about his first car, a 1957 Chevy Bel Air he bought for $300 with money from the shops. He laughed about the time it got stuck in the mud on the way to Raystown Lake. He said he'd love to tell Sam the rest when he visits.",
+      "photosShown": [
+        {
+          "id": "p-car",
+          "caption": "Dad with his first car, 1962"
+        }
+      ],
+      "familyQuestion": {
+        "text": "What was your first car?",
+        "askedBy": "Sam",
+        "answer": "A 1957 Chevy Bel Air he bought for $300."
+      },
+      "mood": "positive",
+      "isSimulated": false
+    },
+    {
+      "id": "call-12",
+      "startedAt": "2026-10-16T14:00:00.000Z",
+      "durationS": 446,
+      "status": "done",
+      "summary": "Hal described the 1977 blizzard and the roundhouse once more, then talked about looking forward to Sam visiting from Penn State for Thanksgiving.",
+      "photosShown": [],
+      "familyQuestion": null,
+      "mood": "positive",
+      "isSimulated": true
+    },
+    {
+      "id": "call-11",
+      "startedAt": "2026-10-14T14:00:00.000Z",
+      "durationS": 513,
+      "status": "done",
+      "summary": "Hal said the garden is finished for the year and he pulled the last green tomatoes to ripen on the windowsill. He came back to the blizzard story and the roundhouse roof.",
+      "photosShown": [],
+      "familyQuestion": null,
+      "mood": "neutral",
+      "isSimulated": true
+    },
+    {
+      "id": "call-10",
+      "startedAt": "2026-10-12T14:00:00.000Z",
+      "durationS": 510,
+      "status": "done",
+      "summary": "Hal talked about the 1977 blizzard and the night at the roundhouse again, and about how the town dug out afterward. He mentioned his neighbor checks in on him most mornings.",
+      "photosShown": [],
+      "familyQuestion": null,
+      "mood": "neutral",
+      "isSimulated": true
+    },
+    {
+      "id": "call-09",
+      "startedAt": "2026-10-09T14:00:00.000Z",
+      "durationS": 419,
+      "status": "done",
+      "summary": "Hal told about the 1977 blizzard, when he and two other men slept at the shops for two nights to keep the engines from freezing. He described the roundhouse roof giving way under the snow.",
+      "photosShown": [
+        {
+          "id": "p-shops",
+          "caption": "Dad at the Altoona railroad shops, 1971"
+        }
+      ],
+      "familyQuestion": null,
+      "mood": "neutral",
+      "isSimulated": true
+    },
+    {
+      "id": "call-08",
+      "startedAt": "2026-10-07T14:00:00.000Z",
+      "durationS": 406,
+      "status": "done",
+      "summary": "Seeing the Raystown Lake photo, Hal remembered summer weekends fishing for bass with Dorothy and the kids. He said Linda caught the biggest fish one year and never let him forget it.",
+      "photosShown": [
+        {
+          "id": "p-lake",
+          "caption": "Hal and Mom at Raystown Lake, 1980"
+        }
+      ],
+      "familyQuestion": null,
+      "mood": "positive",
+      "isSimulated": true
+    },
+    {
+      "id": "call-07",
+      "startedAt": "2026-10-05T14:00:00.000Z",
+      "durationS": 363,
+      "status": "done",
+      "summary": "Hal shared his Steelers memories, including watching the Immaculate Reception on a borrowed TV in 1972. He thinks this year’s team needs a better offensive line.",
+      "photosShown": [],
+      "familyQuestion": null,
+      "mood": "positive",
+      "isSimulated": true
+    },
+    {
+      "id": "call-06",
+      "startedAt": "2026-10-02T14:00:00.000Z",
+      "durationS": 517,
+      "status": "done",
+      "summary": "Hal talked about playing trumpet in the Hollidaysburg High marching band and the cold November games. He hummed part of the fight song and said he can still play a few bars of \"Beer Barrel Polka.\"",
+      "photosShown": [],
+      "familyQuestion": null,
+      "mood": "positive",
+      "isSimulated": true
+    },
+    {
+      "id": "call-05",
+      "startedAt": "2026-09-30T14:00:00.000Z",
+      "durationS": 566,
+      "status": "done",
+      "summary": "Hal told the story of meeting Dorothy at a church dance in 1964. He said she stepped on his foot before he ever asked her to dance, and he married her two years later. He got quiet for a moment, then said she would have liked these chats.",
+      "photosShown": [
+        {
+          "id": "p-lake",
+          "caption": "Hal and Mom at Raystown Lake, 1980"
+        }
+      ],
+      "familyQuestion": {
+        "text": "How did you meet Mom?",
+        "askedBy": "Linda",
+        "answer": "At a church dance in 1964 — she stepped on his foot first."
+      },
+      "mood": "neutral",
+      "isSimulated": true
+    },
+    {
+      "id": "call-04",
+      "startedAt": "2026-09-28T14:00:00.000Z",
+      "durationS": 637,
+      "status": "done",
+      "summary": "Looking at the photo from the shops, Hal named three of the men he worked beside and told how they rebuilt a K4 locomotive for a museum. He was proud the engine still runs on special excursions.",
+      "photosShown": [
+        {
+          "id": "p-shops",
+          "caption": "Dad at the Altoona railroad shops, 1971"
+        }
+      ],
+      "familyQuestion": null,
+      "mood": "positive",
+      "isSimulated": true
+    },
+    {
+      "id": "call-03",
+      "startedAt": "2026-09-25T14:00:00.000Z",
+      "durationS": 576,
+      "status": "done",
+      "summary": "Hal walked through his tomato garden this year: Big Boys along the fence and a few Romas his neighbor gave him. He explained his trick of putting crushed eggshells in the planting hole, and said the deer got more than their share in August.",
+      "photosShown": [],
+      "familyQuestion": null,
+      "mood": "neutral",
+      "isSimulated": true
+    },
+    {
+      "id": "call-02",
+      "startedAt": "2026-09-23T14:00:00.000Z",
+      "durationS": 580,
+      "status": "done",
+      "summary": "Hal talked about his first job sweeping floors at a bakery on 11th Avenue when he was 14. He laughed remembering the owner sneaking him day-old donuts. He said he'd like to bake bread again sometime.",
+      "photosShown": [],
+      "familyQuestion": {
+        "text": "What was your first job?",
+        "askedBy": "Linda",
+        "answer": "Sweeping floors at a bakery on 11th Avenue when he was 14."
+      },
+      "mood": "positive",
+      "isSimulated": true
+    },
+    {
+      "id": "call-01",
+      "startedAt": "2026-09-21T14:00:00.000Z",
+      "durationS": 548,
+      "status": "done",
+      "summary": "Hal and Remi got acquainted. He talked about his 38 years at the Altoona railroad shops and how loud the erecting floor got when three engines were in at once. He said he was glad to have someone to talk to in the evenings.",
+      "photosShown": [
+        {
+          "id": "p-shops",
+          "caption": "Dad at the Altoona railroad shops, 1971"
+        }
+      ],
+      "familyQuestion": null,
+      "mood": "positive",
+      "isSimulated": true
+    }
+  ],
+  "funFacts": [
+    {
+      "id": "ff-live-0",
+      "text": "Hal's first car was a 1957 Chevy Bel Air he bought for $300.",
+      "quote": "Three hundred dollars, two-tone, and I washed it every Sunday.",
+      "askedBy": "Sam",
+      "at": "2026-10-25T02:45:22.330Z",
+      "isSimulated": false
+    },
+    {
+      "id": "ff-call-09-0",
+      "text": "During the 1977 blizzard, Hal slept two nights at the shops to keep the engines running.",
+      "quote": "We slept on the bench by the boiler. Nobody was going home in that.",
+      "askedBy": null,
+      "at": "2026-10-09T14:00:00.000Z",
+      "isSimulated": true
+    },
+    {
+      "id": "ff-call-06-0",
+      "text": "Hal played trumpet in the Hollidaysburg High marching band.",
+      "quote": "Third chair trumpet, and I was loud about it.",
+      "askedBy": null,
+      "at": "2026-10-02T14:00:00.000Z",
+      "isSimulated": true
+    },
+    {
+      "id": "ff-call-05-0",
+      "text": "Hal met Dorothy at a church dance in 1964 — she stepped on his foot first.",
+      "quote": "She stepped on my foot before I ever got the nerve to ask her.",
+      "askedBy": "Linda",
+      "at": "2026-09-30T14:00:00.000Z",
+      "isSimulated": true
+    },
+    {
+      "id": "ff-call-03-0",
+      "text": "Hal puts crushed eggshells in the planting hole of every tomato plant.",
+      "quote": "Eggshells in the hole, every time. My mother did it and they never split.",
+      "askedBy": null,
+      "at": "2026-09-25T14:00:00.000Z",
+      "isSimulated": true
+    },
+    {
+      "id": "ff-call-02-0",
+      "text": "Hal's first job was sweeping floors at a bakery at 14, for 50 cents a day.",
+      "quote": "Fifty cents a day and all the broken donuts I could eat.",
+      "askedBy": "Linda",
+      "at": "2026-09-23T14:00:00.000Z",
+      "isSimulated": true
+    }
+  ],
+  "markers": [
+    {
+      "key": "speech_rate",
+      "label": "Speaking pace",
+      "explainer": "How quickly he talks while speaking, compared with his usual.",
+      "concern": "down",
+      "group": "pace",
+      "unit": "wpm",
+      "baseline": {
+        "median": 133.9,
+        "mad": 1.2,
+        "n": 6
+      },
+      "points": [
+        {
+          "callId": "call-01",
+          "at": "2026-09-21T14:00:00.000Z",
+          "value": 135,
+          "z": -0.27,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-02",
+          "at": "2026-09-23T14:00:00.000Z",
+          "value": 135.2,
+          "z": -0.32,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-03",
+          "at": "2026-09-25T14:00:00.000Z",
+          "value": 131,
+          "z": 0.72,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-04",
+          "at": "2026-09-28T14:00:00.000Z",
+          "value": 129.5,
+          "z": 1.1,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-05",
+          "at": "2026-09-30T14:00:00.000Z",
+          "value": 134.3,
+          "z": -0.1,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-06",
+          "at": "2026-10-02T14:00:00.000Z",
+          "value": 133.5,
+          "z": 0.1,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-07",
+          "at": "2026-10-05T14:00:00.000Z",
+          "value": 119.3,
+          "z": 3.63,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-08",
+          "at": "2026-10-07T14:00:00.000Z",
+          "value": 119.8,
+          "z": 3.51,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-09",
+          "at": "2026-10-09T14:00:00.000Z",
+          "value": 123.7,
+          "z": 2.54,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-10",
+          "at": "2026-10-12T14:00:00.000Z",
+          "value": 115.9,
+          "z": 4.48,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-11",
+          "at": "2026-10-14T14:00:00.000Z",
+          "value": 117.2,
+          "z": 4.16,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-12",
+          "at": "2026-10-16T14:00:00.000Z",
+          "value": 118.5,
+          "z": 3.83,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-live",
+          "at": "2026-10-25T02:45:22.330Z",
+          "value": 119,
+          "z": 3.71,
+          "confidence": "low",
+          "isSimulated": false
+        }
+      ]
+    },
+    {
+      "key": "pause_rate",
+      "label": "Pauses",
+      "explainer": "How often he pauses mid-thought.",
+      "concern": "up",
+      "group": "pauses",
+      "unit": "per100w",
+      "baseline": {
+        "median": 8.95,
+        "mad": 0.5,
+        "n": 6
+      },
+      "points": [
+        {
+          "callId": "call-01",
+          "at": "2026-09-21T14:00:00.000Z",
+          "value": 8.9,
+          "z": -0.07,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-02",
+          "at": "2026-09-23T14:00:00.000Z",
+          "value": 9.7,
+          "z": 1.01,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-03",
+          "at": "2026-09-25T14:00:00.000Z",
+          "value": 9,
+          "z": 0.07,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-04",
+          "at": "2026-09-28T14:00:00.000Z",
+          "value": 9.2,
+          "z": 0.34,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-05",
+          "at": "2026-09-30T14:00:00.000Z",
+          "value": 8.1,
+          "z": -1.15,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-06",
+          "at": "2026-10-02T14:00:00.000Z",
+          "value": 8.1,
+          "z": -1.15,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-07",
+          "at": "2026-10-05T14:00:00.000Z",
+          "value": 12.3,
+          "z": 4.52,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-08",
+          "at": "2026-10-07T14:00:00.000Z",
+          "value": 12.1,
+          "z": 4.25,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-09",
+          "at": "2026-10-09T14:00:00.000Z",
+          "value": 12.4,
+          "z": 4.65,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-10",
+          "at": "2026-10-12T14:00:00.000Z",
+          "value": 13.6,
+          "z": 6.27,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-11",
+          "at": "2026-10-14T14:00:00.000Z",
+          "value": 13.2,
+          "z": 5.73,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-12",
+          "at": "2026-10-16T14:00:00.000Z",
+          "value": 13.4,
+          "z": 6,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-live",
+          "at": "2026-10-25T02:45:22.330Z",
+          "value": 13.1,
+          "z": 5.6,
+          "confidence": "low",
+          "isSimulated": false
+        }
+      ]
+    },
+    {
+      "key": "mean_pause_ms",
+      "label": "Pause length",
+      "explainer": "How long those pauses usually last.",
+      "concern": "up",
+      "group": "pauses",
+      "unit": "ms",
+      "baseline": {
+        "median": 632.25,
+        "mad": 28.1,
+        "n": 6
+      },
+      "points": [
+        {
+          "callId": "call-01",
+          "at": "2026-09-21T14:00:00.000Z",
+          "value": 685.2,
+          "z": 1.27,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-02",
+          "at": "2026-09-23T14:00:00.000Z",
+          "value": 647.2,
+          "z": 0.36,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-03",
+          "at": "2026-09-25T14:00:00.000Z",
+          "value": 668.7,
+          "z": 0.87,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-04",
+          "at": "2026-09-28T14:00:00.000Z",
+          "value": 603.2,
+          "z": -0.7,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-05",
+          "at": "2026-09-30T14:00:00.000Z",
+          "value": 617.3,
+          "z": -0.36,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-06",
+          "at": "2026-10-02T14:00:00.000Z",
+          "value": 605.1,
+          "z": -0.65,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-07",
+          "at": "2026-10-05T14:00:00.000Z",
+          "value": 814.3,
+          "z": 4.37,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-08",
+          "at": "2026-10-07T14:00:00.000Z",
+          "value": 809.6,
+          "z": 4.26,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-09",
+          "at": "2026-10-09T14:00:00.000Z",
+          "value": 826.5,
+          "z": 4.66,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-10",
+          "at": "2026-10-12T14:00:00.000Z",
+          "value": 874,
+          "z": 5.8,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-11",
+          "at": "2026-10-14T14:00:00.000Z",
+          "value": 851.2,
+          "z": 5.26,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-12",
+          "at": "2026-10-16T14:00:00.000Z",
+          "value": 854.7,
+          "z": 5.34,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-live",
+          "at": "2026-10-25T02:45:22.330Z",
+          "value": 830,
+          "z": 4.75,
+          "confidence": "low",
+          "isSimulated": false
+        }
+      ]
+    },
+    {
+      "key": "wfp_rate",
+      "label": "Searching for words",
+      "explainer": "Longer pauses next to words like \"um\" or \"thing.\"",
+      "concern": "up",
+      "group": "pauses",
+      "unit": "per100w",
+      "baseline": {
+        "median": 0.85,
+        "mad": 0.1,
+        "n": 6
+      },
+      "points": [
+        {
+          "callId": "call-01",
+          "at": "2026-09-21T14:00:00.000Z",
+          "value": 0.9,
+          "z": 0.34,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-02",
+          "at": "2026-09-23T14:00:00.000Z",
+          "value": 0.6,
+          "z": -1.69,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-03",
+          "at": "2026-09-25T14:00:00.000Z",
+          "value": 0.9,
+          "z": 0.34,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-04",
+          "at": "2026-09-28T14:00:00.000Z",
+          "value": 0.7,
+          "z": -1.01,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-05",
+          "at": "2026-09-30T14:00:00.000Z",
+          "value": 1,
+          "z": 1.01,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-06",
+          "at": "2026-10-02T14:00:00.000Z",
+          "value": 0.8,
+          "z": -0.34,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-07",
+          "at": "2026-10-05T14:00:00.000Z",
+          "value": 1.7,
+          "z": 5.73,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-08",
+          "at": "2026-10-07T14:00:00.000Z",
+          "value": 1.7,
+          "z": 5.73,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-09",
+          "at": "2026-10-09T14:00:00.000Z",
+          "value": 1.5,
+          "z": 4.38,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-10",
+          "at": "2026-10-12T14:00:00.000Z",
+          "value": 1.8,
+          "z": 6.41,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-11",
+          "at": "2026-10-14T14:00:00.000Z",
+          "value": 2.1,
+          "z": 8.43,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-12",
+          "at": "2026-10-16T14:00:00.000Z",
+          "value": 1.9,
+          "z": 7.08,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-live",
+          "at": "2026-10-25T02:45:22.330Z",
+          "value": 1.9,
+          "z": 7.08,
+          "confidence": "low",
+          "isSimulated": false
+        }
+      ]
+    },
+    {
+      "key": "filler_rate",
+      "label": "Filler words",
+      "explainer": "Words like \"um\" and \"uh.\"",
+      "concern": "up",
+      "group": "words",
+      "unit": "per100w",
+      "baseline": {
+        "median": 3.85,
+        "mad": 0.25,
+        "n": 6
+      },
+      "points": [
+        {
+          "callId": "call-01",
+          "at": "2026-09-21T14:00:00.000Z",
+          "value": 3.7,
+          "z": -0.4,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-02",
+          "at": "2026-09-23T14:00:00.000Z",
+          "value": 4.4,
+          "z": 1.48,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-03",
+          "at": "2026-09-25T14:00:00.000Z",
+          "value": 3.5,
+          "z": -0.94,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-04",
+          "at": "2026-09-28T14:00:00.000Z",
+          "value": 3.6,
+          "z": -0.67,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-05",
+          "at": "2026-09-30T14:00:00.000Z",
+          "value": 4,
+          "z": 0.4,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-06",
+          "at": "2026-10-02T14:00:00.000Z",
+          "value": 4.1,
+          "z": 0.67,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-07",
+          "at": "2026-10-05T14:00:00.000Z",
+          "value": 4.4,
+          "z": 1.48,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-08",
+          "at": "2026-10-07T14:00:00.000Z",
+          "value": 4.6,
+          "z": 2.02,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-09",
+          "at": "2026-10-09T14:00:00.000Z",
+          "value": 4.1,
+          "z": 0.67,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-10",
+          "at": "2026-10-12T14:00:00.000Z",
+          "value": 4.8,
+          "z": 2.56,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-11",
+          "at": "2026-10-14T14:00:00.000Z",
+          "value": 4.3,
+          "z": 1.21,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-12",
+          "at": "2026-10-16T14:00:00.000Z",
+          "value": 4.7,
+          "z": 2.29,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-live",
+          "at": "2026-10-25T02:45:22.330Z",
+          "value": 4.5,
+          "z": 1.75,
+          "confidence": "low",
+          "isSimulated": false
+        }
+      ]
+    },
+    {
+      "key": "vague_rate",
+      "label": "General words",
+      "explainer": "Words like \"thing\" or \"stuff\" in place of a specific word.",
+      "concern": "up",
+      "group": "words",
+      "unit": "per100w",
+      "baseline": {
+        "median": 1.2,
+        "mad": 0.1,
+        "n": 6
+      },
+      "points": [
+        {
+          "callId": "call-01",
+          "at": "2026-09-21T14:00:00.000Z",
+          "value": 1.2,
+          "z": 0,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-02",
+          "at": "2026-09-23T14:00:00.000Z",
+          "value": 1.3,
+          "z": 0.67,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-03",
+          "at": "2026-09-25T14:00:00.000Z",
+          "value": 1.2,
+          "z": 0,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-04",
+          "at": "2026-09-28T14:00:00.000Z",
+          "value": 1.1,
+          "z": -0.67,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-05",
+          "at": "2026-09-30T14:00:00.000Z",
+          "value": 1.3,
+          "z": 0.67,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-06",
+          "at": "2026-10-02T14:00:00.000Z",
+          "value": 1.1,
+          "z": -0.67,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-07",
+          "at": "2026-10-05T14:00:00.000Z",
+          "value": 1.9,
+          "z": 4.72,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-08",
+          "at": "2026-10-07T14:00:00.000Z",
+          "value": 2.2,
+          "z": 6.74,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-09",
+          "at": "2026-10-09T14:00:00.000Z",
+          "value": 1.8,
+          "z": 4.05,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-10",
+          "at": "2026-10-12T14:00:00.000Z",
+          "value": 2.5,
+          "z": 8.77,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-11",
+          "at": "2026-10-14T14:00:00.000Z",
+          "value": 2.5,
+          "z": 8.77,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-12",
+          "at": "2026-10-16T14:00:00.000Z",
+          "value": 2.2,
+          "z": 6.74,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-live",
+          "at": "2026-10-25T02:45:22.330Z",
+          "value": 2.2,
+          "z": 6.74,
+          "confidence": "low",
+          "isSimulated": false
+        }
+      ]
+    },
+    {
+      "key": "mattr",
+      "label": "Word variety",
+      "explainer": "How varied his vocabulary is within a stretch of talk.",
+      "concern": "down",
+      "group": "words",
+      "unit": "ratio",
+      "baseline": {
+        "median": 0.72,
+        "mad": 0.005,
+        "n": 6
+      },
+      "points": [
+        {
+          "callId": "call-01",
+          "at": "2026-09-21T14:00:00.000Z",
+          "value": 0.715,
+          "z": 0.23,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-02",
+          "at": "2026-09-23T14:00:00.000Z",
+          "value": 0.715,
+          "z": 0.23,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-03",
+          "at": "2026-09-25T14:00:00.000Z",
+          "value": 0.728,
+          "z": -0.37,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-04",
+          "at": "2026-09-28T14:00:00.000Z",
+          "value": 0.727,
+          "z": -0.32,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-05",
+          "at": "2026-09-30T14:00:00.000Z",
+          "value": 0.716,
+          "z": 0.19,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-06",
+          "at": "2026-10-02T14:00:00.000Z",
+          "value": 0.723,
+          "z": -0.14,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-07",
+          "at": "2026-10-05T14:00:00.000Z",
+          "value": 0.696,
+          "z": 1.11,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-08",
+          "at": "2026-10-07T14:00:00.000Z",
+          "value": 0.692,
+          "z": 1.3,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-09",
+          "at": "2026-10-09T14:00:00.000Z",
+          "value": 0.697,
+          "z": 1.06,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-10",
+          "at": "2026-10-12T14:00:00.000Z",
+          "value": 0.686,
+          "z": 1.57,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-11",
+          "at": "2026-10-14T14:00:00.000Z",
+          "value": 0.691,
+          "z": 1.34,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-12",
+          "at": "2026-10-16T14:00:00.000Z",
+          "value": 0.695,
+          "z": 1.16,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-live",
+          "at": "2026-10-25T02:45:22.330Z",
+          "value": 0.71,
+          "z": 0.46,
+          "confidence": "low",
+          "isSimulated": false
+        }
+      ]
+    },
+    {
+      "key": "repeat_stories",
+      "label": "Retold stories",
+      "explainer": "Stories he brought up himself that he also told in another call that week.",
+      "concern": "up",
+      "group": "repetition",
+      "unit": "count",
+      "baseline": null,
+      "points": [
+        {
+          "callId": "call-01",
+          "at": "2026-09-21T14:00:00.000Z",
+          "value": 0,
+          "z": null,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-02",
+          "at": "2026-09-23T14:00:00.000Z",
+          "value": 0,
+          "z": null,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-03",
+          "at": "2026-09-25T14:00:00.000Z",
+          "value": 0,
+          "z": null,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-04",
+          "at": "2026-09-28T14:00:00.000Z",
+          "value": 0,
+          "z": null,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-05",
+          "at": "2026-09-30T14:00:00.000Z",
+          "value": 0,
+          "z": null,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-06",
+          "at": "2026-10-02T14:00:00.000Z",
+          "value": 0,
+          "z": null,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-07",
+          "at": "2026-10-05T14:00:00.000Z",
+          "value": 0,
+          "z": null,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-08",
+          "at": "2026-10-07T14:00:00.000Z",
+          "value": 0,
+          "z": null,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-09",
+          "at": "2026-10-09T14:00:00.000Z",
+          "value": 0,
+          "z": null,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-10",
+          "at": "2026-10-12T14:00:00.000Z",
+          "value": 1,
+          "z": null,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-11",
+          "at": "2026-10-14T14:00:00.000Z",
+          "value": 1,
+          "z": null,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-12",
+          "at": "2026-10-16T14:00:00.000Z",
+          "value": 1,
+          "z": null,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-live",
+          "at": "2026-10-25T02:45:22.330Z",
+          "value": 0,
+          "z": null,
+          "confidence": "low",
+          "isSimulated": false
+        }
+      ]
+    }
+  ],
+  "repeats": [
+    {
+      "summary": "The 1977 blizzard when the roundhouse roof caved in under the snow",
+      "dates": [
+        "2026-10-09T14:00:00.000Z",
+        "2026-10-12T14:00:00.000Z",
+        "2026-10-14T14:00:00.000Z",
+        "2026-10-16T14:00:00.000Z"
+      ],
+      "isSimulated": true
+    }
+  ],
+  "nudges": [
+    {
+      "id": "nudge-checkup",
+      "type": "cognitive_checkup",
+      "createdAt": "2026-10-16T14:00:00.000Z",
+      "message": "Over the last couple of weeks, a few things about how Hal talks in our chats have shifted compared with his usual: speaking a bit more slowly than usual; pausing more often or for longer; using more filler or general words, or a narrower range of words; retelling some of the same stories within a week. This isn't a diagnosis — tiredness, a cold, hearing, new medications, or mood can all cause changes like these. It might be a good time to check in with him, and to mention it at his next doctor's visit.",
+      "link": "https://www.alz.org/alzheimers-dementia/10_signs",
+      "isSimulated": true
+    }
+  ],
+  "processing": false,
+  "generatedAt": "2026-10-25T02:47:22.330Z"
+}

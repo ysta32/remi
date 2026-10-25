@@ -17,3 +17,9 @@ node_modules/
 # Chert
 .env.local
 .chert-agent/
+
+# Impeccable runtime state
+.impeccable/hook.cache.json
+
+# Next build output when turbopack root is the repo root
+/.next/

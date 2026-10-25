@@ -12,7 +12,8 @@
     "db:migrate": "tsx db/migrate-cli.ts",
     "seed": "tsx scripts/seed.ts",
     "tune:repeat": "tsx scripts/tune-repeat.ts",
-    "try:extract": "tsx scripts/try-extract.ts"
+    "try:extract": "tsx scripts/try-extract.ts",
+    "fixtures": "tsx scripts/make-fixtures.ts"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",
@@ -21,6 +22,7 @@
     "openai": "^7.43.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "recharts": "^3.10.1",
     "zod": "^4.6.7"
   },
   "devDependencies": {
