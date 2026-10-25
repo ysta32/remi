@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { use, useState } from 'react';
+import { use, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { dismissNudge, FIXTURE_VARIANTS, isFixtureVariant, type FixtureVariant } from '@/lib/api';
 import { USE_FIXTURES } from '@/lib/config';
 import { copy } from '@/lib/copy';
@@ -51,6 +51,41 @@ export function TimelineView({
   const [hiddenNudges, setHiddenNudges] = useState<Set<string>>(new Set());
   const [allFacts, setAllFacts] = useState(false);
 
+  // Beside a gentle note, the right column (panel + facts) should end level with the left (newest +
+  // note). Start with three facts and drop one at a time while the right side runs longer; when the
+  // left side or the panel changes size, start again from three.
+  const leftRef = useRef<HTMLDivElement>(null);
+  const rightRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [factsFit, setFactsFit] = useState(FACTS_SHOWN);
+  const [layoutTick, setLayoutTick] = useState(0); // forces a re-check even when factsFit is already 3
+  useLayoutEffect(() => {
+    const left = leftRef.current, right = rightRef.current;
+    if (!left || !right || allFacts || !window.matchMedia('(min-width: 1024px)').matches) return;
+    if (right.getBoundingClientRect().bottom - left.getBoundingClientRect().bottom > 24 && factsFit > 1) {
+      setFactsFit((n) => n - 1);
+    }
+  }, [allFacts, factsFit, timeline, elder, hiddenNudges, layoutTick]);
+  const loaded = timeline !== null;
+  useEffect(() => {
+    const watched = [leftRef.current, panelRef.current].filter((e): e is HTMLDivElement => !!e);
+    if (!watched.length) return;
+    const sizes = new Map<Element, number>();
+    const ro = new ResizeObserver((entries) => {
+      const changed = entries.some((e) => {
+        const h = Math.round(e.contentRect.height);
+        const was = sizes.get(e.target);
+        sizes.set(e.target, h);
+        return was !== undefined && was !== h;
+      });
+      if (changed) restart();
+    });
+    const restart = () => { setFactsFit(FACTS_SHOWN); setLayoutTick((t) => t + 1); };
+    watched.forEach((e) => ro.observe(e));
+    window.addEventListener('resize', restart);
+    return () => { ro.disconnect(); window.removeEventListener('resize', restart); };
+  }, [loaded]);
+
   if (!timeline) {
     return (
       <>
@@ -66,12 +101,32 @@ export function TimelineView({
   const confirmed = timeline.consent.elderConfirmed;
   const [newest, ...earlier] = timeline.calls;
   const nudges = timeline.nudges.filter((n) => !hiddenNudges.has(n.id));
-  // Pair things of similar height: beside a gentle note, two facts stack; with no note, three run in a row.
+  // Beside a gentle note, facts stack under the panel and fill to fit; with no note, three run in a row.
   const factsBeside = nudges.length > 0;
-  const factsShown = factsBeside ? 2 : FACTS_SHOWN;
+  const factsShown = factsBeside ? factsFit : FACTS_SHOWN;
   const fixture = USE_FIXTURES ? variant : undefined;
   const anySimulated = timeline.calls.some((c) => c.isSimulated);
   const photos = elder?.photos ?? [];
+
+  // Facts pile up with every call, so only the newest few show; each chat's recap keeps its own.
+  const facts = (
+    <section aria-labelledby="facts" className="order-4 space-y-3">
+      <h2 id="facts" className="text-[30px] font-black tracking-tight">Fun facts</h2>
+      <FunFacts facts={allFacts ? timeline.funFacts : timeline.funFacts.slice(0, factsShown)} newIds={newIds} columns={!factsBeside} />
+      {timeline.funFacts.length > factsShown && (
+        <div className="-mt-1 text-right">
+          <button
+            type="button"
+            aria-expanded={allFacts}
+            onClick={() => setAllFacts((v) => !v)}
+            className="text-base font-semibold text-[#7b879a] transition-colors hover:text-ink"
+          >
+            {allFacts ? 'Show fewer' : `See all ${timeline.funFacts.length} fun facts`}
+          </button>
+        </div>
+      )}
+    </section>
+  );
 
   const hide = (nudgeId: string) => {
     setHiddenNudges((prev) => new Set(prev).add(nudgeId));
@@ -104,13 +159,13 @@ export function TimelineView({
           <>
             {!confirmed && <p className="rounded-[20px] border border-line bg-card p-5">{copy.notYetConfirmed(name)}</p>}
 
-            {/* Phones: newest, next-chat panel, note, facts, earlier. Desktop: newest | panel, then note | facts (or facts full width), then earlier chats. */}
-            <div className={`grid items-start gap-8 [grid-template-areas:'newest'_'side'_'note'_'facts'_'earlier'] lg:grid-cols-[1.4fr_1fr] ${
-              factsBeside
-                ? "lg:[grid-template-areas:'newest_side'_'note_facts'_'earlier_earlier']"
-                : "lg:[grid-template-areas:'newest_side'_'facts_facts'_'earlier_earlier']"
-            }`}>
-              <div className="[grid-area:newest]">
+            {/* Desktop: two independent columns (newest + note | panel + facts), so one side growing never
+                opens a gap in the other; earlier chats run full width below. Phones: one column in the
+                order newest, panel, note, facts, earlier (the column wrappers become `contents`). */}
+            <div className="flex flex-col gap-8 lg:grid lg:grid-cols-[1.4fr_1fr] lg:items-start">
+              <div ref={leftRef} className="contents lg:flex lg:flex-col lg:gap-8">
+              <div className="order-1">
+
                 {newest ? (
                   <SnapshotCard
                     key={`${newest.id}:${newest.status}`}
@@ -126,13 +181,23 @@ export function TimelineView({
               </div>
 
               {nudges.length > 0 && (
-                <div className="space-y-4 [grid-area:note]">
+                <div className="order-3 space-y-4">
                   {nudges.map((n) => <GentleNote key={n.id} nudge={n} onDismiss={() => hide(n.id)} />)}
                 </div>
               )}
+              </div>
+
+              <div ref={rightRef} className="contents lg:flex lg:flex-col lg:gap-8">
+                <div ref={panelRef} className="order-2">
+                  {elder && <NextChatPanel elderId={id} elder={elder} name={name} onChanged={refresh} />}
+                </div>
+                {confirmed && factsBeside && facts}
+              </div>
+
+              {confirmed && !factsBeside && <div className="order-4 lg:col-span-2">{facts}</div>}
 
               {earlier.length > 0 && (
-                <section aria-labelledby="earlier" className="space-y-4 [grid-area:earlier]">
+                <section aria-labelledby="earlier" className="order-5 space-y-4 lg:col-span-2">
                   <h2 id="earlier" className="text-[30px] font-black tracking-tight">Earlier chats</h2>
                   <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                     {earlier.slice(0, earlierShown).map((c) => (
@@ -155,31 +220,6 @@ export function TimelineView({
                     </div>
                   )}
                 </section>
-              )}
-
-              <div className="[grid-area:side]">
-                {elder && <NextChatPanel elderId={id} elder={elder} name={name} onChanged={refresh} />}
-              </div>
-
-              {confirmed && (
-                  <section aria-labelledby="facts" className="space-y-3 [grid-area:facts]">
-                    <h2 id="facts" className="text-[30px] font-black tracking-tight">Fun facts</h2>
-                    {/* Facts pile up with every call, so this row shows the newest three; each
-                        chat's recap keeps its own facts one click away. */}
-                    <FunFacts facts={allFacts ? timeline.funFacts : timeline.funFacts.slice(0, factsShown)} newIds={newIds} columns={!factsBeside} />
-                    {timeline.funFacts.length > factsShown && (
-                      <div className="-mt-1 text-right">
-                        <button
-                          type="button"
-                          aria-expanded={allFacts}
-                          onClick={() => setAllFacts((v) => !v)}
-                          className="text-base font-semibold text-[#7b879a] transition-colors hover:text-ink"
-                        >
-                          {allFacts ? 'Show fewer' : `See all ${timeline.funFacts.length} fun facts`}
-                        </button>
-                      </div>
-                    )}
-                  </section>
               )}
             </div>
           </>
