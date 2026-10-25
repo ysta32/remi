@@ -1,6 +1,6 @@
-# Hack PSU — Alzheimer Detection via iMessage
+# iMessage Language Signals
 
-Early-signal detection of cognitive decline from longitudinal iMessage conversation data.
+Exploring early language-change signals in longitudinal iMessage conversation data.
 
 ## Idea
 
