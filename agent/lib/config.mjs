@@ -37,6 +37,9 @@ export function readConfig(env = process.env) {
     echoGuard: env.ECHO_GUARD !== '0',
     bargeIn: env.BARGE_IN !== '0',
     bargeMinRms: Number.parseFloat(env.BARGE_MIN_RMS) || 0.02,
+    // How long the caller must keep talking over Remi before she stops (short sounds and
+    // passing voices don't count).
+    bargeHoldMs: int(env.BARGE_HOLD_MS, 1200),
     turnDetection: env.TURN_DETECTION === 'semantic' ? 'semantic' : 'server',
     // Newest model, smarter than gpt-realtime; gpt-realtime-2.1-mini answers ~150 ms sooner.
     realtimeModel: env.REALTIME_MODEL || 'gpt-realtime-2.1',

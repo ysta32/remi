@@ -186,6 +186,7 @@ export default defineAgent({
       echoGuard: config.echoGuard,
       bargeIn: config.bargeIn,
       bargeMinRms: config.bargeMinRms,
+      bargeHoldMs: config.bargeHoldMs,
       log,
     });
     const transcript = collectTranscript(session, { t0: startedMs, log });
