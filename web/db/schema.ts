@@ -174,3 +174,12 @@ export const detectorResults = sqliteTable('detector_results', {
   resultJson: text('result_json').notNull(),
   analyzedAt: text('analyzed_at').notNull(),
 });
+
+export const liveDetectorResults = sqliteTable('live_detector_results', {
+  callId: text('call_id').primaryKey().references(() => calls.id, { onDelete: 'cascade' }),
+  prefixHash: text('prefix_hash').notNull(),
+  historyHash: text('history_hash').notNull(),
+  settingsHash: text('settings_hash').notNull(),
+  resultJson: text('result_json').notNull(),
+  analyzedAt: text('analyzed_at').notNull(),
+});

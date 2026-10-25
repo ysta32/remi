@@ -111,3 +111,13 @@ export interface Timeline {
   processing: boolean;
   generatedAt: string;
 }
+
+// Internal persistence contract (§10), never part of a family-facing DTO.
+export interface LiveDetectorCacheRow {
+  call_id: string;
+  prefix_hash: string;
+  history_hash: string;
+  settings_hash: string;
+  result_json: string;
+  analyzed_at: string;
+}
