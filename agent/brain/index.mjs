@@ -4,6 +4,8 @@
 import { buildInstructions as buildCallInstructions, openingInstructions } from './callflow.mjs';
 import { createSafetyMonitor, resolveSafetyConfig, screenText } from './safety.mjs';
 import { createCallFlowTools } from './tools.mjs';
+import { contactsSection, createMessagingTools } from './messaging.mjs';
+import { createContactBook } from '../lib/contacts.mjs';
 
 export { openingInstructions, screenText };
 
@@ -21,13 +23,17 @@ const otherCaller = (name) => `IF THE CALLER IS NOT ${name.toUpperCase()}
 - Anyone can call this number. If the caller says they aren't ${name}, or says another name, apologize lightly, ask their name, and use it from then on.
 - Then just be a warm, friendly companion for them: ask about their day and what they enjoy. Ignore the agenda, photos, and family question above.
 - Never share anything about ${name} or their family with someone else: no memories, names, stories, or details from WHAT YOU KNOW.
-- Don't call record_consent, show_photo, or mark_family_question_asked for them. SAFETY still applies to anyone.`;
+- Don't call record_consent, show_photo, mark_family_question_asked, or save_contact for them, and don't text ${name}'s contacts for them. SAFETY still applies to anyone.`;
 
 /** System instructions for one call. */
-export function buildInstructions(ctx, { contractV2 = false, now = new Date(), env = process.env } = {}) {
+export function buildInstructions(ctx, { contractV2 = false, now = new Date(), env = process.env, book = contactBookFor(ctx) } = {}) {
   const safety = resolveSafetyConfig(ctx, contractV2 ? env : {});
-  return `${buildCallInstructions(ctx, { safety, contractV2, now })}\n\n${VOICE_RULES}\n\n${otherCaller(ctx.elder.preferredName)}`;
+  const name = ctx.elder.preferredName;
+  return `${buildCallInstructions(ctx, { safety, contractV2, now })}\n\n${contactsSection(book, name)}\n\n${VOICE_RULES}\n\n${otherCaller(name)}`;
 }
+
+/** The elder's saved numbers (lib/contacts.mjs). */
+export const contactBookFor = (ctx, opts) => createContactBook(ctx.elder.id, opts);
 
 /**
  * Tools plus the safety monitor that backs report_safety_concern.
@@ -37,9 +43,15 @@ export function buildInstructions(ctx, { contractV2 = false, now = new Date(), e
  * @param {() => number} o.elapsedMs
  * @param {(photo: object) => void} [o.onShowPhoto]
  */
-export function createBrain({ ctx, callId = null, emit, elapsedMs, contractV2 = false, onShowPhoto, env = process.env }) {
+export function createBrain({ ctx, callId = null, emit, elapsedMs, contractV2 = false, onShowPhoto, env = process.env, book = contactBookFor(ctx), send }) {
   const safety = createSafetyMonitor({ ctx, callId, postEvent: emit, elapsedMs, contractV2, env: contractV2 ? env : {} });
-  const tools = createCallFlowTools({ postEvent: emit, elapsedMs, safety, contractV2, photos: ctx.photos ?? [], onShowPhoto });
+  const tools = [
+    ...createCallFlowTools({ postEvent: emit, elapsedMs, safety, contractV2, photos: ctx.photos ?? [], onShowPhoto }),
+    ...createMessagingTools({
+      book, elderName: ctx.elder.preferredName, callId, send,
+      dryRun: env.TEXT_DRY_RUN === '1' || env.MOCK_CONTEXT === '1',
+    }),
+  ];
   return {
     safety,
     tools,
