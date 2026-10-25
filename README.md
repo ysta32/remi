@@ -1,6 +1,6 @@
-# iMessage Language Signals
+# Remi
 
-Exploring early language-change signals in longitudinal iMessage conversation data.
+Remi reads the small talk you already have, and watches for language changes worth mentioning to a doctor.
 
 ## Idea
 
