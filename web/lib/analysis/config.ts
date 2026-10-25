@@ -47,6 +47,54 @@ export const MOOD_LOW_MIN = 3;
 export const MOOD_WINDOW = 5;
 export const NUDGE_REFIRE_DAYS = 14;
 
+// Drift Index (drift-index.ts): composite of direction-aligned robust z against the person's own
+// baseline, an EWMA/CUSUM "watching" layer, and a multi-week persistence rule before any family
+// nudge. [HEURISTIC] all of these; checked on simulated personas only (scripts/sim-personas.ts).
+export const DI_SKIP_FIRST = 2; // first calls carry a novelty/familiarity effect
+export const DI_BASELINE_N = 8;
+// Per-marker weight in the composite. Less reliable markers (vague words, MATTR) get half weight.
+export const DI_WEIGHTS: Partial<Record<MarkerKey, number>> = {
+  speech_rate: 1,
+  mean_pause_ms: 1,
+  pause_rate: 1,
+  filler_rate: 1,
+  wfp_rate: 0.75,
+  vague_rate: 0.5,
+  mattr: 0.5,
+};
+// Minimum spread per marker so a very consistent baseline can't produce huge z (same units as values).
+export const DI_SPREAD_FLOOR: Partial<Record<MarkerKey, number>> = {
+  speech_rate: 5,
+  mean_pause_ms: 40,
+  pause_rate: 1,
+  filler_rate: 0.5,
+  wfp_rate: 0.3,
+  vague_rate: 0.5,
+  mattr: 0.01,
+};
+export const DI_Z_CLIP = 4;
+export const DI_SD_FLOOR = 0.2; // floor on the composite's baseline SD before re-standardizing
+export const DI_MIN_CALLS_PER_WEEK = 2;
+export const DI_WEEKLY_THRESHOLD = 1.5; // weekly D, in personal SDs
+export const DI_PERSIST_WINDOW = 4; // weeks
+export const DI_PERSIST_NEEDED = 3; // of the window
+export const DI_WATCH_THRESHOLD = 1.0;
+export const DI_WATCH_WEEKS = 2; // consecutive
+export const DI_EWMA_LAMBDA = 0.2;
+export const DI_EWMA_L = 2.7;
+export const DI_CUSUM_K = 0.5;
+export const DI_CUSUM_H = 4;
+export const DI_TREND_DAYS = 28;
+export const DI_MK_ALPHA = 0.1; // one-sided Mann-Kendall p for "trending up"
+export const DI_REPEATS_WEEKLY = 3;
+export const DI_REPEATS_WEEKS = 2; // consecutive
+export const DI_COOLDOWN_WEEKS = 4;
+// Sharp change: a big, sudden shift in one marker (e.g. talking much more slowly) flags after a few
+// calls instead of waiting weeks for the composite. Consecutive calls guard against one bad call.
+export const DI_SHARP_MARKERS: MarkerKey[] = ['speech_rate'];
+export const DI_SHARP_Z = 2.5;
+export const DI_SHARP_CALLS = 3;
+
 // Repetition (markers.md §6)
 export const REPEAT_WINDOW_DAYS = 7;
 // Tuned on fixtures/transcripts/repeat-pairs.json with text-embedding-3-small (2026-10-25):
