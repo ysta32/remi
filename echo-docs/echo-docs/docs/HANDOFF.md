@@ -97,6 +97,7 @@ Each agent edits **only its own section** plus appends to "Requests" and "Contra
   - REPEAT_COSINE 0.56 was tuned on hand-written pairs, and its margin over the closest different-story pair (0.51) is thin.
 
 ### C — Automatic real-call detector integration (2026-10-25)
+- Verified after fresh review: web325 pass/1skip, detector245, synthetic150, typecheck/lint/build, isolated production smoke78. Review fixes search all seven-day candidates, separate real DI baselines from simulated calls, and redact legacy summaries without summary consent. Four existing build tracing warnings remain.
 - The post-call repetition step now invokes the evaluated standalone detector for real calls. Fixed model/prompt/embedding/dimensions/threshold match the frozen baseline. Legacy simulated seed processing remains compatible.
 - Separate live cache reuses valid chronological prefixes and invalidates downstream evidence after corrections, deletions, safety exclusions and backdated calls. Sharing and inputs are checked before provider requests and atomic persistence. Safety calls and simulated history are excluded.
 - Family repeatAnalysis and read-only DI now consume live results. Real repeat_stories marker uses validated seven-day unprompted story matches; absent evidence is NULL/na. Timeline reads revalidate before exposing counts/quotes. Provider failure is soft and uses a safe error code.

@@ -116,9 +116,14 @@ export async function analyzeLiveRepeats(db: Database.Database, callId: string, 
 
 /** Seven-day marker: only unprompted stories, unlike the all-history story/question panel. */
 export function recentStoryCounts(results: SuccessfulAnalysis[], days: number): Map<string, number> {
-  const items = new Map(results.flatMap(r => r.items).map(i => [i.id,i]));
-  return new Map(results.map(result => [result.callId, result.matches.filter(match => {
-    const item = items.get(match.itemId), prior = items.get(match.matchedItemId ?? '');
-    return match.isRepeat && item?.kind === 'story' && item.elicitation === 'unprompted' && prior && Date.parse(item.startedAt) - Date.parse(prior.startedAt) <= days * 86400000;
-  }).length]));
+  const history = results.flatMap(r => r.items);
+  return new Map(results.map(result => {
+    const current = result.items.filter(item => item.kind === 'story' && item.elicitation === 'unprompted');
+    const startedAt = current[0]?.startedAt;
+    if (!startedAt) return [result.callId, 0];
+    const cutoff = Date.parse(startedAt) - days * 86400000;
+    const recent = history.filter(item => Date.parse(item.startedAt) >= cutoff);
+    const { counts } = classifyCandidates(findCandidates(current, recent), { threshold: LIVE_DETECTOR_SETTINGS.threshold });
+    return [result.callId, counts.total];
+  }));
 }

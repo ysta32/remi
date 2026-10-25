@@ -10,7 +10,9 @@ import { hasDetectorResults, readDetectorCorpus, validatedResults } from './dete
 export function buildDriftIndexView(db: Database.Database, elderId: string, language: Lang, consent: { speechTrends: boolean; mood: boolean }): DriftIndexView | undefined {
   if (!consent.speechTrends) return undefined;
   const rows = db.prepare(`SELECT id,started_at,mood_label,is_simulated FROM calls WHERE elder_id=? AND language=? AND status='done' ORDER BY started_at,id`).all(elderId, language) as {id:string; started_at:string; mood_label:string|null; is_simulated:number}[];
-  const dated = rows.filter(row => Number.isFinite(Date.parse(row.started_at)));
+  // Once real calls exist, their usual must be learned only from real calls.
+  const population = rows.some(row => row.is_simulated === 0) ? rows.filter(row => row.is_simulated === 0) : rows;
+  const dated = population.filter(row => Number.isFinite(Date.parse(row.started_at)));
   const markers = db.prepare(`SELECT m.call_id,m.marker,m.value,m.confidence FROM call_markers m JOIN calls c ON c.id=m.call_id WHERE c.elder_id=? AND c.language=? AND c.status='done'`).all(elderId, language) as {call_id:string;marker:MarkerKey;value:number|null;confidence:string}[];
   const byCall = new Map<string, IndexCall['values']>();
   for (const marker of markers) {

@@ -27,7 +27,7 @@ function call(day: number, extra: Record<string, unknown> = {}) {
     ]), ...extra });
 }
 // Only the provider boundary is mocked; the actual extraction/embedding/detector/storage run.
-function transport(opts: { empty?: boolean; failAt?: number; before?: (n: number) => void } = {}) {
+function transport(opts: { empty?: boolean; failAt?: number; before?: (n: number) => void; storyVector?: (request: number) => number[] } = {}) {
   let n = 0;
   const fetchImpl = vi.fn<typeof fetch>(async (url, init) => {
     n++; opts.before?.(n);
@@ -38,7 +38,7 @@ function transport(opts: { empty?: boolean; failAt?: number; before?: (n: number
       const items = opts.empty ? [] : [0, 2, 3].map((turn, i) => ({ kind: i === 2 ? 'question' : 'story', summary: `Evidence ${i}`, quote: utterances[turn].text, sourceTurnIndex: turn, elicitation: ['unprompted','prompted','uncertain'][i], promptTurnIndex: i === 1 ? 1 : null }));
       return Response.json({ status: 'completed', output: [{ type: 'message', role: 'assistant', status: 'completed', content: [{ type: 'output_text', text: JSON.stringify({ items }) }] }] });
     }
-    return Response.json({ model: body.model, data: body.input.map((s: string, index: number) => ({ index, embedding: Array.from({ length: body.dimensions }, (_, j) => j === Number(s.slice(-1)) ? 1 : 0) })) });
+    return Response.json({ model: body.model, data: body.input.map((s: string, index: number) => ({ index, embedding: Array.from({ length: body.dimensions }, (_, j) => s === 'Evidence 0' && opts.storyVector ? opts.storyVector(n)[j] ?? 0 : j === Number(s.slice(-1)) ? 1 : 0) })) });
   });
   return { fetchImpl, apiKey: 'offline-test-key', maxRetries: 0 };
 }
@@ -161,4 +161,29 @@ it('does not expose old legacy topic matches as real-call repeat evidence', () =
   const insert = getSqlite().prepare("INSERT INTO topics (id,elder_id,call_id,kind,summary,initiated_by,repeat_of_topic_id,is_simulated,created_at) VALUES (?,?,?,'story','Legacy-only story','caller',?,0,'2026-10-02T00:00:00.000Z')");
   insert.run('old-first',elder,first,null); insert.run('old-last',elder,last,'old-first');
   expect(buildTimeline(elder)!.repeats).toEqual([]); expect(view()).toBeUndefined();
+});
+
+it('counts a qualifying recent story even when an older telling has a stronger match', async () => {
+  const oldest = call(1); call(14); const last = call(15);
+  const t = transport({ storyVector: n => n === 4 ? [0.95,0,0,Math.sqrt(1-0.95**2)] : [1] });
+  await analyzeLiveRepeats(getSqlite(), last, t);
+  expect(view()!.matches.find(m => m.callId === last && m.label === 'Unprompted repeat')!.priorCallId).toBe(oldest);
+  getSqlite().prepare("INSERT INTO call_markers VALUES (?,'speech_rate',100,'wpm',NULL,'high')").run(last);
+  await recomputeElder(elder);
+  expect(getSqlite().prepare("SELECT value FROM call_markers WHERE call_id=? AND marker='repeat_stories'").get(last)).toEqual({ value: 1 });
+  expect(buildTimeline(elder)!.markers.find(m => m.key === 'repeat_stories')!.points.find(p => p.callId === last)!.value).toBe(1);
+});
+it('never builds the real-call Drift Index baseline from simulated marker history', async () => {
+  const db = getSqlite();
+  for (let day = 1; day <= 10; day++) {
+    const id = call(day, { is_simulated: 1 });
+    db.prepare("INSERT INTO call_markers VALUES (?,'speech_rate',130,'wpm',NULL,'high')").run(id);
+  }
+  expect(buildTimeline(elder)!.driftIndex!.baselineProgress.ready).toBe(true);
+  const real = call(15); db.prepare("INSERT INTO call_markers VALUES (?,'speech_rate',95,'wpm',NULL,'high')").run(real);
+  await analyzeLiveRepeats(db, real, transport());
+  const index = buildTimeline(elder)!.driftIndex!;
+  expect(index.baselineProgress.ready).toBe(false);
+  expect(index.eligibleCallCount).toBe(1); expect(index.provenance.isSimulated).toBe(false);
+  expect(index.repeatCoverage).toEqual({ knownCallCount: 1, unknownCallCount: 0, unpromptedStoryCount: 0 });
 });

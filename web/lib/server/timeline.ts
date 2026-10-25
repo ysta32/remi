@@ -140,7 +140,7 @@ export function buildTimeline(elderId: string): Timeline | null {
     : [];
 
   const markers: MarkerSeries[] = eff.speechTrends ? buildMarkers(elderId, elder.language) : [];
-  const repeats: Timeline['repeats'] = eff.speechTrends ? buildRepeats(elderId) : [];
+  const repeats: Timeline['repeats'] = eff.speechTrends && eff.summaries ? buildRepeats(elderId) : [];
 
   const nudgeRows = db
     .prepare(
@@ -230,7 +230,7 @@ function buildMarkers(elderId: string, lang: Lang): MarkerSeries[] {
 function buildRepeats(elderId: string): Timeline['repeats'] {
   const rows = getSqlite()
     .prepare(
-      `SELECT t.id, t.summary, t.repeat_of_topic_id, t.is_simulated, c.started_at
+      `SELECT t.id, t.summary, t.repeat_of_topic_id, c.is_simulated, c.started_at
        FROM topics t JOIN calls c ON c.id = t.call_id WHERE t.elder_id = ? AND c.is_simulated = 1 ORDER BY c.started_at`,
     )
     .all(elderId) as {

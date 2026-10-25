@@ -101,8 +101,9 @@ existing dev process endpoint to retry a completed call after fixing the provide
 No provider requests run merely from opening the family page.
 
 The panel compares all earlier calls. The existing retold-story marker counts only unprompted
-story matches whose selected earlier telling is within seven days. The read-only Drift Index
-uses all-history unprompted stories. Questions, prompted retellings and unclear prompting stay
+story matches with any qualifying earlier telling within seven days. The read-only Drift Index
+uses all-history unprompted stories. Once real calls exist in the selected language, it learns
+its baseline only from real calls; an entirely simulated demo retains its fictional baseline. Questions, prompted retellings and unclear prompting stay
 visible in the evidence panel without being added to that marker. “Uncertain” describes the
 prompting classification, not whether a match passed the repeat threshold.
 
