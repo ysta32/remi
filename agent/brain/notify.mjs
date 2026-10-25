@@ -1,8 +1,10 @@
-// Outbound alerts: iMessage via the Chert SDK (@trychert/sdk 0.2.0, in process), and
+// Outbound alerts: iMessage via the Chert Messaging API (POST /api/v1/send through the
+// @trychert/sdk 0.2.0 client; its sendText() targets /text-operations/v1, which 404s), and
 // an optional emergency-dispatch webhook. Neither ever throws; both resolve to
 // { ok, detail }. Never log message bodies or phone numbers in full.
 //
-// Needs CHERT_API_KEY; CHERT_BASE_URL is optional (the SDK defaults to console.trychert.com).
+// Needs CHERT_API_KEY (the tenant's messaging signing secret); CHERT_BASE_URL is optional
+// (the SDK defaults to console.trychert.com/api/v1).
 import { ChertClient } from '@trychert/sdk/imessage';
 
 const PLACEHOLDER = /^(?:YOUR_|<|$)/;
@@ -19,10 +21,19 @@ export function maskPhone(phone) {
 
 async function sendOnce(client, request, timeoutMs) {
   try {
-    const receipt = await client.sendText(request, { signal: AbortSignal.timeout(timeoutMs) });
-    return { ok: true, detail: `queued (not proof of delivery)`, messageId: receipt.message_id, chatId: receipt.chat_id };
+    const { status, data } = await client.requestWithResponse('/send', { method: 'POST', body: request, signal: AbortSignal.timeout(timeoutMs) });
+    if (data?.status === 'sent' || data?.status === 'queued') {
+      return { ok: true, detail: `${data.status} (HTTP ${status}; not proof of delivery)`, messageId: data.message_id, chatId: data.chat_id };
+    }
+    return { ok: false, detail: `chert ${status} ${data?.error ?? 'unexpected'} ${data?.code ?? ''}`.trim(), retryable: data?.retryable === true };
   } catch (err) {
-    return { ok: false, detail: `chert ${err.status ?? ''} ${err.code ?? err.name}: ${String(err.message).slice(0, 160)}`.trim() };
+    const d = err.data;
+    const code = d?.code ?? err.code ?? err.name;
+    return {
+      ok: false,
+      detail: `chert ${err.status ?? ''} ${code}${d?.reason ? `: ${String(d.reason).slice(0, 160)}` : ''}`.trim(),
+      retryable: d?.retryable ?? !(err.status >= 400 && err.status < 500),
+    };
   }
 }
 
@@ -30,17 +41,18 @@ async function sendOnce(client, request, timeoutMs) {
  * Send one iMessage. Retries once with the SAME idempotency key, so the
  * service can de-duplicate if the first attempt actually went through.
  */
-export async function sendIMessage({ phone, body, idempotencyKey, timeoutMs = 20000, env = process.env }) {
+export async function sendIMessage({ phone, body, idempotencyKey, timeoutMs = 20000, env = process.env, fetch, retryDelayMs = 2000 }) {
   if (unset(env.CHERT_API_KEY)) return { ok: false, detail: 'CHERT_API_KEY is not set' };
   const client = new ChertClient({
     apiKey: env.CHERT_API_KEY,
     ...(unset(env.CHERT_BASE_URL) ? {} : { baseURL: env.CHERT_BASE_URL }),
     ...(unset(env.CHERT_TENANT) ? {} : { tenant: env.CHERT_TENANT }),
+    ...(fetch ? { fetch } : {}),
   });
-  const request = { phone, body, idempotency_key: idempotencyKey };
+  const request = { phone, body, ...(idempotencyKey ? { idempotency_key: idempotencyKey } : {}) };
   const first = await sendOnce(client, request, timeoutMs);
-  if (first.ok || /\b4\d\d\b/.test(first.detail)) return first;   // a 4xx won't fix itself
-  await new Promise((r) => setTimeout(r, 2000));
+  if (first.ok || !first.retryable) return first;   // `retryable` is Chert's authoritative signal
+  await new Promise((r) => setTimeout(r, retryDelayMs));
   return sendOnce(client, request, timeoutMs);
 }
 
