@@ -74,6 +74,16 @@ export interface MarkerSeries {
   points: { callId: string; at: string; value: number | null; z: number | null; confidence: 'high' | 'low' | 'na'; isSimulated: boolean }[];
 }
 
+export interface RepeatAnalysisView {
+  scope: 'all_prior_calls';
+  status: 'complete' | 'partial';
+  analyzedCallCount: number;
+  totalCallCount: number;
+  counts: { total: number; unprompted: number; prompted: number; uncertain: number; stories: number; questions: number };
+  provenance: { extractionModel: string | null; embeddingModel: string; threshold: number; detectorVersion: string };
+  matches: { callId: string; startedAt: string; priorCallId: string; priorStartedAt: string; kind: 'story' | 'question'; label: 'Unprompted repeat' | 'Prompted retelling' | 'Uncertain'; similarity: number; summary: string | null; quote: string | null; priorQuote: string | null; isSimulated: boolean }[];
+}
+
 export interface Timeline {
   elder: { id: string; displayName: string; preferredName: string; language: Lang };
   consent: { proposed: ConsentMap; elderConfirmed: boolean; effective: ConsentMap };
@@ -82,6 +92,7 @@ export interface Timeline {
   markers: MarkerSeries[];            // [] unless speechTrends consented
   repeats: { summary: string; dates: string[]; isSimulated: boolean }[]; // [] unless speechTrends consented
   nudges: { id: string; type: 'cognitive_checkup' | 'wellbeing'; createdAt: string; message: string; link: string | null; isSimulated: boolean }[];
+  repeatAnalysis?: RepeatAnalysisView; // omitted without effective speechTrends consent or valid results
   processing: boolean;
   generatedAt: string;
 }

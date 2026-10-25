@@ -166,3 +166,11 @@ export const safetyEvents = sqliteTable('safety_events', {
   note: text('note').notNull(),
   createdAt: text('created_at').notNull(),
 });
+
+export const detectorResults = sqliteTable('detector_results', {
+  callId: text('call_id').primaryKey().references(() => calls.id, { onDelete: 'cascade' }),
+  corpusHash: text('corpus_hash').notNull(),
+  settingsHash: text('settings_hash').notNull(),
+  resultJson: text('result_json').notNull(),
+  analyzedAt: text('analyzed_at').notNull(),
+});
