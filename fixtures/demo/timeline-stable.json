@@ -1113,10 +1113,232 @@
           "isSimulated": true
         }
       ]
+    },
+    {
+      "key": "pitch_var",
+      "label": "Voice rise and fall",
+      "explainer": "How much his voice rises and falls while he talks, compared with his usual.",
+      "concern": "down",
+      "group": "voice",
+      "unit": "st",
+      "baseline": {
+        "median": 3.1,
+        "mad": 0,
+        "n": 6
+      },
+      "points": [
+        {
+          "callId": "call-01",
+          "at": "2026-09-21T14:00:00.000Z",
+          "value": 3.1,
+          "z": 0,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-02",
+          "at": "2026-09-23T14:00:00.000Z",
+          "value": 3.2,
+          "z": -1.08,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-03",
+          "at": "2026-09-25T14:00:00.000Z",
+          "value": 3.1,
+          "z": 0,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-04",
+          "at": "2026-09-28T14:00:00.000Z",
+          "value": 3.1,
+          "z": 0,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-05",
+          "at": "2026-09-30T14:00:00.000Z",
+          "value": 3.2,
+          "z": -1.08,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-06",
+          "at": "2026-10-02T14:00:00.000Z",
+          "value": 3.1,
+          "z": 0,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-07",
+          "at": "2026-10-05T14:00:00.000Z",
+          "value": 3.3,
+          "z": -2.15,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-08",
+          "at": "2026-10-07T14:00:00.000Z",
+          "value": 3.3,
+          "z": -2.15,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-09",
+          "at": "2026-10-09T14:00:00.000Z",
+          "value": 3.3,
+          "z": -2.15,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-10",
+          "at": "2026-10-12T14:00:00.000Z",
+          "value": 3.2,
+          "z": -1.08,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-11",
+          "at": "2026-10-14T14:00:00.000Z",
+          "value": 3.4,
+          "z": -3.23,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-12",
+          "at": "2026-10-16T14:00:00.000Z",
+          "value": 3.1,
+          "z": 0,
+          "confidence": "high",
+          "isSimulated": true
+        }
+      ]
+    },
+    {
+      "key": "pitch_range",
+      "label": "Voice range",
+      "explainer": "The spread between his lower and higher notes when he talks.",
+      "concern": "down",
+      "group": "voice",
+      "unit": "st",
+      "baseline": {
+        "median": 8.4,
+        "mad": 0.1,
+        "n": 6
+      },
+      "points": [
+        {
+          "callId": "call-01",
+          "at": "2026-09-21T14:00:00.000Z",
+          "value": 8.4,
+          "z": 0,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-02",
+          "at": "2026-09-23T14:00:00.000Z",
+          "value": 8.6,
+          "z": -0.79,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-03",
+          "at": "2026-09-25T14:00:00.000Z",
+          "value": 8.3,
+          "z": 0.4,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-04",
+          "at": "2026-09-28T14:00:00.000Z",
+          "value": 8.4,
+          "z": 0,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-05",
+          "at": "2026-09-30T14:00:00.000Z",
+          "value": 8.8,
+          "z": -1.59,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-06",
+          "at": "2026-10-02T14:00:00.000Z",
+          "value": 8.3,
+          "z": 0.4,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-07",
+          "at": "2026-10-05T14:00:00.000Z",
+          "value": 8.3,
+          "z": 0.4,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-08",
+          "at": "2026-10-07T14:00:00.000Z",
+          "value": 8.8,
+          "z": -1.59,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-09",
+          "at": "2026-10-09T14:00:00.000Z",
+          "value": 8.7,
+          "z": -1.19,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-10",
+          "at": "2026-10-12T14:00:00.000Z",
+          "value": 8.9,
+          "z": -1.98,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-11",
+          "at": "2026-10-14T14:00:00.000Z",
+          "value": 8.8,
+          "z": -1.59,
+          "confidence": "high",
+          "isSimulated": true
+        },
+        {
+          "callId": "call-12",
+          "at": "2026-10-16T14:00:00.000Z",
+          "value": 8.6,
+          "z": -0.79,
+          "confidence": "high",
+          "isSimulated": true
+        }
+      ]
     }
   ],
   "repeats": [],
   "nudges": [],
   "processing": false,
-  "generatedAt": "2026-10-25T02:47:22.330Z"
+  "generatedAt": "2026-10-25T05:16:44.912Z"
 }

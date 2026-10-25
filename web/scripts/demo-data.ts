@@ -167,7 +167,9 @@ export function storiesFor(call: SeedCall, scenario: Scenario): string[] {
 
 // [mean, ±spread] per marker; demo.md §2 table.
 type Spec = [number, number];
-const EARLY: Record<Exclude<MarkerKey, 'repeat_stories'>, Spec> = {
+type TextKey = Exclude<MarkerKey, 'repeat_stories' | VoiceKey>;
+type VoiceKey = 'pitch_var' | 'pitch_range';
+const EARLY: Record<TextKey, Spec> = {
   speech_rate: [134, 5], pause_rate: [9.0, 1.0], mean_pause_ms: [650, 50], wfp_rate: [0.8, 0.3],
   filler_rate: [4.0, 0.5], vague_rate: [1.2, 0.2], mattr: [0.72, 0.012],
 };
@@ -180,9 +182,16 @@ const DRIFT_W4: typeof EARLY = {
   filler_rate: [4.6, 0.4], vague_rate: [2.3, 0.2], mattr: [0.69, 0.01],
 };
 
+// Voice markers (markers.md §4b, chart only) in semitones. Drawn from their own PRNG so
+// adding them leaves every transcript marker value from earlier seeds unchanged.
+const VOICE_EARLY: Record<VoiceKey, Spec> = { pitch_var: [3.2, 0.2], pitch_range: [8.6, 0.5] };
+const VOICE_W3: typeof VOICE_EARLY = { pitch_var: [2.9, 0.15], pitch_range: [7.9, 0.4] };
+const VOICE_W4: typeof VOICE_EARLY = { pitch_var: [2.7, 0.15], pitch_range: [7.5, 0.4] };
+
 export const MARKER_UNITS: Record<MarkerKey, string> = {
   speech_rate: 'wpm', pause_rate: 'per100w', mean_pause_ms: 'ms', wfp_rate: 'per100w',
   filler_rate: 'per100w', vague_rate: 'per100w', mattr: 'ratio', repeat_stories: 'count',
+  pitch_var: 'st', pitch_range: 'st',
 };
 
 // mulberry32: small deterministic PRNG so every seed run is identical.
@@ -204,9 +213,14 @@ export function markersFor(n: number, scenario: Scenario, rand: () => number) {
   const week = weekOf(n);
   const table = week <= 2 || scenario === 'stable' ? EARLY : week === 3 ? DRIFT_W3 : DRIFT_W4;
   const out = {} as Record<Exclude<MarkerKey, 'repeat_stories'>, number>;
-  for (const [key, [mean, spread]] of Object.entries(table) as [keyof typeof EARLY, Spec][]) {
+  for (const [key, [mean, spread]] of Object.entries(table) as [TextKey, Spec][]) {
     const v = mean + (rand() * 2 - 1) * spread;
     out[key] = key === 'mattr' ? Math.round(v * 1000) / 1000 : Math.round(v * 10) / 10;
+  }
+  const voice = week <= 2 || scenario === 'stable' ? VOICE_EARLY : week === 3 ? VOICE_W3 : VOICE_W4;
+  const vrand = prng(1000 + n);
+  for (const [key, [mean, spread]] of Object.entries(voice) as [VoiceKey, Spec][]) {
+    out[key] = Math.round((mean + (vrand() * 2 - 1) * spread) * 10) / 10;
   }
   return out;
 }

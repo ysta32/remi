@@ -25,6 +25,8 @@ const META: Record<MarkerKey, { label: string; explainer: string; concern: 'up' 
   vague_rate: { label: 'General words', explainer: 'Words like "thing" or "stuff" in place of a specific word.', concern: 'up', group: 'words' },
   mattr: { label: 'Word variety', explainer: 'How varied his vocabulary is within a stretch of talk.', concern: 'down', group: 'words' },
   repeat_stories: { label: 'Retold stories', explainer: 'Stories he brought up himself that he also told in another call that week.', concern: 'up', group: 'repetition' },
+  pitch_var: { label: 'Voice rise and fall', explainer: 'How much his voice rises and falls while he talks, compared with his usual.', concern: 'down', group: 'voice' },
+  pitch_range: { label: 'Voice range', explainer: 'The spread between his lower and higher notes when he talks.', concern: 'down', group: 'voice' },
 };
 
 const PLAIN: Record<MarkerGroup, string> = {
@@ -32,6 +34,7 @@ const PLAIN: Record<MarkerGroup, string> = {
   pauses: 'pausing more often or for longer',
   words: 'using more filler or general words, or a narrower range of words',
   repetition: 'retelling some of the same stories within a week',
+  voice: 'speaking with less rise and fall in his voice than usual',
 };
 
 const median = (xs: number[]) => {
