@@ -46,15 +46,23 @@ export async function placeCall({ to, video = true, env = process.env, onStatus 
   const host = env.LIVEKIT_URL.replace(/^ws/, 'http');
   const rooms = new RoomServiceClient(host, env.LIVEKIT_API_KEY, env.LIVEKIT_API_SECRET);
   const dispatch = new AgentDispatchClient(host, env.LIVEKIT_API_KEY, env.LIVEKIT_API_SECRET);
+  // The SDK collapses unknown error codes to "request_failed"; keep Chert's own code and message.
+  let lastError = null;
   const facetime = new ChertControlPlane({
     token: facetimeToken(env),
     projectId: env.CHERT_PROJECT_ID,
     ...(isUnset(env.CHERT_FACETIME_URL) ? {} : { baseUrl: env.CHERT_FACETIME_URL }),
+    fetch: async (url, init) => {
+      const res = await fetch(url, init);
+      if (!res.ok) lastError = await res.clone().json().then((j) => j?.error ?? null).catch(() => null);
+      return res;
+    },
   });
 
   let lineId = isUnset(env.CHERT_LINE_ID) ? null : env.CHERT_LINE_ID;
   if (!lineId) {
-    const lines = (await facetime.listLines()).data ?? [];
+    const res = await facetime.listLines();
+    const lines = [res?.data, res?.data?.items, res?.items, res].find(Array.isArray) ?? [];
     const line = lines.find((l) => l.supports_audio !== false) ?? lines[0];
     if (!line) throw new Error('no FaceTime line on this project');
     lineId = line.id;
@@ -65,11 +73,22 @@ export async function placeCall({ to, video = true, env = process.env, onStatus 
   const identity = `chert-bridge-out-${id.slice(0, 8)}`;
   await rooms.createRoom({ name: room, emptyTimeout: 120, departureTimeout: 20 });
   await dispatch.createDispatch(room, env.AGENT_NAME || 'remi', { metadata: JSON.stringify({ outbound: true }) });
+  // Chert binds the bridge to the agent's exact LiveKit identity (remote_participant_identity),
+  // so wait for the dispatched agent to join, as chert dev does for inbound calls.
+  let agentIdentity = null;
+  for (let i = 0; i < 40 && !agentIdentity; i++) {
+    const people = await rooms.listParticipants(room).catch(() => []);
+    agentIdentity = people.find((p) => Number(p.kind) === 4)?.identity ?? null;
+    if (!agentIdentity) await sleep(250);
+  }
+  if (!agentIdentity) throw new Error(`agent ${env.AGENT_NAME || 'remi'} did not join the room within 10 s (is the worker running?)`);
   onStatus({ step: 'room_ready', room });
 
   const at = new AccessToken(env.LIVEKIT_API_KEY, env.LIVEKIT_API_SECRET, { identity, ttl: '2h' });
   at.addGrant({ room, roomJoin: true, canPublish: true, canSubscribe: true, canPublishData: true });
-  const call = await facetime.createCall({
+  let call;
+  try {
+    call = await facetime.createCall({
     direction: 'outbound',
     mode: 'customer_managed',
     line_id: lineId,
@@ -77,8 +96,12 @@ export async function placeCall({ to, video = true, env = process.env, onStatus 
     media: { audio: true, video: Boolean(video) },
     livekit_url: env.LIVEKIT_URL,
     participant_token: await at.toJwt(),
-    remote_participant_identity: identity,
+    remote_participant_identity: agentIdentity,
   }, `remi-out-${id}`);
+  } catch (err) {
+    if (lastError?.code) { err.message = `Chert ${err.status}: ${lastError.code}${lastError.message ? ` (${String(lastError.message).slice(0, 200)})` : ''}`; err.code = lastError.code; }
+    throw err;
+  }
   onStatus({ step: 'dialing', callId: call.id, status: call.status, to: `***${dest.destination.slice(-4)}` });
 
   const seen = new Set();
