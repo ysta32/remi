@@ -167,16 +167,26 @@ export function TimelineView({
               {earlier.length > 0 && (
                 <section aria-labelledby="earlier" className="space-y-3 [grid-area:earlier]">
                   <h2 id="earlier" className="text-[30px] font-black tracking-tight">Earlier chats</h2>
-                  {/* Masonry columns: cards keep their natural height, so no half-empty cells. */}
-                  <div className="gap-4 sm:columns-2 [&>*]:mb-4 [&>*]:break-inside-avoid">
-                    {shownEarlier.map((c) => (
-                      <SnapshotCard
-                        key={`${c.id}:${c.status}`}
-                        call={c} variant="compact" isNew={newIds.has(c.id)}
-                        confirmed={confirmed} photos={photos} name={name}
-                      />
-                    ))}
-                  </div>
+                  {/* Two stacks that alternate cards, so rows read in date order with no half-empty cells.
+                      Phones get one column in date order. */}
+                  {(() => {
+                    const card = (c: (typeof shownEarlier)[number]) => (
+                      <SnapshotCard key={`${c.id}:${c.status}`} call={c} variant="compact" isNew={newIds.has(c.id)}
+                        confirmed={confirmed} photos={photos} name={name} />
+                    );
+                    return (
+                      <>
+                        <div className="space-y-4 sm:hidden">{shownEarlier.map(card)}</div>
+                        <div className="hidden items-start gap-4 sm:grid sm:grid-cols-2">
+                          {[0, 1].map((col) => (
+                            <div key={col} className="space-y-4">
+                              {shownEarlier.filter((_, i) => i % 2 === col).map(card)}
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    );
+                  })()}
                   {earlier.length > EARLIER_SHOWN && (
                     <button
                       type="button"

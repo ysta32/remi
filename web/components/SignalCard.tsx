@@ -23,7 +23,7 @@ export function StatusPill({ status }: { status: Signal['status'] }) {
   return <span className={`rounded-full px-3 py-0.5 text-base font-bold ${PILL[status]}`}>{STATUS_TEXT[status]}</span>;
 }
 
-export function SignalCard({ signal, compact = false }: { signal: Signal; compact?: boolean }) {
+export function SignalCard({ signal, compact = false, chartHeight }: { signal: Signal; compact?: boolean; chartHeight?: number }) {
   const latest = latestLine(signal);
   return (
     <article className="rounded-[28px] border border-line bg-card p-5">
@@ -32,7 +32,7 @@ export function SignalCard({ signal, compact = false }: { signal: Signal; compac
         <StatusPill status={signal.status} />
       </div>
       <div className={compact ? 'mt-3 space-y-2' : 'mt-3 grid gap-4 md:grid-cols-[3fr_2fr] md:items-center'}>
-        <SignalChart signal={signal} height={compact ? 110 : 150} />
+        <SignalChart signal={signal} height={chartHeight ?? (compact ? 110 : 150)} />
         <div className="space-y-1">
           <p className="text-ink-2">{signal.explainer}</p>
           {latest && <p className="text-base text-ink-2">{latest}</p>}

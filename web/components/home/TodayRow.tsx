@@ -8,6 +8,7 @@ import { formatRelative } from '@/lib/format';
 import { pollDelay, settled } from '@/lib/live';
 import { buildSignals } from '@/lib/signals';
 import type { Timeline } from '@/lib/types';
+import { FunFacts } from '../FunFacts';
 import { SunGlyph } from '../GentleNote';
 import { QuestionsWaiting } from '../QuestionsWaiting';
 import { SignalCard } from '../SignalCard';
@@ -56,12 +57,14 @@ export function TodayRow({ elderId }: { elderId: string }) {
 
   const name = timeline.elder.preferredName;
   const newest = timeline.calls[0];
-  const pauses = buildSignals(timeline.markers)[0];
+  const [pauses, pace] = buildSignals(timeline.markers);
   const hasNote = timeline.nudges.length > 0;
   const heading = 'mb-3 text-[22px] font-extrabold';
 
   return (
-    <div className="grid items-start gap-5 md:grid-cols-3">
+    // Two balanced columns: stories (snapshot, note, waiting question) | how he's doing.
+    <div className="grid items-start gap-5 md:grid-cols-2">
+      <div className="space-y-6">
       <section aria-labelledby="latest" className="flex flex-col">
         <h2 id="latest" className={heading}>
           Latest snapshot{newest && <span className="font-normal text-ink-2"> · {formatRelative(newest.startedAt)}</span>}
@@ -75,14 +78,12 @@ export function TodayRow({ elderId }: { elderId: string }) {
           <p className="rounded-[20px] border border-line bg-card p-4">No chats yet.</p>
         )}
       </section>
-      <section aria-labelledby="doing" className="flex flex-col">
-        <h2 id="doing" className={heading}>How he&apos;s doing</h2>
-        {timeline.markers.length > 0 ? (
-          <SignalCard signal={pauses} compact />
-        ) : (
-          <p className="rounded-[20px] border border-line bg-card p-4">Remi will start comparing after a few more chats.</p>
-        )}
-      </section>
+      {timeline.funFacts[0] && (
+        <section aria-labelledby="fact" className="flex flex-col">
+          <h2 id="fact" className={heading}>Latest fun fact</h2>
+          <FunFacts facts={[timeline.funFacts[0]]} newIds={new Set()} />
+        </section>
+      )}
       <section aria-labelledby="notes" className="flex flex-col">
         <h2 id="notes" className={heading}>Gentle notes</h2>
         <div className="flex items-start gap-3 rounded-[20px] border border-line bg-card p-4">
@@ -100,6 +101,18 @@ export function TodayRow({ elderId }: { elderId: string }) {
           <div className="mt-4">
             <QuestionsWaiting questions={elder.questions} name={name} />
           </div>
+        )}
+      </section>
+      </div>
+      <section aria-labelledby="doing" className="flex flex-col">
+        <h2 id="doing" className={heading}>How he&apos;s doing</h2>
+        {timeline.markers.length > 0 ? (
+          <div className="space-y-4">
+            <SignalCard signal={pauses} compact chartHeight={150} />
+            <SignalCard signal={pace} compact chartHeight={150} />
+          </div>
+        ) : (
+          <p className="rounded-[20px] border border-line bg-card p-4">Remi will start comparing after a few more chats.</p>
         )}
       </section>
     </div>
