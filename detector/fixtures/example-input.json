@@ -1,0 +1,16 @@
+{
+  "call": {
+    "elderId": "fictional-elder-01",
+    "callId": "fictional-call-01",
+    "startedAt": "2026-10-24T14:00:00Z",
+    "isSimulated": true,
+    "utterances": [
+      { "speaker": "agent", "text": "Hello. How has your morning been?" },
+      { "speaker": "caller", "text": "I walked to the orchard with my friend June. We picked a basket of apples." },
+      { "speaker": "agent", "text": "That sounds pleasant." },
+      { "speaker": "caller", "text": "What time does the library open on Sunday?" }
+    ]
+  },
+  "history": [],
+  "processingAllowed": true
+}
