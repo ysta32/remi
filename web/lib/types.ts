@@ -85,6 +85,19 @@ export interface RepeatAnalysisView {
   matches: { callId: string; startedAt: string; priorCallId: string; priorStartedAt: string; kind: 'story' | 'question'; label: 'Unprompted repeat' | 'Prompted retelling' | 'Uncertain'; similarity: number; summary: string | null; quote: string | null; priorQuote: string | null; isSimulated: boolean }[];
 }
 
+/** Read-only computation; rule flags describe computed state, never notification delivery. */
+export interface DriftIndexView {
+  language: Lang;
+  baselineProgress: { familiarizationCalls: number; familiarizationRequired: number; baselineCalls: number; baselineRequired: number; ready: boolean };
+  eligibleCallCount: number;
+  monitoredCallCount: number;
+  completedMonitoringWeeks: number;
+  repeatCoverage: { knownCallCount: number; unknownCallCount: number; unpromptedStoryCount: number };
+  provenance: { isSimulated: boolean; timing: 'synthetic_authored' | 'stored_call_timing' | 'unknown'; computation: 'read_only'; notificationDelivery: 'not_performed' };
+  rules: import('./analysis/drift-index').DriftIndexOptions;
+  result: import('./analysis/drift-index').DriftIndexResult;
+}
+
 export interface Timeline {
   elder: { id: string; displayName: string; preferredName: string; language: Lang };
   consent: { proposed: ConsentMap; elderConfirmed: boolean; effective: ConsentMap };
@@ -93,6 +106,7 @@ export interface Timeline {
   markers: MarkerSeries[];            // [] unless speechTrends consented
   repeats: { summary: string; dates: string[]; isSimulated: boolean }[]; // [] unless speechTrends consented
   nudges: { id: string; type: 'cognitive_checkup' | 'wellbeing'; createdAt: string; message: string; link: string | null; isSimulated: boolean }[];
+  driftIndex?: DriftIndexView; // omitted without effective speechTrends consent
   repeatAnalysis?: RepeatAnalysisView; // omitted without effective speechTrends consent or valid results
   processing: boolean;
   generatedAt: string;

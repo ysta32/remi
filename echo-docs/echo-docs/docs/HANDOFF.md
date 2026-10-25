@@ -146,3 +146,8 @@ Each agent edits **only its own section** plus appends to "Requests" and "Contra
 ## Decisions log (human-confirmed only)
 - Sat Oct 24 ~6:14 PM — Team committed to the elder FaceTime conversation + memory + family loop project.
 - Sat Oct 24 ~8:25 PM — FaceTime-first flow replaces iMessage voice notes as the primary channel.
+
+- 2026-10-25 [contract] B/D: additive optional Timeline.driftIndex and DriftIndexView
+  implemented as a consent-filtered read-only adapter using unchanged production defaults;
+  full interface documented in contracts.md and web/lib/types.ts. No notification delivery.
+  Synthetic importer now iterates seven TEXT_MARKER_KEYS independently of ten chart keys.

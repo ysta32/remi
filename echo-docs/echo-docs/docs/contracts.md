@@ -451,3 +451,30 @@ are sanitized and never print transcript content or credentials. Similarity is n
 Environment precedence preserves the standalone detector/team convention: `OPENAI_EXTRACT_MODEL` over
 `OPENAI_EXTRACTION_MODEL`; `OPENAI_EMBED_MODEL` over `EMBEDDING_MODEL` over
 `OPENAI_EMBEDDING_MODEL`; `EMBEDDING_DIMENSIONS` over `OPENAI_EMBEDDING_DIMENSIONS`.
+
+
+### Additive Timeline Drift Index view (2026-10-25)
+`Timeline.driftIndex?: DriftIndexView` is omitted without effective speechTrends consent.
+It is computed on read with unchanged `runDriftIndex` production defaults from same-elder,
+current-language done calls. Only finite high-confidence text markers are input; a
+high-confidence speech_rate makes the call eligible. Stored z/baselines, legacy repeat
+markers and planted labels are not inputs. Mood remains null unless separately consented
+and known. Validated standalone detector successes provide only unprompted repeated-story
+counts; a successful zero is known and unavailable/stale evidence remains unknown.
+
+`DriftIndexView` fields mirror `web/lib/types.ts`: language; baselineProgress
+(familiarizationCalls, familiarizationRequired, baselineCalls, baselineRequired, ready);
+eligibleCallCount; monitoredCallCount; completedMonitoringWeeks; repeatCoverage
+(knownCallCount, unknownCallCount, unpromptedStoryCount); provenance (isSimulated,
+timing: synthetic_authored/stored_call_timing/unknown, computation: read_only,
+notificationDelivery: not_performed); rules (DriftIndexOptions defaults); result
+(DriftIndexResult: baseline, calls, weeks). Counts in repeatCoverage refer to eligible
+calls. Completed monitoring weeks exclude baselineWeek and require a non-null weeklyD.
+Monitoring calls must have day strictly greater than baseline.endDay. The first two
+eligible calls familiarize; eight further calls establish baseline. Twelve calls at three
+per week leave two monitored calls in the final baseline week and zero completed
+monitoring weeks. Computed rule flags do not assert that notifications were sent.
+
+The DTO contains no transcript, quote, evidence or vector. Canonical imported synthetic
+transcript notice identifies authored timing; unrelated simulated timing is unknown.
+No DB writes or notification actions occur during this computation.
