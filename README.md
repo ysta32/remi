@@ -1,37 +1,113 @@
 # Remi
 
-Remi notices changes in how someone talks over time, compared with their own usual, and helps
-families know when it may be worth talking to a doctor.
+Grandpa FaceTimes Remi whenever he likes. Remi is a patient, friendly voice that remembers his
+stories, shows him family photos, and asks the questions his grandkids sent. Afterwards his family
+gets the good parts: what he talked about, the fun facts, his answers. Over weeks, Remi also keeps
+an eye on a few things about how he talks, compared with his own usual, and gently lets the family
+know if it may be a good time to check in.
 
-## Idea
+Built in 24 hours at HackPSU Fall 2026.
 
-Speech research looks at interpretable features of everyday language: how varied the vocabulary is,
-how simple the sentences are, how often general words replace specific ones, how fast someone types
-or talks. A person's iMessage history is a dense, years-long, naturally occurring language sample.
-This project explores extracting privacy-preserving linguistic features from that history and
-comparing them with the person's own usual over time, to surface a change worth bringing to a clinician.
+![Remi home page: "Grandpa calls. Remi listens. You get his stories."](docs/readme/home.png)
 
-**This is a hackathon research project, not a diagnostic tool.**
+## Why we built it
 
-## Planned pipeline
+Most older adults who live alone don't want another app, a wearable, or a test. They will pick up
+a FaceTime call. We were inspired by the I-CONECT study, a randomized trial where adults over 75 had
+frequent video conversations with trained interviewers, and the group with mild cognitive
+impairment showed better scores after six months. Whether a conversation with an AI gives the same
+benefit hasn't been tested. Remi borrows the format, a friendly chat with a theme and a photo, and
+puts the family at the centre of it.
 
-1. **Ingest** — read the local `chat.db` (macOS Messages) on-device, sender's own messages only.
-2. **Feature extraction** — lexical diversity (TTR, MATTR), mean utterance length, syntactic depth,
-   pronoun-to-noun ratio, filler/vagueness rate, repetition, inter-message latency, edit/typo rate.
-3. **Longitudinal modeling** — per-person baseline, then trend detection over months/years.
-4. **Report** — a plain-language trend view, plus an explicit "talk to a doctor" framing.
+The other half is noticing. Families often only see a parent a few times a year, and small changes
+in how someone talks are easy to miss. Remi compares each chat with that person's own history,
+never with other people, and only speaks up when several things stay different for a few weeks.
 
-## Privacy
+## What the family sees
 
-- All processing stays on-device by default; raw message text never leaves the machine.
-- Only aggregate features are persisted.
-- Explicit opt-in before any data is read.
+**Hal's chats.** The newest chat sits at the top, with a gentle note below it when there is one.
+On the right, the family adds questions and photos for the next call. Remi asks the oldest
+waiting question and shows the photos it hasn't shown in a while.
 
-## Status
+![Hal's page: newest chat, a gentle note, and the "For Hal's next chat" panel](docs/readme/hal-page.png)
 
-Scaffolding. See issues for the task breakdown.
+**A recap for every chat.** What they talked about, the fun fact in Hal's own words, the photos
+Remi showed, and Linda or Sam's question with his answer. The small calendar jumps between chats.
 
-## Disclaimer
+![Recap of the October 9 chat with the month calendar](docs/readme/chat-recap.png)
 
-Not a medical device. Does not diagnose Alzheimer's disease or any condition. Outputs are
-exploratory signals only and must not be used for clinical decisions.
+**How he sounded.** Four plain signals on one timeline: pauses, speaking pace, vague words like
+"thing" and "stuff", and stories told again across chats. The blue band is his usual; the dark dot
+is the chat you're looking at. Everything is in words a family member can read in a few seconds.
+
+![How he sounded: pauses, pace, vague words and retold stories against his usual](docs/readme/how-he-sounded.png)
+
+While a call is happening, his page updates live: "Chatting now", the photo Remi just showed, the
+question it just asked. A minute after he hangs up, the write-up appears.
+
+## How a call works
+
+1. Hal FaceTimes a normal phone number. Chert bridges the FaceTime call into a LiveKit room where
+   our agent is waiting.
+2. Before it says hello, the agent fetches Hal's context from our API: his last chat, things he has
+   shared, today's theme, a few family photos, and the next family question.
+3. The agent (LiveKit Agents with OpenAI's realtime voice model) has a warm, unhurried conversation.
+   It shows a photo on its video while they talk about it and asks the family's question by name.
+4. When he hangs up, the web app transcribes the audio with word timings, writes a short summary
+   and fun facts, and computes the speech markers.
+5. Each marker is compared with Hal's own baseline. A gentle note appears only when several kinds
+   of markers have drifted for two weeks in a row. It never contains numbers.
+
+## What Remi is not
+
+Remi is not a medical device and doesn't diagnose anything. It notices changes in how someone
+talks compared with their own usual, and those changes have plenty of everyday causes: a cold,
+tiredness, hearing, new medication, mood. The note says so, and points to the Alzheimer's
+Association's list of warning signs and a conversation with his doctor.
+
+The family never sees transcripts. Details stay hidden until Hal himself says yes to sharing on a
+call, and the audio is deleted after it's analysed.
+
+The four weeks of history in the demo are simulated so the charts have something to show. Every
+simulated chat is labeled "Simulated" in the app.
+
+## Running it locally
+
+You need Node 22 or 24.
+
+```bash
+cd web
+npm install
+npm run dev            # http://localhost:3000, with built-in sample data
+```
+
+That's enough to click through every page. To use the real database and API instead:
+
+```bash
+cp ../env.local.template .env.local   # fill in the values; never commit this file
+npm run seed -- --scenario drift      # loads Hal's simulated history
+NEXT_PUBLIC_USE_FIXTURES=0 npm run dev
+```
+
+Tests and checks: `npm test`, `npm run typecheck`, `npm run lint`.
+
+The call side needs a LiveKit project, an OpenAI key and a Chert FaceTime line (`LIVEKIT_URL`,
+`LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `OPENAI_API_KEY`, `AGENT_NAME` and the `CHERT_*` values in
+`env.local.template`).
+
+## What's in the repo
+
+| Folder | What it is |
+|---|---|
+| `web/` | Next.js app: the family pages, the API the agent talks to, SQLite storage, and the post-call analysis (markers, baselines, drift, notes) |
+| `detector/` | Standalone check for stories retold across calls |
+| `synthetic/` | Generated practice conversations used to test the analysis without real people |
+| `echo-docs/` | Our spec, the API contract between the parts, and the copy and safety rules we wrote for ourselves |
+| `fixtures/` | Sample data for the demo |
+
+## Team
+
+Stanley, Siyuan, Kevin, Ryan and Jimmy.
+
+The call agent started from Chert's `chert new --video` starter. The hero illustration was made by
+our team with an image generator.
