@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import { readFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { createWavWriter, WAV_FORMAT } from '../lib/wav.mjs';
+import { createWavWriter, startCapture, WAV_FORMAT } from '../lib/wav.mjs';
+import { existsSync } from 'node:fs';
+import { readConfig } from '../lib/config.mjs';
 
 test('wav writer: 16 kHz mono 16-bit, header sizes patched on finish', async () => {
   const path = join(tmpdir(), `remi-wav-${process.pid}.wav`);
@@ -23,4 +25,28 @@ test('wav writer: 16 kHz mono 16-bit, header sizes patched on finish', async () 
   assert.equal(buf.readInt16LE(44 + 2 * 4), sine[4]);
   assert.equal(r.ms, 1100);
   await rm(path);
+});
+
+test('startCapture keeps frames from before the file opens, then renames to the call id', async () => {
+  const dir = join(tmpdir(), `remi-cap-${process.pid}`);
+  const local = join(dir, 'local-abc.wav');
+  const final = join(dir, 'call-123.wav');
+  const cap = startCapture(local);
+  const frame = new Int16Array(320).fill(1000); // 20 ms
+  cap.write(frame); cap.write(frame);           // before open resolves
+  await new Promise((r) => setTimeout(r, 20));
+  cap.write(frame);
+  const r = await cap.finish(final);
+  assert.equal(r.path, final);
+  assert.equal(r.bytes, 3 * 640);
+  assert.equal(r.ms, 60);
+  assert.ok(!existsSync(local));
+  const buf = await readFile(final);
+  assert.equal(buf.readUInt32LE(40), 3 * 640);
+  await rm(dir, { recursive: true, force: true });
+});
+
+test('capture is on by default; CAPTURE_AUDIO=0 turns it off', () => {
+  assert.equal(readConfig({}).captureAudio, true);
+  assert.equal(readConfig({ CAPTURE_AUDIO: '0' }).captureAudio, false);
 });

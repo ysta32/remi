@@ -2,6 +2,7 @@
 // wait for the caller, greet on bridge_ready, one audio track and one video track,
 // both from this agent. What Remi says and does lives in brain/; how it talks to the
 // backend lives in lib/. Nothing on the backend path can end a live call.
+import { accessSync, constants, mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
 import { AutoSubscribe, cli, defineAgent, llm, ServerOptions, voice } from '@livekit/agents';
@@ -17,10 +18,23 @@ import { tapCallerAudio } from './lib/caller-audio.mjs';
 import { createTurnGuard } from './lib/turn-guard.mjs';
 import { collectTranscript } from './lib/transcript.mjs';
 import { renderPhotoCard, withPulse } from './lib/card.mjs';
-import { createWavWriter } from './lib/wav.mjs';
+import { startCapture } from './lib/wav.mjs';
+import { createCallMemory } from './lib/call-memory.mjs';
 
 const PHOTO_SECONDS = 90;   // then the face comes back
+const MEMORY_EVERY = 3;     // caller turns between in-call memory refreshes
 const log = (line) => console.log(line);
+export const CALLS_DIR = join(TMP_DIR, 'calls');
+
+// At startup, before any call: make sure caller audio has somewhere to go.
+if (readConfig().captureAudio) {
+  try {
+    mkdirSync(CALLS_DIR, { recursive: true });
+    accessSync(CALLS_DIR, constants.W_OK);
+  } catch (err) {
+    console.error(`[wav] ${CALLS_DIR} is not writable (${err.message}); calls will have no audio`);
+  }
+}
 
 export default defineAgent({
   entry: async (ctx) => {
@@ -56,6 +70,15 @@ export default defineAgent({
         themeId: context.theme?.id ?? null,
       },
     });
+
+    // Caller audio is captured from the moment the caller joins; renamed to <callId>.wav at the end.
+    const wav = config.captureAudio ? startCapture(join(CALLS_DIR, `${call.localId}.wav`), { log }) : null;
+    // One decode of the caller's audio feeds the WAV now and barge-in once the guard exists.
+    let guard = null;
+    const stopTap = tapCallerAudio(ctx.room, caller.identity, (f) => {
+      wav?.write(f.data);
+      guard?.onCallerFrame(f);
+    }, log);
 
     // Photos load in the background; show_photo uses whatever has arrived.
     const photoBytes = new Map();
@@ -94,6 +117,11 @@ export default defineAgent({
     });
     const tools = brain.tools.map((t) => llm.tool({ name: t.name, description: t.description, parameters: t.parameters, execute: async (args) => t.execute(args) }));
 
+    // Instructions: the call plan, plus a running memory of this call added as it goes.
+    const instructions = buildInstructions(context, { contractV2: config.contractV2 });
+    const agent = new voice.Agent({ instructions, tools });
+    const memory = createCallMemory({ t0: startedMs });
+
     const session = new voice.AgentSession({
       llm: new realtime.RealtimeModel({
         model: config.realtimeModel,
@@ -115,7 +143,7 @@ export default defineAgent({
     session.on(voice.AgentSessionEventTypes.AgentStateChanged, (ev) => { speaking = ev.newState === 'speaking'; });
     session.on(voice.AgentSessionEventTypes.Error, (ev) => log(`[session] error: ${ev.error?.message ?? ev.error}`));
 
-    const guard = createTurnGuard(session, {
+    guard = createTurnGuard(session, {
       echoGuard: config.echoGuard,
       bargeIn: config.bargeIn,
       bargeMinRms: config.bargeMinRms,
@@ -123,18 +151,16 @@ export default defineAgent({
     });
     const transcript = collectTranscript(session, { t0: startedMs, log });
     session.on(voice.AgentSessionEventTypes.ConversationItemAdded, ({ item }) => {
-      if (item?.role === 'user' && item.textContent) brain.safetyCheck(item.textContent);
+      if (!item?.textContent) return;
+      memory.add(item.role, item.textContent);
+      if (item.role !== 'user') return;
+      brain.safetyCheck(item.textContent);
+      if (memory.callerTurns % MEMORY_EVERY === 0) {
+        agent.updateInstructions(`${instructions}\n\n${memory.section(context.elder.preferredName)}`)
+          .catch((err) => log(`[memory] update failed: ${err.message}`));
+      }
     });
 
-    // One decode of the caller's audio feeds barge-in and (optionally) the WAV capture.
-    let wav = null;
-    const wavReady = config.captureAudio
-      ? call.ready.then((id) => createWavWriter(join(TMP_DIR, 'calls', `${id ?? call.localId}.wav`))).then((w) => { wav = w; }).catch((err) => log(`[wav] ${err.message}`))
-      : Promise.resolve();
-    const stopTap = tapCallerAudio(ctx.room, caller.identity, (f) => {
-      guard.onCallerFrame(f);
-      wav?.write(f.data);
-    }, log);
 
     // Finish once: caller hangs up, or the job shuts down.
     let finished = null;
@@ -142,14 +168,15 @@ export default defineAgent({
       if (finished) return finished;
       finished = (async () => {
         stopTap();
-        guard.stop();
+        guard?.stop();
         transcript.stop();
-        await wavReady;
-        const audio = wav ? await wav.finish() : null;
+        const id = await call.ready;
+        const audio = wav ? await wav.finish(join(CALLS_DIR, `${id ?? call.localId}.wav`)) : null;
+        if (audio) log(`[wav] ${audio.ms} ms of caller audio → ${audio.path}`);
         const utterances = transcript.utterances();
         const lat = transcript.latencies;
         const med = lat.length ? [...lat].sort((a, b) => a - b)[Math.floor(lat.length / 2)] : null;
-        log(`[call] ending (${reason}): ${utterances.length} utterances, ${Math.round((Date.now() - startedMs) / 1000)} s, median reply ${med ?? '-'} ms, barge-ins ${guard.stats.bargeIns}, stuck turns ${guard.stats.stuckCommits}`);
+        log(`[call] ending (${reason}): ${utterances.length} utterances, ${Math.round((Date.now() - startedMs) / 1000)} s, median reply ${med ?? '-'} ms, barge-ins ${guard?.stats.bargeIns ?? 0}, stuck turns ${guard?.stats.stuckCommits ?? 0}`);
         await call.complete({
           endedAt: isoNow(),
           endReason: reason,
@@ -172,7 +199,7 @@ export default defineAgent({
 
     await session.start({
       room: ctx.room,
-      agent: new voice.Agent({ instructions: buildInstructions(context, { contractV2: config.contractV2 }), tools }),
+      agent,
       record: false,
       inputOptions: {
         participantIdentity: caller.identity,

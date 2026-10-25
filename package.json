@@ -7,6 +7,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "chert": "node tools/chert-agent.mjs"
+    "chert": "node tools/chert-agent.mjs",
+    "test": "bash scripts/test-all.sh"
   }
 }

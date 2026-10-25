@@ -21,7 +21,8 @@ export function readConfig(env = process.env) {
     // Kevin's extended contract (memory prompts, emergency contact, safety levels,
     // family alerts). Off: only event types main's backend accepts are ever sent.
     contractV2: on(env.CONTRACT_V2),
-    captureAudio: on(env.CAPTURE_AUDIO),
+    // Caller WAV for the backend's STT + voice markers. On unless CAPTURE_AUDIO=0.
+    captureAudio: env.CAPTURE_AUDIO !== '0',
     demoMode: on(env.DEMO_MODE),
     // End-of-turn silence for the realtime model's server VAD (contracts default 1000).
     // TURN_DETECTION=semantic keeps the plugin's semantic VAD instead.

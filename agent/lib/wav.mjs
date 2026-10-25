@@ -1,7 +1,7 @@
-// Caller-audio capture for the backend's STT step (CAPTURE_AUDIO=1). Format is fixed by
+// Caller-audio capture for the backend's STT step (on by default; CAPTURE_AUDIO=0 turns it off). Format is fixed by
 // INTEGRATION.md: 16 kHz, mono, 16-bit PCM. Written to agent/tmp/calls/<callId>.wav;
 // the backend deletes it after STT.
-import { open, mkdir } from 'node:fs/promises';
+import { open, mkdir, rename } from 'node:fs/promises';
 import { dirname } from 'node:path';
 
 export const WAV_FORMAT = Object.freeze({ sampleRate: 16000, channels: 1, bitsPerSample: 16 });
@@ -43,6 +43,37 @@ export async function createWavWriter(path) {
           .then(() => ({ path, bytes, ms: Math.round((bytes / 2 / WAV_FORMAT.sampleRate) * 1000) }));
       }
       return done;
+    },
+  };
+}
+
+/**
+ * Capture from the first caller frame: opens `path` at once and buffers frames until the
+ * file is open, so nothing said before the backend answers createCall is lost.
+ * finish(finalPath) closes the file and renames it (e.g. to <callId>.wav).
+ */
+export function startCapture(path, { log = () => {} } = {}) {
+  let writer = null;
+  let early = [];
+  const opened = createWavWriter(path).then((w) => {
+    writer = w;
+    for (const f of early) w.write(f);
+    early = null;
+    return w;
+  }).catch((err) => { early = null; log(`[wav] could not open ${path}: ${err.message}`); return null; });
+  return {
+    write(int16) {
+      if (writer) writer.write(int16);
+      else if (early) early.push(int16.slice());
+    },
+    async finish(finalPath = path) {
+      const w = await opened;
+      if (!w) return null;
+      const r = await w.finish();
+      if (finalPath !== path) {
+        try { await rename(path, finalPath); return { ...r, path: finalPath }; } catch (err) { log(`[wav] rename failed: ${err.message}`); }
+      }
+      return r;
     },
   };
 }
