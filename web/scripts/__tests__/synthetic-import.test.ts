@@ -35,7 +35,7 @@ async function run(options: Record<string, unknown> = {}) {
 }
 describe('isolated offline transcript import', () => {
   it('keeps ten chart markers separate from seven computed text markers', async () => {
-    expect(Object.keys(markersFor(12,'drift',prng()))).toEqual([...TEXT_MARKER_KEYS]);
+    expect(Object.keys(markersFor(12,'drift',prng()))).toEqual([...TEXT_MARKER_KEYS, 'pitch_var', 'pitch_range']);
     expect(MARKER_KEYS).toHaveLength(10); expect(TEXT_MARKER_KEYS).toHaveLength(7);
     await expect(run()).resolves.toMatchObject({ baselineCount: 7 });
   });
