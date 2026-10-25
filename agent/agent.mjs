@@ -1,6 +1,6 @@
 // Remi on a FaceTime call (Chert). Built on the Chert video starter: join at once,
 // wait for the caller, greet on bridge_ready, one audio track and one video track,
-// both from this agent. What Remi says and does lives in brain/; how it talks to the
+// both from this agent (or both from the LemonSlice avatar, lib/avatar.mjs). What Remi says and does lives in brain/; how it talks to the
 // backend lives in lib/. Nothing on the backend path can end a live call.
 import { accessSync, constants, mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -23,6 +23,7 @@ import { createLatencyProbe, formatLatency } from './lib/latency-probe.mjs';
 import { missingTextConfig } from './brain/notify.mjs';
 import { fillSharedEnv } from './lib/env.mjs';
 import { createCallMemory } from './lib/call-memory.mjs';
+import { avatarEnabled, startAvatar } from './lib/avatar.mjs';
 
 const PHOTO_SECONDS = 90;   // then the face comes back
 const MEMORY_EVERY = 3;     // caller turns between in-call memory refreshes
@@ -100,23 +101,35 @@ export default defineAgent({
       api.fetchPhoto(p.imageUrl).then((buf) => { if (buf) photoBytes.set(p.id, buf); });
     }
 
-    // Video: the face, or a photo card for PHOTO_SECONDS after show_photo.
-    const source = new VideoSource(WIDTH, HEIGHT);
-    const track = LocalVideoTrack.createVideoTrack('agent-video', source);
+    // Video: the face, or a photo card for PHOTO_SECONDS after show_photo. With the
+    // LemonSlice avatar (lib/avatar.mjs) the avatar publishes the face instead, and this
+    // starts only if the avatar can't.
+    let source = null;
+    let track = null;
+    let timer = null;
     let tick = 0;
     let speaking = false;
     let card = null;   // { pixels, until }
+    let avatarOn = false;
     const frame = () => {
       if (card && Date.now() > card.until) card = null;
       const pixels = card ? withPulse(card.pixels, tick, speaking) : drawFace(tick, speaking);
       tick += 1;
       source.captureFrame(new VideoFrame(pixels, WIDTH, HEIGHT, VideoBufferType.RGBA));
     };
-    frame();
-    await ctx.room.localParticipant.publishTrack(track, { source: TrackSource.SOURCE_CAMERA });
-    const timer = setInterval(frame, 1000 / FPS);
+    const startOwnVideo = async () => {
+      source = new VideoSource(WIDTH, HEIGHT);
+      track = LocalVideoTrack.createVideoTrack('agent-video', source);
+      frame();
+      await ctx.room.localParticipant.publishTrack(track, { source: TrackSource.SOURCE_CAMERA });
+      timer = setInterval(frame, 1000 / FPS);
+    };
+    const wantAvatar = avatarEnabled();
+    if (!wantAvatar) await startOwnVideo();
 
     const showPhoto = (photo) => {
+      // Only one participant's video reaches FaceTime; while the avatar owns it, no photo cards.
+      if (avatarOn) { log(`[video] avatar on; not showing ${photo.id}`); return; }
       renderPhotoCard({ image: photoBytes.get(photo.id) ?? null, caption: photo.caption, people: photo.people })
         .then((pixels) => { card = { pixels, until: Date.now() + PHOTO_SECONDS * 1000 }; log(`[video] showing ${photo.id}${photoBytes.has(photo.id) ? '' : ' (caption card)'}`); })
         .catch((err) => log(`[video] photo card failed: ${err.message}`));
@@ -209,12 +222,16 @@ export default defineAgent({
     ctx.addShutdownCallback(async () => {
       await finish('agent_shutdown');
       await Promise.allSettled([brain.safety.flush(4000), call.flush(4000)]);
-      clearInterval(timer);
+      if (timer) clearInterval(timer);
       await session.close();
-      await track.close();
-      await source.close();
+      await track?.close();
+      await source?.close();
     });
 
+    if (wantAvatar) {
+      avatarOn = (await startAvatar({ session, room: ctx.room, log })).ok;
+      if (!avatarOn) await startOwnVideo();
+    }
     await session.start({
       room: ctx.room,
       agent,
