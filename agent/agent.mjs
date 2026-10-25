@@ -24,6 +24,7 @@ import { missingTextConfig } from './brain/notify.mjs';
 import { fillSharedEnv } from './lib/env.mjs';
 import { createCallMemory } from './lib/call-memory.mjs';
 import { avatarEnabled, keepAvatarOut, startAvatar } from './lib/avatar.mjs';
+import { fillEnabled, fillScreen } from './lib/avatar-fill.mjs';
 
 const PHOTO_SECONDS = 90;   // then the face comes back
 const MEMORY_EVERY = 3;     // caller turns between in-call memory refreshes
@@ -234,6 +235,12 @@ export default defineAgent({
         const stopGuard = keepAvatarOut(ctx.room, { log });
         ctx.addShutdownCallback(async () => stopGuard());
         await startOwnVideo();
+      } else if (fillEnabled()) {
+        // Remi republishes the avatar cropped to fill FaceTime's landscape window.
+        const fill = await fillScreen({ session, room: ctx.room, log, timeoutMs: 5000 })
+          .catch((err) => ({ ok: false, detail: err.message }));
+        if (fill.ok) { log('[avatar] full-screen on'); ctx.addShutdownCallback(fill.stop); }
+        else log(`[avatar] full-screen off (${fill.detail}); avatar keeps its own track`);
       }
     }
     await session.start({
