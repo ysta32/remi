@@ -60,8 +60,12 @@ export function pickMemoryPrompts(ctx, max = 2) {
  * Instructions for the opening turn, used with the session's reply generation
  * right after bridge_ready (Chert ends calls with no agent audio in 10 s).
  */
-export function openingInstructions(ctx, { outbound = false } = {}) {
+export function openingInstructions(ctx, { outbound = false, pitch = false } = {}) {
   const name = ctx.elder.preferredName;
+  // Live demo (GREET_PITCH=1): Remi introduces herself and what she does, then starts the call.
+  if (pitch) {
+    return `This call is being shown live to an audience. Greet ${name} warmly by name, then introduce yourself in your own words, warm and natural, not salesy: you're ${APP_NAME}, an AI companion who FaceTimes older adults like ${name} for a friendly chat every day; you remember their stories, show them family photos, and keep their family close with a short recap of each call, and if something seems wrong you let the family know right away. Never say you diagnose or detect any medical condition. About four short sentences, then ask ${name} how their day has been, and stop and listen.`;
+  }
   const memory = ctx.lastCall?.summary
     ? ` In a few words, mention one warm thing from last time (${ctx.lastCall.summary.slice(0, 160)}).`
     : '';

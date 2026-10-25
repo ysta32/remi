@@ -18,6 +18,7 @@ export function readConfig(env = process.env) {
     // Greet when the caller joins instead of on bridge_ready. Browser testing only:
     // on a real FaceTime call the caller may still be connecting.
     greetOnJoin: on(env.GREET_ON_JOIN),
+    greetPitch: on(env.GREET_PITCH),
     // Kevin's extended contract (memory prompts, emergency contact, safety levels,
     // family alerts). Off: only event types main's backend accepts are ever sent.
     contractV2: on(env.CONTRACT_V2),

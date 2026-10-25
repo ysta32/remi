@@ -267,7 +267,7 @@ export default defineAgent({
     // hears nothing within 10 s of that). GREET_ON_JOIN=1 greets now: browser tests only.
     const greet = () => {
       log(`[call] greeting (${Date.now() - startedMs} ms after join)`);
-      session.generateReply({ instructions: openingInstructions(context, { outbound }) });
+      session.generateReply({ instructions: openingInstructions(context, { outbound, pitch: config.greetPitch }) });
     };
     if (config.greetOnJoin) greet();
     else {
