@@ -5,7 +5,7 @@
     "driftIndex": {
       "driftDetectionPct": 92,
       "driftDelayMedianWeeks": 5,
-      "driftDelayIqr": "5–6",
+      "driftDelayIqr": "5â€“6",
       "stableAnyAlert8wPct": 1,
       "stableAlertsPerPersonaYear": 0.16,
       "stableWatchWeeksPct": 16.661533723437017,
@@ -17,7 +17,7 @@
     "current": {
       "driftDetectionPct": 93.5,
       "driftDelayMedianWeeks": 4,
-      "driftDelayIqr": "4–5",
+      "driftDelayIqr": "4â€“5",
       "stableAnyAlert8wPct": 10,
       "stableAlertsPerPersonaYear": 1.545,
       "stableWatchWeeksPct": null,
@@ -29,7 +29,7 @@
     "naive": {
       "driftDetectionPct": 100,
       "driftDelayMedianWeeks": 2,
-      "driftDelayIqr": "2–2",
+      "driftDelayIqr": "2â€“2",
       "stableAnyAlert8wPct": 99.5,
       "stableAlertsPerPersonaYear": 74.3,
       "stableWatchWeeksPct": null,
@@ -41,7 +41,7 @@
   },
   "sweep": [
     {
-      "name": "default (8-call baseline, skip 2, ≥1.5 in 3 of 4)",
+      "name": "default (8-call baseline, skip 2, â‰¥1.5 in 3 of 4)",
       "detectedPct": 92,
       "delayMedian": 5,
       "stableAlertsPerYear": 0.16,
