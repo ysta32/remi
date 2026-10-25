@@ -39,3 +39,8 @@ No evaluation score has been computed by this checkpoint. Human review is still 
 ## Open the local review packet
 
 On Ryan's Mac, open `/Users/ryanwatach/Documents/Projects/PSU/remi/data/evaluation-review/review.html` in a browser. It contains all 12 conversations and 60 planted items with links to earlier passages; predictions are hidden. Open `review-notes.txt` from the same folder in TextEdit or VS Code, record checked/corrected/unresolved for each item, and save. The browser document is read-only and does not save decisions. `START-HERE.txt` gives step-by-step instructions. These local files are ignored by Git and are not included in this pull request. The original corpus and frozen checkpoint remain unchanged.
+
+## Subsequent review status
+
+The historical checkpoint above is preserved. Human review and scoring subsequently completed;
+see [reviewed results](2026-10-25-reviewed-results.md) and the app's `/evaluation` page.

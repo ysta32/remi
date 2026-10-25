@@ -1,0 +1,6 @@
+.eval-report { max-width:1060px; margin:0 auto; padding:32px 24px; }
+.eval-graphic { display:block; width:100%; height:auto; }
+.eval-scope { margin-top:18px; color:var(--ink-2); font-size:16px; line-height:1.6; }
+.eval-scope strong { color:var(--ink); }
+@media(max-width:560px) { .eval-report { padding:20px 12px; }.eval-scope { font-size:15px; margin-top:14px; } }
+@media print { .eval-report { padding:0; max-width:none; break-inside:avoid; } }

@@ -49,6 +49,12 @@ During a call, the page updates live.
   analysis.
 - The demo's four weeks of history are simulated, and labeled that way in the app.
 
+## Repeat detector results
+
+![Known repeats caught: 24 / 30. Across 60 reviewed items: 24 caught, 6 missed, 30 correctly new, 0 false alarms.](web/public/evaluation/repeat-results.svg)
+
+**What this measures:** repeat matching on 12 synthetic calls. Preliminary evidence, not an untouched holdout, a medical result, or a real-call performance estimate.
+
 ## Team
 
 Stanley, Siyuan, Kevin, Ryan and Jimmy.

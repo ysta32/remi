@@ -111,3 +111,14 @@ Human smoke check: complete two consented calls with the same story, wait for pr
 then open the elder's timeline and inspect the earlier-call link. Retrying the second call
 should reuse its result. This integration was tested using mocked provider HTTP; real calls
 and fresh model accuracy still need human validation. The reviewed synthetic baseline is unchanged.
+
+## Judge-facing repeat evaluation
+
+Open `/evaluation` (the **Evaluation** navigation link). It shows only the compact 24/30 results
+graphic and the “What this measures” caption. The root GitHub README embeds the exact same SVG
+from `web/public/evaluation/repeat-results.svg` with the same caption.
+
+The detailed reviewed evidence and reproduction instructions remain in
+`docs/evaluation/2026-10-25-reviewed-results.md` and the portable snapshot at
+`web/public/evaluation/repeat-review-v1.json`. No database or model calls are needed to display the page.
+Stanley owns the separate FaceTime check.
