@@ -11,7 +11,7 @@ import { pitchMarkersAsync, pitchNotAvailable } from '@/lib/markers/pitch';
 import { parseWav } from '@/lib/markers/wav';
 import { newId, nowIso } from '@/lib/server/ids';
 import type { Lang, MarkerResult, Utterance, Word } from '@/lib/types';
-import { PAUSE_MAX_MS, REPEAT_COSINE, REPEAT_WINDOW_DAYS } from './config';
+import { PAUSE_MAX_MS, PITCH_MAX_SECONDS, REPEAT_COSINE, REPEAT_WINDOW_DAYS } from './config';
 import { embed, EmbeddingsDisabledError } from './embeddings';
 import { extractCall, matchStories, type Extraction } from './llm';
 import { SAFETY_SUMMARY_LINE } from './prompts';
@@ -62,19 +62,24 @@ export async function processCall(callId: string): Promise<void> {
     let utterances: Utterance[] = call.utterancesJson ? JSON.parse(call.utterancesJson) : [];
 
     // 1. STT (soft): word timestamps for pause markers.
-    // 1b. Acoustic (soft): pitch markers from the same WAV, limited to the caller's word spans.
-    // The WAV is deleted right after, and again in the outer finally if anything above throws.
+    // 1b. Acoustic (soft): pitch markers, limited to the caller's speech.
+    // The WAV is read into memory and deleted right after STT, BEFORE the words are stored: a
+    // retried /complete then always finds the WAV gone and keeps the stored words (see
+    // completeCall). The outer finally deletes it too if anything here throws.
     if (audioPath) {
       const wav = audioPath;
       const words = await step(callId, 'stt', () => transcribeWords(wav, lang), true);
+      const bytes = await step(callId, 'read_audio', () => fs.readFile(wav), true);
+      await deleteAudio(callId, wav);
+      audioPath = null;
       if (words && words.length) {
         utterances = attachWords(utterances, words);
         db.update(calls).set({ utterancesJson: JSON.stringify(utterances) }).where(eq(calls.id, callId)).run();
       }
-      const final = utterances;
-      await step(callId, 'acoustic', async () => upsertMarkers(callId, await voiceMarkers(wav, final, lang), true), true);
-      await deleteAudio(callId, wav);
-      audioPath = null;
+      if (bytes) {
+        const final = utterances;
+        await step(callId, 'acoustic', async () => upsertMarkers(callId, await voiceMarkers(bytes, final, lang), true), true);
+      }
     }
     // No audio this run, or the acoustic step failed (e.g. an unreadable WAV): mark the voice
     // markers not available, but never overwrite real values from an earlier run.
@@ -138,8 +143,12 @@ export async function processCall(callId: string): Promise<void> {
 }
 
 /** Pitch markers (markers.md §4b) for one call's WAV. Adequacy comes from the transcript markers. */
-async function voiceMarkers(wav: string, utterances: Utterance[], lang: Lang): Promise<MarkerResult[]> {
-  const { sampleRate, samples } = parseWav(await fs.readFile(wav));
+async function voiceMarkers(wavBytes: Uint8Array, utterances: Utterance[], lang: Lang): Promise<MarkerResult[]> {
+  const parsed = parseWav(wavBytes);
+  // Bound the work (and memory) for very long recordings.
+  const maxSamples = Math.floor(PITCH_MAX_SECONDS * parsed.sampleRate);
+  const samples = parsed.samples.length > maxSamples ? parsed.samples.subarray(0, maxSamples) : parsed.samples;
+  const sampleRate = parsed.sampleRate;
   const caller = utterances.filter((u) => u.speaker === 'caller');
   // Analyse only the caller's speech: STT word spans when present, else the live caller turns
   // (approximate times, but they keep agent turns, echo and room noise out). With neither, the
@@ -171,7 +180,12 @@ async function deleteAudio(callId: string, wav: string): Promise<void> {
     console.error(`[pipeline] call=${callId} could not delete audio: ${errMsg(err)}`);
   }
   try {
-    getDb().update(calls).set({ audioPath: null }).where(eq(calls.id, callId)).run();
+    // Only clear the path we just deleted: a retry may have stored a different file meanwhile.
+    getDb()
+      .update(calls)
+      .set({ audioPath: null })
+      .where(and(eq(calls.id, callId), eq(calls.audioPath, wav)))
+      .run();
   } catch {
     /* best effort */
   }

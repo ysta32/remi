@@ -61,6 +61,7 @@ export const PITCH_OUTLIER_ST = 10; // backstop: drop frames further than this f
 export const PITCH_SPAN_PAD_MS = 100; // padding around STT word spans
 export const PITCH_MIN_VOICED_FRAMES = 500; // ~10 s of voiced speech at a 20 ms hop → 'high'
 export const PITCH_MIN_FRAMES_ANY = 25; // ~0.5 s; below this, no value at all
+export const PITCH_MAX_SECONDS = 30 * 60; // analyse at most the first 30 minutes of a recording
 export const PITCH_YIELD_FRAMES = 250; // async tracking yields to the event loop every N frames (~100 ms of work)
 
 // Groups that can drift toward a nudge, in display order. 'voice' (pitch) is deliberately left
