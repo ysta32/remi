@@ -1,0 +1,23 @@
+# Remi: post-call repeat detector
+
+Approved in conversation: full transcripts from Siyuan; OpenAI extraction and embeddings; all earlier calls of the same elder; detect same underlying incident/question despite paraphrasing; keep prompted/unprompted/uncertain repeat labels; embeddings alone decide matches. No second LLM verification step. User requested one subagent per implementation step.
+
+## Scope and architecture
+Add an independent ES-module Node package under `detector/`, matching the repository's existing JavaScript ES modules. Do not scaffold or change web, voice agent, database, original specifications, root package files or lockfiles. Siyuan passes a call and stored prior extracted items into `analyzeCall`, then persists its returned items and results transactionally. Stable item IDs and a per-call replacement key allow idempotent upserts; the module makes no database writes. No credentials, transcript logging, audio, clinical inference, UI, seven-day restriction, or automatic family disclosure. Respect the application's existing consent gate; require the caller to explicitly authorize processing before any provider request.
+
+The narrow contract must accept the existing documented `{speaker:'caller'|'agent',text,startMs,endMs}` transcript structure. Extract caller stories/questions only, using agent turns to determine elicitation. A general conversational opener does not make a story prompted. Prompted means an explicit invitation to recount the specific incident or ask the specific question. Ambiguous evidence remains uncertain. Source quotes must be literal substrings of caller turns; prompted evidence references a prior agent turn. Summaries preserve supplied who/what/where/when details without inventing missing details. Model instructions treat transcripts as data, not commands.
+
+## Approaches
+Chosen: extract concise items, embed with text-embedding-3-small, cosine match against same-kind prior items, threshold-only decision. Rejected for v1: a second model verifies candidate matches. Same-topic false positives remain a limitation to evaluate, not claimed eliminated. No vector database is necessary for four weeks of data; compare vectors in process.
+
+## Repeat semantics
+Earlier means strictly earlier startedAt, different callId, same elderId and same kind. At most one best match per current item, even if multiple previous calls match. Rank ties deterministically by most recent prior call then lexical item ID. Preserve best candidate/score even below threshold for later evaluation. Never compare vectors with different model IDs or dimensions. Missing/incompatible eligible historical vectors => unavailable, not no-repeat. No history => no-repeat with score null. Configurable threshold default 0.85 is a PROVISIONAL starting value inherited from existing notes, not validated accuracy or probability.
+
+## Provider and privacy
+Native fetch to fixed api.openai.com endpoints, no new runtime dependencies. OpenAI Responses structured JSON extraction; explicitly configured extraction model (use team's available model), store:false. Embeddings model default text-embedding-3-small, explicit dimensions default 1536. Configurable timeout and at most one bounded retry for transient errors. Fail closed on missing key/model, refusal, incomplete response, invalid output, forged quotes, nonfinite/zero/mismatched vectors. Never include provider response bodies, transcript contents, or keys in errors/logs. Analysis errors return status unavailable with counts null. Transcripts remain in caller memory; the detector does not write files except the explicit CLI's result output, which contains sensitive evidence and is documented as private.
+
+## Testing / tasks 2 and 3
+Unit and integration tests use synthetic fixtures and controlled HTTP responses; they prove adapter/math/contracts, not semantic quality of OpenAI. Add a live opt-in command but never call providers without local credentials. Keep synthetic ground-truth labels out of detector input. No four-week generator/audio/evaluation implementation in this task. Store scores, model, dimensions, extraction model, prompt version, threshold and detector version to enable later evaluation. Future tuning and held-out evaluation data must be separate.
+
+## Delivery
+New isolated worktree ws/ryan-repeat-detector. Original main checkout untouched. Initial implementation was delivered uncommitted. The user subsequently authorized review, commit, and push of this feature branch; no merge into main is authorized. Six sequential implementer subagents and independent task reviews, then broad review and whole-suite verification. Report real live verification separately from deterministic tests.
