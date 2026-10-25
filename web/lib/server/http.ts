@@ -27,8 +27,12 @@ export function requireAgentAuth(req: Request): Response | null {
   const expected = config.agentApiToken;
   const header = req.headers.get('authorization') ?? '';
   const given = header.startsWith('Bearer ') ? header.slice(7) : '';
-  if (!expected || given.length !== expected.length) return error(401, 'unauthorized');
-  return timingSafeEqual(Buffer.from(given), Buffer.from(expected)) ? null : error(401, 'unauthorized');
+  // Compare byte lengths (not string lengths): timingSafeEqual throws on unequal byte lengths,
+  // e.g. a non-ASCII token with the same character count.
+  const a = Buffer.from(given);
+  const b = Buffer.from(expected);
+  if (!expected || a.length !== b.length) return error(401, 'unauthorized');
+  return timingSafeEqual(a, b) ? null : error(401, 'unauthorized');
 }
 
 /** 404 unless DEV_TOOLS=1. */

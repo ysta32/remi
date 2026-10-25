@@ -1,6 +1,7 @@
 // Family-facing elder profile serializers and zod schemas (contracts §5).
 import { z } from 'zod';
 import { getSqlite } from '@/db/client';
+import { isValidTimeZone } from '@/lib/analysis/weeks';
 import { consentView } from './consent';
 import { getConsentRow } from './context';
 
@@ -13,7 +14,7 @@ export const elderCreateSchema = z.object({
   displayName: z.string().trim().min(1).max(120),
   preferredName: z.string().trim().min(1).max(60),
   language: z.enum(['en', 'zh']),
-  timezone: z.string().trim().min(1).max(64).optional(),
+  timezone: z.string().trim().min(1).max(64).refine(isValidTimeZone, 'must be an IANA time zone, e.g. America/New_York').optional(),
   about: z.string().max(600).optional(),
   primaryContactName: z.string().trim().min(1).max(100),
   members: z.array(memberSchema).max(30).optional(),

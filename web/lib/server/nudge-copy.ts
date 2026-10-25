@@ -1,4 +1,4 @@
-// Nudge copy, verbatim from docs/safety-and-copy.md §3. Never add numbers to this text.
+// Nudge copy, verbatim from echo-docs/echo-docs/docs/safety-and-copy.md §3. Never add numbers to this text.
 import type { NudgeReason } from '../types';
 
 export const CHECKUP_LINK = 'https://www.alz.org/alzheimers-dementia/10_signs';

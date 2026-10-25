@@ -1,14 +1,34 @@
 // Agent call lifecycle: create, events (with side effects), complete (contracts §4).
+import fs from 'node:fs';
+import path from 'node:path';
 import { z } from 'zod';
 import { getSqlite } from '@/db/client';
 import { processCall } from '@/lib/analysis/pipeline';
-import type { CallEvent, ConsentKey } from '../types';
+import type { CallEvent, ConsentKey, Utterance } from '../types';
 import { CONSENT_KEYS, ELDER_COLUMN } from './consent';
 import { newId, nowIso } from './ids';
 import { enqueue } from './queue';
 
-const isoDate = z.string().refine((s) => !Number.isNaN(Date.parse(s)), 'must be an ISO-8601 timestamp');
+// ISO-8601 with an explicit zone, normalized to UTC so string ordering in SQL is chronological.
+const ISO_WITH_ZONE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})$/;
+const isoDate = z
+  .string()
+  .regex(ISO_WITH_ZONE, 'must be an ISO-8601 timestamp with a zone, e.g. 2026-10-25T14:02:11Z')
+  .refine((s) => !Number.isNaN(Date.parse(s)), 'must be a valid timestamp')
+  .transform((s) => new Date(s).toISOString());
 const atMs = z.number().int().min(0);
+
+// The pipeline deletes audioPath after STT, so only accept the agent's capture files:
+// an absolute .wav path inside a `tmp/calls` directory (contracts §4 example).
+const audioPathSchema = z
+  .string()
+  .max(1000)
+  .refine((p) => {
+    if (!path.isAbsolute(p)) return false;
+    const norm = path.resolve(p);
+    const dir = path.dirname(norm);
+    return path.extname(norm).toLowerCase() === '.wav' && path.basename(dir) === 'calls' && path.basename(path.dirname(dir)) === 'tmp';
+  }, 'audioPath must be an absolute path to a .wav file inside a tmp/calls directory');
 
 export const callCreateSchema = z.object({
   elderId: z.string().min(1),
@@ -24,12 +44,14 @@ export const callEventSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('consent'),
     atMs,
-    payload: z.object({
-      summaries: z.boolean().optional(),
-      funFacts: z.boolean().optional(),
-      speechTrends: z.boolean().optional(),
-      mood: z.boolean().optional(),
-    }),
+    payload: z
+      .object({
+        summaries: z.boolean().optional(),
+        funFacts: z.boolean().optional(),
+        speechTrends: z.boolean().optional(),
+        mood: z.boolean().optional(),
+      })
+      .refine((p) => Object.values(p).some((v) => typeof v === 'boolean'), 'consent payload needs at least one key'),
   }),
   z.object({
     type: z.literal('safety'),
@@ -51,7 +73,7 @@ export const callCompleteSchema = z.object({
   endedAt: isoDate,
   endReason: z.string().max(200).nullish(),
   utterances: z.array(utteranceSchema),
-  audioPath: z.string().max(1000).nullish(),
+  audioPath: audioPathSchema.nullish(),
 });
 
 export type CallCreate = z.infer<typeof callCreateSchema>;
@@ -91,7 +113,10 @@ export function applyCallEvent(callId: string, ev: CallEvent): boolean {
         );
         break;
       case 'question_asked':
-        db.prepare(`UPDATE family_questions SET status = 'asked', asked_call_id = ? WHERE id = ? AND elder_id = ?`).run(
+        // Never move an already-answered question back to 'asked'.
+        db.prepare(
+          `UPDATE family_questions SET status = 'asked', asked_call_id = ? WHERE id = ? AND elder_id = ? AND status != 'answered'`,
+        ).run(
           callId,
           ev.payload.questionId,
           call.elder_id,
@@ -147,11 +172,26 @@ export function completeCall(callId: string, body: CallComplete): boolean {
   if (!call) return false;
   const durationMs = Date.parse(body.endedAt) - Date.parse(call.started_at);
   const durationS = Number.isFinite(durationMs) ? Math.max(0, Math.round(durationMs / 1000)) : null;
+
+  // A retried /complete must not undo an earlier run: once STT has consumed (and deleted) the
+  // WAV, keep the word-timestamped utterances instead of overwriting them with the live text.
+  const audioPath = body.audioPath && fs.existsSync(body.audioPath) ? body.audioPath : null;
+  let utterances: Utterance[] = body.utterances;
+  if (!audioPath && !hasWords(utterances)) {
+    const stored = getSqlite().prepare('SELECT utterances_json FROM calls WHERE id = ?').get(callId) as
+      | { utterances_json: string | null }
+      | undefined;
+    const prev = stored?.utterances_json ? (JSON.parse(stored.utterances_json) as Utterance[]) : null;
+    if (prev && hasWords(prev)) utterances = prev;
+  }
+
   getSqlite()
     .prepare(
       `UPDATE calls SET utterances_json = ?, ended_at = ?, end_reason = ?, audio_path = ?, duration_s = ? WHERE id = ?`,
     )
-    .run(JSON.stringify(body.utterances), body.endedAt, body.endReason ?? null, body.audioPath ?? null, durationS, callId);
+    .run(JSON.stringify(utterances), body.endedAt, body.endReason ?? null, audioPath, durationS, callId);
   startProcessing(callId);
   return true;
 }
+
+const hasWords = (utts: Utterance[]) => utts.some((u) => u.speaker === 'caller' && u.words && u.words.length > 0);

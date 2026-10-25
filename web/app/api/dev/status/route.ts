@@ -4,12 +4,16 @@ import { json, requireDevTools } from '@/lib/server/http';
 
 export const runtime = 'nodejs';
 
-export async function GET() {
+// Operator view (DEV_TOOLS=1 only). Per safety-and-copy §6, safety events and transcripts are
+// visible here and nowhere on the family side. Transcripts only with ?transcripts=1.
+export async function GET(req?: Request) {
   const blocked = requireDevTools();
   if (blocked) return blocked;
-  const rows = getSqlite()
+  const withTranscripts = req ? new URL(req.url).searchParams.get('transcripts') === '1' : false;
+  const db = getSqlite();
+  const rows = db
     .prepare(
-      `SELECT id, elder_id, started_at, status, failed_step, error, duration_s, is_simulated FROM calls
+      `SELECT id, elder_id, started_at, status, failed_step, error, duration_s, is_simulated, utterances_json FROM calls
        ORDER BY started_at DESC, created_at DESC LIMIT 20`,
     )
     .all() as {
@@ -21,7 +25,10 @@ export async function GET() {
     error: string | null;
     duration_s: number | null;
     is_simulated: number;
+    utterances_json: string | null;
   }[];
+  const eventsStmt = db.prepare('SELECT type, payload_json, at_ms FROM call_events WHERE call_id = ? ORDER BY at_ms');
+  const safetyStmt = db.prepare('SELECT category, note, created_at FROM safety_events WHERE call_id = ? ORDER BY created_at');
   return json({
     calls: rows.map((r) => ({
       id: r.id,
@@ -33,6 +40,17 @@ export async function GET() {
       durationS: r.duration_s,
       isSimulated: r.is_simulated === 1,
       timings: getTimings(r.id),
+      events: (eventsStmt.all(r.id) as { type: string; payload_json: string; at_ms: number }[]).map((e) => ({
+        type: e.type,
+        atMs: e.at_ms,
+        payload: JSON.parse(e.payload_json) as unknown,
+      })),
+      safetyEvents: (safetyStmt.all(r.id) as { category: string; note: string; created_at: string }[]).map((s) => ({
+        category: s.category,
+        note: s.note,
+        createdAt: s.created_at,
+      })),
+      ...(withTranscripts ? { utterances: r.utterances_json ? (JSON.parse(r.utterances_json) as unknown) : null } : {}),
     })),
   });
 }

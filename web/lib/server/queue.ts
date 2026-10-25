@@ -11,7 +11,18 @@ export function enqueue(job: () => Promise<void>): Promise<void> {
   return next;
 }
 
-/** Resolves when every queued job so far has finished (tests, dev tools). */
-export function drainQueue(): Promise<void> {
-  return g.__remiQueue ?? Promise.resolve();
+/**
+ * Resolves when every queued job so far has finished (tests, dev tools), or after `timeoutMs`
+ * so a hung model call can't block a demo reset forever.
+ */
+export function drainQueue(timeoutMs = 10_000): Promise<void> {
+  const pending = g.__remiQueue ?? Promise.resolve();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<void>((resolve) => {
+    timer = setTimeout(() => {
+      console.warn(`[queue] drain timed out after ${timeoutMs} ms; continuing`);
+      resolve();
+    }, timeoutMs);
+  });
+  return Promise.race([pending, timeout]).finally(() => clearTimeout(timer));
 }

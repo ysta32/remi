@@ -98,8 +98,11 @@ export function buildTimeline(elderId: string): Timeline | null {
       durationS: c.duration_s,
       status: c.status,
       summary: eff.summaries ? c.summary : null,
-      photosShown: shownByCall.get(c.id) ?? [],
-      familyQuestion: q ? { text: q.text, askedBy: q.asked_by, answer: answers.get(q.id) ?? null } : null,
+      // SPEC §12: before the elder confirms sharing, the family sees only that a call happened
+      // and its length — so call details stay hidden until elderConfirmed.
+      photosShown: consent.elderConfirmed ? (shownByCall.get(c.id) ?? []) : [],
+      familyQuestion:
+        consent.elderConfirmed && q ? { text: q.text, askedBy: q.asked_by, answer: answers.get(q.id) ?? null } : null,
       mood: eff.mood ? c.mood_label : null,
       isSimulated: c.is_simulated === 1,
     };
@@ -180,12 +183,13 @@ function buildMarkers(elderId: string, lang: Lang): MarkerSeries[] {
   const pointsStmt = db.prepare(
     `SELECT m.call_id, c.started_at, m.value, m.z, m.confidence, c.is_simulated
      FROM call_markers m JOIN calls c ON c.id = m.call_id
-     WHERE c.elder_id = ? AND m.marker = ? ORDER BY c.started_at`,
+     WHERE c.elder_id = ? AND m.marker = ? AND c.language = ? AND c.status != 'failed' ORDER BY c.started_at`,
   );
   return MARKER_KEYS.map((key) => {
     const meta = markerMeta(key, lang);
     const b = baselineStmt.get(elderId, key, lang) as { median: number; mad: number; n: number } | undefined;
-    const pts = pointsStmt.all(elderId, key) as {
+    // Baselines and units are per language, so only plot this language's calls.
+    const pts = pointsStmt.all(elderId, key, lang) as {
       call_id: string;
       started_at: string;
       value: number | null;

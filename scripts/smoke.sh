@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Contract smoke test (docs/contracts.md §4–6) against a running dev server.
+# Contract smoke test (echo-docs/echo-docs/docs/contracts.md §4–6) against a running dev server.
 # Usage (from web/):  BASE=http://localhost:3000 AGENT_API_TOKEN=... bash ../scripts/smoke.sh
 # Needs the server started with DEV_TOOLS=1 and the same AGENT_API_TOKEN. WARNING: calls /api/dev/reset.
 # Requires bash, curl and node. Exits non-zero on the first unexpected status.

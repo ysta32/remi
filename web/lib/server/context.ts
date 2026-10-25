@@ -23,6 +23,9 @@ interface ThemeRow {
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+// Calls that really happened. Excludes in_progress (possibly the current call, or an abandoned
+// one) and failed rows, so fetching context after POST /calls doesn't shift the theme.
+const FINISHED = `status IN ('processing','done')`;
 
 export function getElderRow(elderId: string): ElderRow | undefined {
   return getSqlite()
@@ -42,7 +45,7 @@ export function nextTheme(elderId: string): ThemeRow {
   const all = db.prepare('SELECT id, title, prompt_en, prompt_zh, sort FROM themes ORDER BY sort, id').all() as ThemeRow[];
   if (all.length === 0) throw new Error('no themes seeded');
   const last = db
-    .prepare('SELECT theme_id FROM calls WHERE elder_id = ? ORDER BY started_at DESC, created_at DESC LIMIT 1')
+    .prepare(`SELECT theme_id FROM calls WHERE elder_id = ? AND ${FINISHED} ORDER BY started_at DESC, created_at DESC LIMIT 1`)
     .get(elderId) as { theme_id: string | null } | undefined;
   if (!last) return all[0];
   const idx = last.theme_id ? all.findIndex((t) => t.id === last.theme_id) : -1;
@@ -69,7 +72,10 @@ export function buildCallContext(elderId: string, origin: string): CallContext |
 
   const knownFacts = (
     db
-      .prepare('SELECT text FROM fun_facts WHERE elder_id = ? ORDER BY created_at DESC LIMIT 10')
+      .prepare(
+        `SELECT f.text FROM fun_facts f JOIN calls c ON c.id = f.call_id
+         WHERE f.elder_id = ? ORDER BY c.started_at DESC, f.created_at DESC LIMIT 10`,
+      )
       .all(elderId) as { text: string }[]
   ).map((r) => r.text);
 
@@ -100,7 +106,9 @@ export function buildCallContext(elderId: string, origin: string): CallContext |
     )
     .get(elderId) as { id: string; text: string; asked_by: string } | undefined;
 
-  const priorCalls = db.prepare('SELECT COUNT(*) AS n FROM calls WHERE elder_id = ?').get(elderId) as { n: number };
+  const priorCalls = db.prepare(`SELECT COUNT(*) AS n FROM calls WHERE elder_id = ? AND ${FINISHED}`).get(elderId) as {
+    n: number;
+  };
   const theme = nextTheme(elderId);
 
   return {
