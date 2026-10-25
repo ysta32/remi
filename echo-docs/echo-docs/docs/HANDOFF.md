@@ -45,7 +45,8 @@ Each agent edits **only its own section** plus appends to "Requests" and "Contra
   - The elder timezone is validated.
 
 ## C — Analysis
-- Status: C1–C5 done. `processCall` runs stt → extract → markers → repetition → done → recompute. stt, extract and repetition are soft steps: a failure is logged and the call still finishes.
+- Integration checkpoint (Oct 25): resolved `ws/ryan-synthetic-data` against main `3cd740b`, preserving current recap/polling/layout, standalone repeat evidence and older-call targets, authored-timing notices, and computed-only Drift Index labels. New regression tests cover six-card pagination and recap-card anchors. Web300 + detector245 + generator150 tests passed (695 total; 1 skipped), typecheck/lint/syntax and production build passed; 78 API smoke checks passed on a disposable database. Build reports four dynamic-filesystem tracing warnings in existing backend paths. Frozen detector settings are in `docs/evaluation/`; human label review remains pending. No new audio generation or provider calls were made.
+- Status: C1–C5 done. `processCall` runs stt → acoustic (voice markers) → extract → markers → repetition → done → recompute. stt, acoustic, extract and repetition are soft steps: a failure is logged and the call still finishes.
   - If extraction fails twice, the summary falls back to "{name} and Remi chatted for N minutes."
   - The WAV is deleted in a `finally`.
 - Providers + models in use (all overridable by env):
@@ -77,6 +78,18 @@ Each agent edits **only its own section** plus appends to "Requests" and "Contra
   - An invalid timezone falls back to America/New_York.
   - "mm-hmm" counts as a filler for word-finding pauses, and the pause agent-overlap check uses a closed interval.
   - "1 minute" is singular in the fallback summary.
+- Voice markers (`pitch_var`, `pitch_range`, group `voice`):
+  - Added Oct 25. Defined in markers.md §4b.
+  - YIN pitch tracking in pure TS (`web/lib/markers/pitch.ts`, `wav.ts`), with no dependencies, so it behaves the same on the demo Mac and on Windows.
+  - Runs as the soft pipeline step `acoustic` after STT and before the WAV is deleted, and analyses only the caller's word spans.
+  - **Chart only:** they get baselines, z-scores and charts, but `NUDGE_GROUPS` in `web/lib/analysis/config.ts` leaves out `voice`. Add it there to let voice drive nudges once real calls show it's stable.
+  - Adequacy is decided by transcript markers only.
+  - Cost: about 2.5–3 s for 10 minutes of continuous voiced speech (worst case), run in chunks that yield to the event loop so the server keeps answering requests. Analysis covers STT word spans, else the live caller turns; with neither it is capped at `low`.
+  - Checks:
+    - unit tests on synthetic tones and glides;
+    - `npm run pitch:check -- --file x.wav` on a synthetic 140 ± 25 Hz voice gave a median of 142 Hz and pitch_range 5.96 st (expected about 6);
+    - the TTS flat-vs-expressive comparison (`npm run pitch:check`) is not yet run, because it needs `OPENAI_API_KEY` in `web/.env.local`.
+  - Real values need agent capture (A6, `CAPTURE_AUDIO=1`). Without audio both markers are `na`.
 - Known issues:
   - The check-up rule uses the latest 2 *evaluated* weeks (weeks with fewer than 2 adequate calls are skipped), so the demo nudge survives a single live call. It has no recency limit.
   - `hal-zh-sample.json` uses a separate fictional elder (王奶奶).
@@ -98,6 +111,13 @@ Each agent edits **only its own section** plus appends to "Requests" and "Contra
   3. Voice chart (pitch variation / range) on the "How he's doing" tab once Siyuan's `c5247e6` lands on `main`. Sound only, never mood.
   4. Setup/manage pages for Kevin's memory moments + emergency contact, only if humans approve that contract change (see Requests).
 
+## Ryan — synthetic calls and audio (Task 2)
+- Branch: `ws/ryan-synthetic-data`; standalone `synthetic/` package. Seeded transcript generator produces one fictional elder, 12 calls across four weeks, planted repeats/retellings and distinct same-topic incidents. Ground truth and tuning/held-out incident families stay separate from detector inputs. Additive offline importer and dashboard provenance/unavailable-analysis support are now implemented; existing analysis pipelines and call agent are unchanged.
+- Run from repository root: `node synthetic/cli.mjs --output synthetic/output-release` (fresh directory only), then `node synthetic/audio-cli.mjs --input synthetic/output-release` for an offline audio plan. See `synthetic/README.md` for paid generation commands.
+- Audio now uses OpenAI `gpt-4o-mini-tts-2025-12-15`, default voices cedar/marin, with `OPENAI_API_KEY` supplied privately. It writes explicitly simulated full-conversation and caller-only 24 kHz WAVs with exact inserted silence and sample-derived timing. Cached PCM reproduces assembly; fresh TTS is not deterministic. Live generation completed: `synthetic/audio-openai-all/` contains 12 conversations and 12 caller-only WAVs (about 35 minutes); all 96 inserted silences and cache-only byte-identical replay verified. Files are local/ignored. Subjective listening, STT and acoustic analysis remain unverified.
+- Verified offline: 150 synthetic tests, 245 detector tests, 199 web tests, both syntax checks, web typecheck and lint. Dry run: 12 calls, 252 speech segments, 30,271 text characters and 96 planted pauses. No semantic accuracy or medical claim.
+- Siyuan handoff: use a copy of caller-only WAV with its audio-derived utterance times; the pipeline deletes input audio. Authored transcript word times are not audio measurements. Imported 12 calls into fresh local `web/data/synthetic-transcripts-demo.db`: 96 marker rows, 7 baselines, no topics/facts/nudges. Legacy repeat values remain NULL/na. The separate standalone detector now has a consent-filtered timeline panel and actual persisted results: 12 calls analyzed with OpenAI, 24 matches (14 unprompted, 8 prompted, 2 uncertain; 16 stories, 8 questions) at provisional0.85. Cached rerun reuses all results. Run import, analyze:synthetic and live dashboard using `web/README.md`; no reset/seed is needed. This combined demo is not held-out accuracy evaluation. Elder ID is `elder-synthetic-hal-bennett`, distinct from the existing demo elder.
+
 ## Requests (from → to: what, by when)
 - D → B: `web/` is scaffolded (Next 16.4.3, Tailwind 4, Recharts, vitest; `web/lib/types.ts` mirrors contracts §3, `web/lib/config.ts` has `APP_NAME`). Please build `web/db`, `web/app/api` on top of this branch rather than a second scaffold.
 - D → B: confirm field names for `GET /api/elders/:id` (contract §5 lists only the parts). D assumes `ElderProfile` in `web/lib/api.ts`: `{ id, displayName, preferredName, language, timezone, about, primaryContactName, members[], photos[{id,caption,people,imageUrl}], questions[{id,text,askedBy,status}], consent }`.
@@ -113,6 +133,8 @@ Each agent edits **only its own section** plus appends to "Requests" and "Contra
   - Write captures to `agent/tmp/calls/<callId>.wav` and pass the absolute path.
   - Send all four keys in one `consent` event, because `elderConfirmed` needs all four.
   - Fetch photo `imageUrl`s with the Bearer token.
+- C → D: the timeline now has 10 marker series. The 2 new ones are `pitch_var` and `pitch_range`, group `voice`, unit `st` (semitones). Use the same chart component, with label and explainer from the API. Keep their copy about sound only, never mood (safety-and-copy).
+- C → A: the voice markers need caller audio. Use `CAPTURE_AUDIO=1` (A6) to write a 16 kHz mono PCM16 WAV to `agent/tmp/calls/<callId>.wav`, and pass its absolute path as `audioPath` in `/complete`.
 - B → humans: branch `ws/A-call-flow` has a `[contract]` commit (memory prompts, more safety categories, emergency fields) that B has not implemented.
   - The current API rejects those events with 400.
   - It needs a human decision. It also conflicts with "never quiz/test memory" and with "family alerting is roadmap".
@@ -120,8 +142,14 @@ Each agent edits **only its own section** plus appends to "Requests" and "Contra
 - D → A (Kevin) + humans, Sat 11:30 PM: `ws/A-call-flow` (3 commits) is still not on `main`. Decide on its `[contract]` commit, then merge so the demo path runs end to end.
 
 ## Contract changes (date time — change — affected workstreams)
--
+- 2026-10-25 — Add standalone `detector_results` table and optional consent-filtered `Timeline.repeatAnalysis` (counts, three labels, same-elder earlier links, quote evidence, provenance). Legacy topics/repeat markers unchanged; affected B/C/D.
+- Sun Oct 25 — `[contract]` additive: `MarkerKey` += `pitch_var`, `pitch_range`; `MarkerGroup` += `voice`; unit `st` (semitones). No DB change (`call_markers.marker` is text). Timeline now returns 10 marker series. Chart only: voice never drives nudges. Definitions in markers.md §4b. Affects C (computes), B (timeline passes through), D (render 2 more charts; group `voice`).
 
 ## Decisions log (human-confirmed only)
 - Sat Oct 24 ~6:14 PM — Team committed to the elder FaceTime conversation + memory + family loop project.
 - Sat Oct 24 ~8:25 PM — FaceTime-first flow replaces iMessage voice notes as the primary channel.
+
+- 2026-10-25 [contract] B/D: additive optional Timeline.driftIndex and DriftIndexView
+  implemented as a consent-filtered read-only adapter using unchanged production defaults;
+  full interface documented in contracts.md and web/lib/types.ts. No notification delivery.
+  Synthetic importer now iterates seven TEXT_MARKER_KEYS independently of ten chart keys.

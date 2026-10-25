@@ -7,9 +7,8 @@ import { driftDomain, type WeekPoint } from './drift-domain';
 
 export type { WeekPoint };
 
-// Hex mirrors of the CSS tokens (SVG attributes don't reliably resolve var()). Same palette as the
-// recap charts: muted blue data (#7d9cc0 dots, --hero lines), --sky-soft for his usual range, and
-// --family-ink for the things that need attention (smoothed trend, notes, check-ins).
+// Hex mirrors of the CSS tokens (SVG attributes don't reliably resolve var()). Keep the
+// research and family charts aligned with the recap palette.
 export const R = {
   ink: '#1d2b45', ink2: '#4f5b70', band: '#d6e8f8', line: '#e3ebf3', card: '#ffffff',
   weekly: '#7d9cc0', hero: '#a9cdee', ewma: '#7a3a1f', faded: '#c9d8ea',
@@ -17,7 +16,7 @@ export const R = {
 
 const fmt = (v: number | null | undefined) => (v == null ? 'not enough chats' : `${v >= 0 ? '+' : ''}${v.toFixed(1)}`);
 
-function Tip({ active, payload }: { active?: boolean; payload?: { payload: WeekPoint }[] }) {
+export function DriftIndexTooltip({ active, payload, computedStates = false }: { active?: boolean; payload?: { payload: WeekPoint }[]; computedStates?: boolean }) {
   const d = payload?.[0]?.payload;
   if (!active || !d) return null;
   return (
@@ -26,9 +25,9 @@ function Tip({ active, payload }: { active?: boolean; payload?: { payload: WeekP
       <p className="text-ink-2">Weekly score {fmt(d.weeklyD)}</p>
       {d.ewma != null && !d.baselineWeek && <p className="text-ink-2">Smoothed {fmt(d.ewma)}</p>}
       {d.calls != null && <p className="text-ink-2">{d.calls} chats</p>}
-      {d.nudge && <p className="font-bold">Family note sent</p>}
+      {d.nudge && <p className="font-bold">{computedStates ? 'Nudge rule met · no notification sent' : 'Family note sent'}</p>}
       {!d.nudge && d.watch && <p className="text-ink-2">Watching (dashboard only)</p>}
-      {d.wellbeingCard && <p className="text-ink-2">Wellbeing card shown</p>}
+      {d.wellbeingCard && <p className="text-ink-2">{computedStates ? 'Wellbeing rule met (computed only)' : 'Wellbeing card shown'}</p>}
     </div>
   );
 }
@@ -39,8 +38,8 @@ const NOTE_ROW_Y = 18; // text baseline inside the top margin
 
 /** Weekly Drift Index bars, smoothed (EWMA) line, "usual" band ±1 and the 1.5 nudge line. */
 export function DriftIndexChart({
-  weeks, height = 220, threshold = 1.5, domain, title,
-}: { weeks: WeekPoint[]; height?: number; threshold?: number; domain?: [number, number]; title: string }) {
+  weeks, height = 220, threshold = 1.5, domain, title, computedStates = false,
+}: { weeks: WeekPoint[]; height?: number; threshold?: number; domain?: [number, number]; title: string; computedStates?: boolean }) {
   const data = weeks.map((w) => ({ ...w, ewmaPlot: w.baselineWeek ? null : w.ewma ?? null }));
   const hasEwma = weeks.some((w) => w.ewma != null);
   const [lo, hi] = domain ?? driftDomain(weeks);
@@ -59,7 +58,7 @@ export function DriftIndexChart({
               tickFormatter={(v: number) => (v === threshold ? '' : String(v))} {...axis} />
             <ReferenceLine y={threshold} stroke={R.ink} strokeDasharray="5 4" strokeWidth={1.5}
               label={{ value: `${threshold}`, position: 'left', fill: R.ink, fontSize: 16, fontWeight: 700 }} />
-            <Tooltip content={<Tip />} cursor={{ fill: R.line, fillOpacity: 0.6 }} />
+            <Tooltip content={<DriftIndexTooltip computedStates={computedStates} />} cursor={{ fill: R.line, fillOpacity: 0.6 }} />
             <Bar dataKey="weeklyD" radius={3} maxBarSize={34}
               isAnimationActive={false}
               label={(p: { x?: number | string; y?: number | string; width?: number | string; index?: number }) => {
@@ -69,7 +68,7 @@ export function DriftIndexChart({
                 return (
                   // All notes sit in one row in the top margin, above every bar and the trend line.
                   <text x={x + width / 2} y={NOTE_ROW_Y} textAnchor="middle" fontSize={16} fontWeight={800} fill={R.ink}>
-                    Note
+                    {computedStates ? 'Rule met' : 'Note'}
                   </text>
                 );
               }}>
@@ -91,7 +90,7 @@ export function DriftIndexChart({
           {weeks.map((w) => (
             <tr key={w.week}>
               <td>{w.week}</td><td>{fmt(w.weeklyD)}</td><td>{fmt(w.ewma)}</td>
-              <td>{w.baselineWeek ? 'learning his usual' : w.nudge ? 'family note' : w.watch ? 'watching' : 'steady'}</td>
+              <td>{w.baselineWeek ? 'learning his usual' : w.nudge ? (computedStates ? 'nudge rule met · no notification sent' : 'family note') : computedStates && w.wellbeingCard ? 'wellbeing rule met (computed only)' : w.watch ? 'watching' : computedStates && w.weeklyD === null ? 'insufficient monitoring data' : 'steady'}</td>
             </tr>
           ))}
         </tbody>
@@ -100,7 +99,7 @@ export function DriftIndexChart({
   );
 }
 
-export function DriftLegend({ showEwma = true }: { showEwma?: boolean }) {
+export function DriftLegend({ showEwma = true, computedStates = false }: { showEwma?: boolean; computedStates?: boolean }) {
   return (
     <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-base text-ink-2">
       <span className="inline-flex items-center gap-1.5">
@@ -118,7 +117,7 @@ export function DriftLegend({ showEwma = true }: { showEwma?: boolean }) {
         <span aria-hidden className="h-3 w-5 rounded-sm" style={{ background: R.band }} /> His usual range
       </span>
       <span className="inline-flex items-center gap-1.5">
-        <span aria-hidden className="w-5 border-t-2 border-dashed" style={{ borderColor: R.ink }} /> Note line (1.5)
+        <span aria-hidden className="w-5 border-t-2 border-dashed" style={{ borderColor: R.ink }} /> {computedStates ? 'Nudge rule line (1.5)' : 'Note line (1.5)'}
       </span>
     </p>
   );

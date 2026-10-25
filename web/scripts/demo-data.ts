@@ -167,7 +167,7 @@ export function storiesFor(call: SeedCall, scenario: Scenario): string[] {
 
 // [mean, ±spread] per marker; demo.md §2 table.
 type Spec = [number, number];
-const EARLY: Record<Exclude<MarkerKey, 'repeat_stories'>, Spec> = {
+const EARLY: Record<Exclude<MarkerKey, 'repeat_stories' | 'pitch_var' | 'pitch_range'>, Spec> = {
   speech_rate: [134, 5], pause_rate: [9.0, 1.0], mean_pause_ms: [650, 50], wfp_rate: [0.8, 0.3],
   filler_rate: [4.0, 0.5], vague_rate: [1.2, 0.2], mattr: [0.72, 0.012],
 };
@@ -180,7 +180,7 @@ const DRIFT_W4: typeof EARLY = {
   filler_rate: [4.6, 0.4], vague_rate: [2.3, 0.2], mattr: [0.69, 0.01],
 };
 
-export const MARKER_UNITS: Record<MarkerKey, string> = {
+export const MARKER_UNITS: Record<Exclude<MarkerKey, 'pitch_var' | 'pitch_range'>, string> = {
   speech_rate: 'wpm', pause_rate: 'per100w', mean_pause_ms: 'ms', wfp_rate: 'per100w',
   filler_rate: 'per100w', vague_rate: 'per100w', mattr: 'ratio', repeat_stories: 'count',
 };
@@ -203,7 +203,7 @@ export const weekOf = (n: number) => Math.ceil(n / 3);
 export function markersFor(n: number, scenario: Scenario, rand: () => number) {
   const week = weekOf(n);
   const table = week <= 2 || scenario === 'stable' ? EARLY : week === 3 ? DRIFT_W3 : DRIFT_W4;
-  const out = {} as Record<Exclude<MarkerKey, 'repeat_stories'>, number>;
+  const out = {} as Record<Exclude<MarkerKey, 'repeat_stories' | 'pitch_var' | 'pitch_range'>, number>;
   for (const [key, [mean, spread]] of Object.entries(table) as [keyof typeof EARLY, Spec][]) {
     const v = mean + (rand() * 2 - 1) * spread;
     out[key] = key === 'mattr' ? Math.round(v * 1000) / 1000 : Math.round(v * 10) / 10;

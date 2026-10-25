@@ -17,6 +17,8 @@ Every workstream that writes prompts, UI text, README, or Devpost content follow
 
 Honest framing of the evidence (use in pitch and Devpost): the I-CONECT trial used trained human interviewers, was a Phase II randomized trial of 186 adults aged 75+, and found improved global cognition in the MCI group after 6 months of frequent video conversations. Whether AI conversations give the same benefit is untested. Echo is inspired by that format, not proven to replicate it.
 
+**Voice markers (pitch).** The two voice charts describe sound only: "Voice rise and fall — How much his voice rises and falls while he talks, compared with his usual." and "Voice range — The spread between his lower and higher notes when he talks." Never connect them to mood, emotion, depression, energy or health in any copy, prompt or pitch; they are chart-only and never drive a nudge.
+
 ## 2. Standing disclaimers (UI)
 
 - Timeline footer: **"Echo is not a medical device and doesn't diagnose anything. It notices changes in how {name} talks compared with his own usual, which can have many causes. If you're concerned, talk with his doctor."**

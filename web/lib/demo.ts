@@ -1,4 +1,4 @@
-// The one demo elder the judges' line serves (matches B's DEMO_ELDER_ID in scripts/seed.ts,
-// which can't be imported into client components because it pulls in the DB).
-export const DEMO_ELDER_ID = 'elder-hal-demo';
-export const DEMO_ELDER_PATH = `/elders/${DEMO_ELDER_ID}`;
+// Keep the judges' existing seeded elder by default; optionally point home/nav at a separate demo.
+// Do not import scripts/seed.ts here: it pulls the database into client components.
+export const DEMO_ELDER_ID = process.env.NEXT_PUBLIC_DEMO_ELDER_ID || 'elder-hal-demo';
+export const DEMO_ELDER_PATH = `/elders/${encodeURIComponent(DEMO_ELDER_ID)}`;

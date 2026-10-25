@@ -156,7 +156,7 @@ check "timeline call card" "b.calls.length === 1 && b.calls[0].id === '$CALL' &&
 check "call ended (done or failed)" '["done","failed"].includes(b.calls[0].status)'
 check "photo shown + question on card" "b.calls[0].photosShown[0].id === '$PHOTO' && b.calls[0].familyQuestion.askedBy === 'Sam'"
 check "consent confirmed" 'b.consent.elderConfirmed === true && b.consent.effective.speechTrends === true'
-check "markers series present" 'b.markers.length === 8'
+check "markers series present (8 speech + 2 voice)" "b.markers.length === 10 && ['pitch_var','pitch_range'].every((k) => b.markers.some((m) => m.key === k && m.group === 'voice'))"
 if grep -q 'utterances\|Good to hear you again' "$BODY"; then echo "FAIL timeline leaks transcript" >&2; exit 1; fi
 echo "ok   timeline has no transcript"
 req 404 GET /api/elders/does-not-exist/timeline

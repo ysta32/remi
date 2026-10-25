@@ -1,0 +1,37 @@
+﻿SIMULATED corpus: synthetic/ generator, seed NaN, 12 calls
+
+Per-call markers (authored timing):
+#	week	planted	words	wpm	pause/100w	meanPause	wfp	filler	vague	mattr	rep7d	repAll	D
+1	2026-W40	600	380	127.2	2.11	620	0.00	0.00	0.00	0.841	0	0	0.32
+2	2026-W40	600	373	127.3	2.14	590	0.00	0.00	0.27	0.851	0	0	-0.50
+3	2026-W40	600	365	127.0	2.19	624	0.00	0.00	0.00	0.849	0	0	0.18
+4	2026-W41	850	379	125.9	2.11	848	0.00	0.00	0.00	0.851	0	0	3.60
+5	2026-W41	850	381	125.9	2.10	853	0.00	0.00	0.00	0.824	0	0	4.76
+6	2026-W41	850	382	125.9	2.09	860	0.00	0.00	0.00	0.871	0	0	2.69
+7	2026-W42	1100	381	124.5	2.10	1116	0.00	0.00	0.00	0.826	0	2	4.91
+8	2026-W42	1100	377	124.5	2.12	1102	0.00	0.00	0.27	0.839	0	2	4.61
+9	2026-W42	1100	365	124.3	2.19	1099	0.00	0.00	0.00	0.860	0	1	3.53
+10	2026-W43	1400	377	122.8	2.12	1408	0.00	0.00	0.00	0.861	0	1	3.71
+11	2026-W43	1400	384	123.0	2.08	1398	0.00	0.00	0.00	0.819	0	1	5.44
+12	2026-W43	1400	383	123.1	2.09	1377	0.00	0.00	0.26	0.856	0	2	4.06
+
+Current SPEC §11 rule (baseline = first 6 adequate calls; weekly median z ≥ 1.5 per group; ≥2 groups × 2 weeks):
+  2026-W40: calls=3 repeats=0 drifting=[] speech_rate=-0.2 pause_rate=0.1 mean_pause_ms=-0.7 wfp_rate=0.0 filler_rate=0.0 vague_rate=0.0 mattr=0.0
+  2026-W41: calls=3 repeats=0 drifting=[] speech_rate=0.2 pause_rate=-0.0 mean_pause_ms=0.7 wfp_rate=0.0 filler_rate=0.0 vague_rate=0.0 mattr=-0.0
+  2026-W42: calls=3 repeats=0 drifting=[pauses] speech_rate=0.5 pause_rate=0.0 mean_pause_ms=2.1 wfp_rate=0.0 filler_rate=0.0 vague_rate=0.0 mattr=0.4
+  2026-W43: calls=3 repeats=0 drifting=[pauses] speech_rate=0.9 pause_rate=-0.1 mean_pause_ms=3.8 wfp_rate=0.0 filler_rate=0.0 vague_rate=0.0 mattr=-0.3
+  → check-up nudge: no
+  Variant with repeats counted against all history (not 7 days):
+    2026-W40: repeats=0 drifting=[]
+    2026-W41: repeats=0 drifting=[]
+    2026-W42: repeats=5 drifting=[pauses, repetition]
+    2026-W43: repeats=4 drifting=[pauses, repetition]
+  → check-up nudge: YES — pausing more often or for longer; retelling some of the same stories within a week
+
+Drift Index, compressed (baseline = week 1, 2 of last 3 weeks ≥ 1.5, Theil-Sen up, MK p<0.10):
+  week 1: n=3 weeklyD=-0.00 ewma=0.00 (limit 0.90) cusum=0.00 slope/wk=-0.23 mkP=1.000 meets=false watch=false repeatsCard=false NUDGE=false [baseline]
+  week 2: n=3 weeklyD=3.69 ewma=1.76 (limit 0.90) cusum=9.56 slope/wk=2.51 mkP=0.130 meets=true watch=true repeatsCard=false NUDGE=false
+  week 3: n=3 weeklyD=4.35 ewma=2.97 (limit 0.90) cusum=21.11 slope/wk=1.82 mkP=0.059 meets=true watch=true repeatsCard=false NUDGE=true
+  week 4: n=3 weeklyD=4.41 ewma=3.68 (limit 0.90) cusum=32.82 slope/wk=1.19 mkP=0.017 meets=true watch=true repeatsCard=true NUDGE=false
+
+Drift Index, standard options (8-call baseline after skipping 2): baseline built; nudge=false

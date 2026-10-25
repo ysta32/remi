@@ -1,0 +1,32 @@
+# Synthetic repeat detection integration
+
+User requests adding actual repeat detections to the generated-call demo. Continue on ws/ryan-synthetic-data; user has authorized implementation and feature commit/push. Reuse standalone detector; actual OpenAI calls authorized for these fictional transcripts. Main remains unchanged.
+
+## Approach and scope
+A separate explicit CLI analyzes the imported synthetic corpus chronologically using detector/analyzeCall, persists successful results separately, and exposes an optional consent-filtered timeline DTO. This preserves the legacy seven-day story matcher. Alternatives of reusing legacy topics or injecting planted repeat counts lose required semantics and evidence. Do not modify detector extraction/comparison algorithms or lower threshold to force matches.
+
+## Shared contract
+New SQLite detector_results table: call_id TEXT PRIMARY KEY REFERENCES calls(id) ON DELETE CASCADE, corpus_hash TEXT NOT NULL, settings_hash TEXT NOT NULL, result_json TEXT NOT NULL, analyzed_at TEXT NOT NULL. Mirror Drizzle and document contract. Store only complete successful AnalysisResult JSON internally. Public Timeline.repeatAnalysis optional:
+```
+interface RepeatAnalysisView {
+ scope: 'all_prior_calls';
+ status: 'complete' | 'partial';
+ analyzedCallCount: number;
+ totalCallCount: number;
+ counts: {total:number;unprompted:number;prompted:number;uncertain:number;stories:number;questions:number};
+ provenance: {extractionModel:string|null;embeddingModel:string;threshold:number;detectorVersion:string};
+ matches: {callId:string;startedAt:string;priorCallId:string;priorStartedAt:string;kind:'story'|'question';label:'Unprompted repeat'|'Prompted retelling'|'Uncertain';similarity:number;summary:string|null;quote:string|null;priorQuote:string|null;isSimulated:boolean}[];
+}
+```
+Field omitted without effective speechTrends consent or any valid results. Quote AND summary fields null without effective summaries consent. Never expose embeddings, full result JSON, full transcripts, incident IDs, planted labels or split decisions. Matched prior evidence must resolve to an existing same-elder strictly earlier call in the current corpus. Only detector isRepeat matches are detections. Explicit zero counts valid. Top-level counts cover analyzed calls; partial status clearly indicates omissions. DTO source is validated successful stored results; ignore stale corpus/settings mixtures. No writes to legacy topics/repeat_stories/other markers/nudges.
+
+## Runner
+web/lib/server/synthetic-repeats.ts exports analyzeSyntheticRepeats({inputDir,databasePath,apply?:boolean}, options?: OpenAIOptions & {threshold?:number;onProgress?:(event:{completed:number;total:number;callId:string;repeatCount:number})=>void}). apply default false: validate/read-only dry run, no credentials needed/network/migration/writes. CLI web/scripts/analyze-synthetic-repeats.ts via npm run analyze:synthetic; --input ABS --database ABS [--apply]. Existing canonical validated loadTranscriptSource, convert exact toDetectorCall allowlist. Do not read ground-truth/split files. Validate database exists regular nonsymlink with real ancestors, named corpus elder and all its calls exist simulated, complete, exact canonical transcript/dates/IDs; require effective speechTrends and summaries for processing. Do not modify unrelated elders/calls. Snapshot corpus hash binds all ordered call inputs. Settings hash binds detector/prompt/model/dimensions/threshold, never key. Defaults extraction reuse DEFAULT_EXTRACT_MODEL; embeddings text-embedding-3-small 1536; threshold 0.85; explicit environment overrides supported and recorded. No credentials loaded by library; CLI reads process.env; parent supplies Node --env-file.
+
+Before every provider call and final commit recheck current source/corpus and consent against live DB. Chronological in-memory history contains actual extracted saved items from earlier calls, no planted history. On any unavailable provider result abort remaining calls and leave previous successful database results intact. Collect whole successful batch then transact all results together, preserving legacy data. Migrate only explicit apply, after source/consent validation. A complete unchanged successful corpus/settings batch may be reused without provider calls; any changed/missing entry requires full chronological replay, preventing stale downstream history. Table absence permitted before migration. CLI sanitized errors/progress, no secrets/transcript print. No new network/mock vectors in production. Deterministic provider-shaped transport fixtures only for offline tests. Live run entire 12-call demo is not held-out evaluation.
+
+## Dashboard
+New RepeatDetections component appears on both Chats and How he's doing when optional DTO exists. Show title 'Repeated stories and questions', total and three exact label counts, story/question counts, scope 'Compared with all earlier calls', analyzed call count, provisional threshold/model detail and similarity explicitly NOT probability. Display expandable actual matched current/prior quotes, dates and links to earlier calls; quote redaction respected. No-match complete result says 'No repeats detected at this threshold', never implies absent planted repeats. Partial clearly 'Some calls have not been analyzed'. No clinical claims. Keep simulated badges. Stable SnapshotCard id='call-'+call.id; links to same elder ?call=ENCODED_ID#ENCODED_ANCHOR; target query expands earlier chats. Hide legacy retold tile when standalone result field exists (legacy behavior unchanged otherwise). Existing simulated notice recognition remains backwards-compatible; displayed notice says timing authored and summaries not run, and says repeat analysis not run only when DTO absent. Do not change stored original profile provenance or generator outputs. Audio unchanged.
+
+## Acceptance
+TDD evidence: real SQLite/migrations and production detector transport boundary; no label leakage, exact earlier history (including >7 days), three labels and kind counts, zero vs unavailable, failure no partial persistence, settings/source/cache invalidation, consent recheck, missing/foreign/deleted prior links, DTO strips private data/quotes on revoke, unchanged legacy markers/topics/nudges, fixture fallback, anchor expansion, synthetic notice. Existing suites/typecheck/lint remain green. Parent verifies real OpenAI run, database/API and browser. No accuracy/clinical claim. Contract docs/types/HANDOFF log committed via [contract] process; no worker commits/pushes.

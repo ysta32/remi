@@ -7,6 +7,8 @@ import { USE_FIXTURES } from '@/lib/config';
 import { copy } from '@/lib/copy';
 import { formatRelative } from '@/lib/format';
 import { hasHighlight, recapHighlights } from '@/lib/recap';
+import { isSyntheticTranscriptDemo, syntheticTranscriptNotice } from '@/lib/synthetic-demo';
+import { RepeatDetections } from './RepeatDetections';
 import { ChatCard, recapHref } from './ChatCard';
 import { FunFacts } from './FunFacts';
 import { GentleNote } from './GentleNote';
@@ -19,6 +21,11 @@ import { useTimelinePoll } from './useTimelinePoll';
 
 const FACTS_SHOWN = 3;
 const EARLIER_STEP = 6; // two rows of three; older chats are a click away (and on each recap's calendar)
+
+export function earlierCallsForTarget<T extends { id: string }>(calls: T[], showAll: boolean, target: unknown, limit = 4): T[] {
+  return showAll || (typeof target === 'string' && calls.some(call => call.id === target))
+    ? calls : calls.slice(0, limit);
+}
 
 function FixtureBar({ elderId, current, tab }: { elderId: string; current: FixtureVariant; tab: 'chats' | 'doing' }) {
   return (
@@ -86,6 +93,13 @@ export function TimelineView({
     return () => { ro.disconnect(); window.removeEventListener('resize', restart); };
   }, [loaded]);
 
+  // A stable dependency avoids moving the reader back to the card on every poll.
+  const targetCallId = typeof query.call === 'string' && timeline?.calls.some(call => call.id === query.call) ? query.call : null;
+  useEffect(() => {
+    if (tab !== 'chats' || !targetCallId) return;
+    document.getElementById(`call-${targetCallId}`)?.scrollIntoView({ block: 'start' });
+  }, [targetCallId, tab]);
+
   if (!timeline) {
     return (
       <>
@@ -100,12 +114,14 @@ export function TimelineView({
   const name = timeline.elder.preferredName;
   const confirmed = timeline.consent.elderConfirmed;
   const [newest, ...earlier] = timeline.calls;
+  const shownEarlier = earlierCallsForTarget(earlier, earlierShown >= earlier.length, query.call, earlierShown);
   const nudges = timeline.nudges.filter((n) => !hiddenNudges.has(n.id));
   // Beside a gentle note, facts stack under the panel and fill to fit; with no note, three run in a row.
   const factsBeside = nudges.length > 0;
   const factsShown = factsBeside ? factsFit : FACTS_SHOWN;
   const fixture = USE_FIXTURES ? variant : undefined;
   const anySimulated = timeline.calls.some((c) => c.isSimulated);
+  const transcriptDemo = elder?.id === timeline.elder.id && isSyntheticTranscriptDemo(elder, timeline.calls);
   const photos = elder?.photos ?? [];
 
   // Facts pile up with every call, so only the newest few show; each chat's recap keeps its own.
@@ -149,6 +165,7 @@ export function TimelineView({
           {anySimulated && (
             <p className="text-base text-ink-2">Chats marked Simulated are demo history created for this presentation.</p>
           )}
+          {transcriptDemo && <p className="text-base text-ink-2">{syntheticTranscriptNotice(Boolean(timeline.repeatAnalysis))}</p>}
           {error && <p className="text-base text-ink" role="status">Having trouble refreshing. Showing the last update.</p>}
           <TimelineTabs elderId={id} tab={tab} fixture={USE_FIXTURES ? variant : undefined} />
         </header>
@@ -157,6 +174,7 @@ export function TimelineView({
           <HowHesDoing timeline={timeline} />
         ) : (
           <>
+            {timeline.repeatAnalysis && <RepeatDetections analysis={timeline.repeatAnalysis} elderId={id} />}
             {!confirmed && <p className="rounded-[20px] border border-line bg-card p-5">{copy.notYetConfirmed(name)}</p>}
 
             {/* Desktop: two independent columns (newest + note | panel + facts), so one side growing never
@@ -200,13 +218,13 @@ export function TimelineView({
                 <section aria-labelledby="earlier" className="order-5 space-y-4 lg:col-span-2">
                   <h2 id="earlier" className="text-[30px] font-black tracking-tight">Earlier chats</h2>
                   <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                    {earlier.slice(0, earlierShown).map((c) => (
+                    {shownEarlier.map((c) => (
                       <ChatCard key={`${c.id}:${c.status}`} call={c} href={recapHref(id, c.id, fixture)}
                         highlight={confirmed && hasHighlight(timeline, c)}
                         factCount={confirmed ? recapHighlights(timeline, c).facts.length : 0} />
                     ))}
                   </div>
-                  {earlier.length > EARLIER_STEP && (
+                  {earlier.length > EARLIER_STEP && !earlier.some(call => call.id === query.call) && (
                     <div className="text-right">
                       <button
                         type="button"

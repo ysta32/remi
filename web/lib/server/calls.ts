@@ -18,17 +18,44 @@ const isoDate = z
   .transform((s) => new Date(s).toISOString());
 const atMs = z.number().int().min(0);
 
-// The pipeline deletes audioPath after STT, so only accept the agent's capture files:
-// an absolute .wav path inside a `tmp/calls` directory (contracts §4 example).
+// The pipeline reads, uploads (STT) and deletes audioPath, so only accept the agent's capture
+// files: an absolute local .wav path inside a `tmp/calls` directory (contracts §4 example).
+// Rejected: UNC/network and device paths (\\host\share, //host, \\?\, \\.\ — an unreachable host
+// also blocks the event loop on existsSync), NTFS alternate data streams (a ':' after the drive),
+// and anything not ending in tmp/calls/<name>.wav.
+const isTmpCallsWav = (p: string): boolean => {
+  const norm = path.resolve(p);
+  const dir = path.dirname(norm);
+  const eq = (a: string, b: string) => (process.platform === 'win32' ? a.toLowerCase() === b.toLowerCase() : a === b);
+  return path.extname(norm).toLowerCase() === '.wav' && eq(path.basename(dir), 'calls') && eq(path.basename(path.dirname(dir)), 'tmp');
+};
 const audioPathSchema = z
   .string()
   .max(1000)
   .refine((p) => {
     if (!path.isAbsolute(p)) return false;
-    const norm = path.resolve(p);
-    const dir = path.dirname(norm);
-    return path.extname(norm).toLowerCase() === '.wav' && path.basename(dir) === 'calls' && path.basename(path.dirname(dir)) === 'tmp';
-  }, 'audioPath must be an absolute path to a .wav file inside a tmp/calls directory');
+    if (/^[\\/]{2}/.test(p)) return false; // UNC, \\?\ and \\.\ device paths
+    if (p.slice(/^[a-zA-Z]:/.test(p) ? 2 : 0).includes(':')) return false; // alternate data streams
+    return isTmpCallsWav(p);
+  }, 'audioPath must be an absolute local path to a .wav file inside a tmp/calls directory');
+
+/**
+ * The capture file to process, or null. It must exist as a regular file (not a symlink), its real
+ * path (junctions resolved) must still be a tmp/calls .wav, and it must be under MAX_AUDIO_BYTES.
+ */
+function safeAudioFile(p: string): string | null {
+  try {
+    const st = fs.lstatSync(p);
+    if (!st.isFile() || st.isSymbolicLink() || st.size > MAX_AUDIO_BYTES) return null;
+    const real = fs.realpathSync(p);
+    return isTmpCallsWav(real) ? real : null;
+  } catch {
+    return null; // missing or unreadable
+  }
+}
+
+// ~60 min of 48 kHz stereo 16-bit; the agent writes 16 kHz mono (~115 MB/hour).
+const MAX_AUDIO_BYTES = 700 * 1024 * 1024;
 
 export const callCreateSchema = z.object({
   elderId: z.string().min(1),
@@ -173,11 +200,12 @@ export function completeCall(callId: string, body: CallComplete): boolean {
   const durationMs = Date.parse(body.endedAt) - Date.parse(call.started_at);
   const durationS = Number.isFinite(durationMs) ? Math.max(0, Math.round(durationMs / 1000)) : null;
 
-  // A retried /complete must not undo an earlier run: once STT has consumed (and deleted) the
-  // WAV, keep the word-timestamped utterances instead of overwriting them with the live text.
-  const audioPath = body.audioPath && fs.existsSync(body.audioPath) ? body.audioPath : null;
+  // A retried /complete must not undo an earlier run: keep stored word-timestamped utterances
+  // (from post-call STT) instead of overwriting them with the live text, whether or not the WAV
+  // still exists.
+  const audioPath = body.audioPath ? safeAudioFile(body.audioPath) : null;
   let utterances: Utterance[] = body.utterances;
-  if (!audioPath && !hasWords(utterances)) {
+  if (!hasWords(utterances)) {
     const stored = getSqlite().prepare('SELECT utterances_json FROM calls WHERE id = ?').get(callId) as
       | { utterances_json: string | null }
       | undefined;

@@ -28,6 +28,7 @@ export function ChatCard({
 
   return (
     <Link
+      id={`call-${call.id}`}
       href={href}
       className="group relative flex flex-col gap-3.5 rounded-3xl border border-line bg-card px-7 pb-5 pt-6 shadow-[0_2px_6px_rgba(29,43,69,0.04)] hover:border-ink-2"
     >

@@ -36,13 +36,14 @@ export type CallEvent =
 
 export type MarkerKey =
   | 'speech_rate' | 'pause_rate' | 'mean_pause_ms' | 'wfp_rate'
-  | 'filler_rate' | 'vague_rate' | 'mattr' | 'repeat_stories';
-export type MarkerGroup = 'pace' | 'pauses' | 'words' | 'repetition';
+  | 'filler_rate' | 'vague_rate' | 'mattr' | 'repeat_stories'
+  | 'pitch_var' | 'pitch_range';      // voice group: chart only, not used for nudges
+export type MarkerGroup = 'pace' | 'pauses' | 'words' | 'repetition' | 'voice';
 
 export interface MarkerResult {
   marker: MarkerKey;
   value: number | null;
-  unit: string;                       // 'wpm' | 'cpm' | 'per100w' | 'per100c' | 'ms' | 'ratio' | 'count'
+  unit: string;                       // 'wpm' | 'cpm' | 'per100w' | 'per100c' | 'ms' | 'ratio' | 'count' | 'st'
   confidence: 'high' | 'low' | 'na';
 }
 
@@ -74,6 +75,29 @@ export interface MarkerSeries {
   points: { callId: string; at: string; value: number | null; z: number | null; confidence: 'high' | 'low' | 'na'; isSimulated: boolean }[];
 }
 
+export interface RepeatAnalysisView {
+  scope: 'all_prior_calls';
+  status: 'complete' | 'partial';
+  analyzedCallCount: number;
+  totalCallCount: number;
+  counts: { total: number; unprompted: number; prompted: number; uncertain: number; stories: number; questions: number };
+  provenance: { extractionModel: string | null; embeddingModel: string; threshold: number; detectorVersion: string };
+  matches: { callId: string; startedAt: string; priorCallId: string; priorStartedAt: string; kind: 'story' | 'question'; label: 'Unprompted repeat' | 'Prompted retelling' | 'Uncertain'; similarity: number; summary: string | null; quote: string | null; priorQuote: string | null; isSimulated: boolean }[];
+}
+
+/** Read-only computation; rule flags describe computed state, never notification delivery. */
+export interface DriftIndexView {
+  language: Lang;
+  baselineProgress: { familiarizationCalls: number; familiarizationRequired: number; baselineCalls: number; baselineRequired: number; ready: boolean };
+  eligibleCallCount: number;
+  monitoredCallCount: number;
+  completedMonitoringWeeks: number;
+  repeatCoverage: { knownCallCount: number; unknownCallCount: number; unpromptedStoryCount: number };
+  provenance: { isSimulated: boolean; timing: 'synthetic_authored' | 'stored_call_timing' | 'unknown'; computation: 'read_only'; notificationDelivery: 'not_performed' };
+  rules: import('./analysis/drift-index').DriftIndexOptions;
+  result: import('./analysis/drift-index').DriftIndexResult;
+}
+
 export interface Timeline {
   elder: { id: string; displayName: string; preferredName: string; language: Lang };
   consent: { proposed: ConsentMap; elderConfirmed: boolean; effective: ConsentMap };
@@ -82,6 +106,8 @@ export interface Timeline {
   markers: MarkerSeries[];            // [] unless speechTrends consented
   repeats: { summary: string; dates: string[]; isSimulated: boolean }[]; // [] unless speechTrends consented
   nudges: { id: string; type: 'cognitive_checkup' | 'wellbeing'; createdAt: string; message: string; link: string | null; isSimulated: boolean }[];
+  driftIndex?: DriftIndexView; // omitted without effective speechTrends consent
+  repeatAnalysis?: RepeatAnalysisView; // omitted without effective speechTrends consent or valid results
   processing: boolean;
   generatedAt: string;
 }

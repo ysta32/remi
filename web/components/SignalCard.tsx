@@ -7,6 +7,7 @@ const PILL: Record<Signal['status'], string> = {
   different: 'bg-sky-soft text-ink',
   retold: 'bg-sky-soft text-ink',
   learning: 'border border-line text-ink-2',
+  not_analyzed: 'border border-line text-ink-2',
 };
 
 function latestLine(signal: Signal): string | null {
