@@ -50,43 +50,10 @@ function Stat({ value, label }: { value: string; label: string }) {
   );
 }
 
-const RESEARCH: { title: string; finding: string; use: string; cite: string }[] = [
-  {
-    title: 'Which markers',
-    finding: 'Filled pauses ("um") were the strongest acoustic marker of mild cognitive impairment in the Framingham Heart Study; pause length and frequency differ in early Alzheimer’s; speaking rate is the most consistent speech measure; retelling stories on different days stood out in phone conversations.',
-    use: 'Remi tracks pace, pauses, filler and vague words, word variety, and retold stories.',
-    cite: 'Ding et al. 2024 · Pistono et al. · Hamrick et al. 2023 · Yamada et al. 2020',
-  },
-  {
-    title: 'Compare him with himself',
-    finding: 'Following each person’s own speaking style over time did better than one-off snapshots in the I-CONECT video-chat trial. Models trained on older recordings can pick up recording conditions instead of speech.',
-    use: 'Every marker is scored against his own usual, built from his first weeks of chats.',
-    cite: 'Hoang et al. 2025 · Liu et al. 2024',
-  },
-  {
-    title: 'Never trust one call',
-    finding: 'Single speech sessions are only moderately reliable (ICC 0.22–0.92); averages over several sessions are reliable (ICC ≥ 0.75).',
-    use: 'Remi averages by week and needs weeks of evidence before writing to the family.',
-    cite: 'Robin et al. 2025 · van den Berg et al. 2024',
-  },
-];
-
-const PERSONAS: { key: 'drift' | 'stable' | 'mood'; title: string; planted: string; basis: string }[] = [
-  {
-    key: 'drift', title: 'Slow change',
-    planted: 'From week 3: pauses 650 → 850 ms and 12 → 17 per 100 words, pace −20 words/min, more fillers, less word variety, retold stories rising to ~3 a week.',
-    basis: 'Sized from published gaps between early cognitive impairment and controls.',
-  },
-  {
-    key: 'stable', title: 'Steady',
-    planted: 'No change. Ordinary ups and downs, plus one week with a cold that lengthens pauses.',
-    basis: 'Tests how often Remi would worry a family for nothing.',
-  },
-  {
-    key: 'mood', title: 'Two low weeks',
-    planted: 'Low mood in weeks 4–5 with slightly slower speech and longer pauses, then recovery. No extra retold stories.',
-    basis: 'Low mood can look like cognitive change in speech; it should get a wellbeing card instead.',
-  },
+const PERSONAS: { key: 'drift' | 'stable' | 'mood'; title: string; who: string }[] = [
+  { key: 'drift', title: 'Slow change', who: 'Someone whose speech gradually shifts: longer pauses, slower talking, more "um"s, and more retold stories.' },
+  { key: 'stable', title: 'Steady', who: 'Someone who doesn’t change, apart from ordinary ups and downs and one week with a cold.' },
+  { key: 'mood', title: 'Two low weeks', who: 'Someone who feels down for two weeks, talks a little slower, then recovers.' },
 ];
 
 const RULES: { key: 'driftIndex' | 'current' | 'naive'; name: string; how: string }[] = [
@@ -116,11 +83,8 @@ export default function ResearchPage() {
             <SimulatedBadge />
           </div>
           <p className={lede}>
-            Research links changes in everyday speech to early cognitive decline: more and longer pauses, slower talking,
-            more &quot;um&quot;s, and the same stories told again. These changes are small and gradual, and easy to miss on
-            a weekly phone call. {APP_NAME} hears Grandpa often, so it can compare him with himself over months. The hard part
-            is deciding when a change is real enough to tell the family. This page shows how we decided, and how we tested it
-            on simulated people before trusting it.
+            How {APP_NAME}&apos;s rule for writing to the family behaves on simulated people: whether it notices a slow
+            change, and whether it stays quiet when nothing has changed.
           </p>
         </header>
 
@@ -131,51 +95,20 @@ export default function ResearchPage() {
         </section>
 
         <section aria-labelledby="s1" className="space-y-4">
-          <Step n={1} title="What the research told us" />
-          <div className="grid gap-4 lg:grid-cols-3">
-            {RESEARCH.map((r) => (
-              <article key={r.title} className={card}>
-                <h3 className="text-[22px] font-extrabold">{r.title}</h3>
-                <p className="mt-2 text-ink-2">{r.finding}</p>
-                <p className="mt-3 font-bold">{r.use}</p>
-                <p className="mt-3 text-base text-ink-2">{r.cite}</p>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        <section aria-labelledby="s2" className="space-y-4">
-          <Step n={2} title="What we built" />
-          <ol className={`${card} max-w-none list-decimal space-y-2 pl-10 md:pl-12`}>
-            <li><strong>Score each chat against his usual.</strong> Each marker becomes &quot;how many of his own spreads away from his typical value&quot;, using 8 early chats (skipping the first two, while he gets used to {APP_NAME}).</li>
-            <li><strong>Combine into one weekly score.</strong> Markers are averaged with less weight on the least reliable ones, then scaled so 1 means one of his ordinary week-to-week swings.</li>
-            <li><strong>Wait for persistence.</strong> The family gets a note only if the weekly score is at least 1.5 in 3 of the last 4 weeks and still trending up. A smoothed trend can mark a week as &quot;watching&quot; on the dashboard, but never messages anyone.</li>
-            <li><strong>Route low mood elsewhere.</strong> If mood has been low at the same time, the family gets a wellbeing card instead of a check-up note.</li>
-          </ol>
-        </section>
-
-        <section aria-labelledby="s3" className="space-y-4">
-          <Step n={3} title="How we simulated people" />
-          <p className={lede}>
-            We didn&apos;t write fake conversations. For each simulated chat we generated the numbers the marker code would
-            produce: his usual value, plus any planted change, plus a week-to-week wobble (some weeks are just off), plus
-            chat-to-chat noise that is larger for short chats, plus an occasional glitch like a bad connection. Noise
-            levels come from the published reliability studies. People call about 4 times a week and miss 15% of calls.
-            Each person was run {evalData.seeds} times with different random seeds.
-          </p>
+          <Step n={1} title="Who we simulated" />
           <div className="grid gap-4 lg:grid-cols-3">
             {PERSONAS.map((p) => (
               <article key={p.key} className={card}>
                 <h3 className="text-[22px] font-extrabold">{p.title}</h3>
-                <p className="mt-2 text-ink-2">{p.planted}</p>
-                <p className="mt-2 text-base font-bold">{p.basis}</p>
+                <p className="mt-2 text-ink-2">{p.who}</p>
               </article>
             ))}
           </div>
+          <p className={small}>Each person was simulated {evalData.seeds} times.</p>
         </section>
 
-        <section aria-labelledby="s4" className="space-y-4">
-          <Step n={4} title="Results" />
+        <section aria-labelledby="s2" className="space-y-4">
+          <Step n={2} title="Results" />
 
           <h3 className="pt-2 text-[24px] font-black">A change at a realistic pace</h3>
           <p className={lede}>
@@ -284,8 +217,8 @@ export default function ResearchPage() {
           </p>
         </section>
 
-        <section aria-labelledby="s5" className="space-y-4">
-          <Step n={5} title="Checked on generated conversations">
+        <section aria-labelledby="s3" className="space-y-4">
+          <Step n={3} title="Checked on generated conversations">
             <SimulatedBadge />
           </Step>
           <p className={lede}>
@@ -308,7 +241,6 @@ export default function ResearchPage() {
           <h2 id="limits" className="text-[24px] font-black">What this does and doesn&apos;t show</h2>
           <ul className="list-disc space-y-1.5 pl-6 text-base text-ink-2">
             <li>It shows the rule behaves as designed: quiet for steady people, not fooled by low mood, responsive to sustained change. It does not show how well it works on real people; that needs months of real chats.</li>
-            <li>Which markers to track and how noisy they are come from published studies of structured speech tasks. Real phone chats are probably noisier. The thresholds are our engineering choices.</li>
             <li>{APP_NAME} notices changes in how someone talks compared with their own usual. Sleep, illness, mood, hearing or a new phone can all cause them. It cannot diagnose anything; it suggests mentioning a lasting change at the next check-up.</li>
           </ul>
         </section>
