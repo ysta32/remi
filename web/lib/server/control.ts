@@ -23,10 +23,17 @@ const jobs = () => (store.__remiJobs ??= new Map());
 
 const lastFour = (s: string) => s.replace(/\D/g, '').slice(-4);
 
+// The agent's own .env.local owns its Chert/LiveKit credentials. node --env-file never
+// overrides variables already set, so drop the web app's copies (web/.env.local may hold
+// older ones) before handing the environment to the agent scripts.
+const AGENT_OWNED = /^(CHERT_|LIVEKIT_|AGENT_NAME$)/;
+
 function npmRun(script: string, args: string[]): ChildProcess {
+  const env: NodeJS.ProcessEnv = { ...process.env, FORCE_COLOR: '0' };
+  for (const k of Object.keys(env)) if (AGENT_OWNED.test(k)) delete env[k];
   return spawn('npm', ['run', '-s', script, '--', ...args], {
     cwd: config.agentDir,
-    env: { ...process.env, FORCE_COLOR: '0' },
+    env,
     stdio: ['ignore', 'pipe', 'pipe'],
   });
 }
