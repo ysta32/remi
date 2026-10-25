@@ -1,6 +1,6 @@
 # Reviewed repeat detector results — 25 October 2026
 
-Open `/evaluation` in the Remi app. This is a static judge-facing report: it requires no demo database, API key, model call, or local evaluation files at runtime. The page offers interactive item selection, current/prior fictional excerpts, outcome filters, a print button, and a downloadable JSON snapshot.
+Open `/evaluation` in the Remi app. This is a static judge-facing report: it requires no demo database, API key, model call, or local evaluation files at runtime. The page shows only the compact results graphic and scope caption. The GitHub README uses the same SVG. Detailed item evidence remains in the public JSON snapshot.
 
 ## What was evaluated
 
@@ -32,7 +32,7 @@ These numbers describe repeat matching on fictional transcripts. They do not mea
 
 Frozen implementation/settings: [original checkpoint](2026-10-25-detector-freeze.json). The original [baseline note](2026-10-25-repeat-baseline.md) describes the state before review and remains a historical record.
 
-Public artifact: `web/public/evaluation/repeat-review-v1.json`. Only allowlisted fictional excerpts, summaries, per-item labels/decisions, source hashes and settings are exported; no embeddings, credentials, complete database, or machine paths. The app derives metrics from these 60 rows.
+Public artifact: `web/public/evaluation/repeat-review-v1.json`. Only allowlisted fictional excerpts, summaries, per-item labels/decisions, source hashes and settings are exported; no embeddings, credentials, complete database, or machine paths. The compact graphic reflects these 60 rows; the evaluation helpers derive metrics from the same snapshot.
 
 Export using the original local review packet and frozen snapshot into a **new** file:
 
@@ -45,10 +45,8 @@ python3 scripts/export-repeat-evaluation.py \
 
 The exporter verifies manifest/file/database/result hashes, review-confirmation and correction hashes, item alignment, quote grounding, threshold decisions and prior references before writing. It refuses overwrite. Unchanged inputs reproduce the committed JSON byte-for-byte. It reads no credentials and calls no provider. Original input artifacts remain local/ignored; the public export lets teammates present without those files.
 
-## Judge walkthrough (about one minute)
+## Judge walkthrough
 
-1. Lead with “24 of 30 known repeats caught; no false alarms among 30 new items.”
-2. Explain precision versus recall using the denominators or confusion matrix.
-3. Select item 10.5: compare the seed-storage question to its earlier wording and show why 0.786 missed the 0.85 cutoff.
-4. Select item 11.2: show a caught retelling, its earlier quote, and the separate unclear-prompting label.
-5. Close with the limits and next independent test. Do not present zero observed false alarms as a guarantee on future calls.
+Show the compact `/evaluation` page or the matching graphic in the GitHub README:
+“24 of 30 known repeats caught; no false alarms among 30 new items.”
+Read the scope caption directly below it. Do not present zero observed false alarms as a guarantee on future calls.

@@ -114,13 +114,11 @@ and fresh model accuracy still need human validation. The reviewed synthetic bas
 
 ## Judge-facing repeat evaluation
 
-Open `/evaluation` (the **Evaluation** navigation link). The reviewed synthetic snapshot is bundled
-with the app, so teammates need no local corpus, database import or API credentials to present it.
-It shows the 60-item outcome grid, confusion matrix, precision/recall/F1/accuracy with denominators,
-story/question breakdowns, all six misses and clickable current/prior transcript evidence.
-Use **Print / save PDF** for the browser print flow or **Download results** for the portable JSON.
+Open `/evaluation` (the **Evaluation** navigation link). It shows only the compact 24/30 results
+graphic and the “What this measures” caption. The root GitHub README embeds the exact same SVG
+from `web/public/evaluation/repeat-results.svg` with the same caption.
 
-Suggested walkthrough and export instructions: `docs/evaluation/2026-10-25-reviewed-results.md`
-(at the repo root). Items10.2,10.5,11.2 retain the human-confirmed retelling correction while
-prompting stays unclear. The page makes no live/medical/untouched-holdout performance claim.
-Stanley owns the separate FaceTime check. No audio generation or detector tuning is part of this view.
+The detailed reviewed evidence and reproduction instructions remain in
+`docs/evaluation/2026-10-25-reviewed-results.md` and the portable snapshot at
+`web/public/evaluation/repeat-review-v1.json`. No database or model calls are needed to display the page.
+Stanley owns the separate FaceTime check.

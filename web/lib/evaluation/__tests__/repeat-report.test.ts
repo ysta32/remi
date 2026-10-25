@@ -38,10 +38,13 @@ it('preserves the three human corrections without claiming their prompting is re
     expect(repeatReport.items.find(i => i.reviewItem === id)).toMatchObject({ actualRepeat:true,humanConfirmedRetelling:true,prompting:'uncertain',outcome });
   }
 });
-it('renders scoped scores, all evidence, limitations, denominators and portable download', () => {
+it('renders only the shared results graphic and its scope caption', () => {
   const html = renderToStaticMarkup(React.createElement(RepeatEvaluation));
-  for (const text of ['Synthetic','24','30','100%','80%','90%','88.9%','not an untouched holdout','Prompting unclear','Confirmed retelling','Stanley','/evaluation/repeat-review-v1.json']) expect(html).toContain(text);
+  expect(html).toContain('/evaluation/repeat-results.svg');
+  expect(html).toContain('24 / 30');
+  expect(html).toContain('What this measures:');
+  expect(html).toContain('not an untouched holdout');
+  expect(html).not.toContain('<button');
+  expect(html).not.toContain('<section');
   expect(html).not.toContain('clinical accuracy');
-  expect(html).not.toContain('100% accurate');
-  expect(html).not.toContain('embeddingDimensions');
 });
