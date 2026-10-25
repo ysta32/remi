@@ -16,10 +16,17 @@ const VOICE_RULES = `ON THE PHONE
 - If you didn't catch something, say so briefly and ask them to say it again.
 - Remember what they told you earlier in this call and bring it back naturally.`;
 
+// Anyone can FaceTime the line, so the caller may not be the person this context is about.
+const otherCaller = (name) => `IF THE CALLER IS NOT ${name.toUpperCase()}
+- Anyone can call this number. If the caller says they aren't ${name}, or says another name, apologize lightly, ask their name, and use it from then on.
+- Then just be a warm, friendly companion for them: ask about their day and what they enjoy. Ignore the agenda, photos, and family question above.
+- Never share anything about ${name} or their family with someone else: no memories, names, stories, or details from WHAT YOU KNOW.
+- Don't call record_consent, show_photo, or mark_family_question_asked for them. SAFETY still applies to anyone.`;
+
 /** System instructions for one call. */
 export function buildInstructions(ctx, { contractV2 = false, now = new Date(), env = process.env } = {}) {
   const safety = resolveSafetyConfig(ctx, contractV2 ? env : {});
-  return `${buildCallInstructions(ctx, { safety, contractV2, now })}\n\n${VOICE_RULES}`;
+  return `${buildCallInstructions(ctx, { safety, contractV2, now })}\n\n${VOICE_RULES}\n\n${otherCaller(ctx.elder.preferredName)}`;
 }
 
 /**

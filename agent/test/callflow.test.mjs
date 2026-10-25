@@ -84,3 +84,10 @@ test('tools post events once and route safety through the monitor', () => {
   assert.equal(events[0].atMs, 5000);
   assert.deepEqual(reports, [{ category: 'fall', level: 'urgent', note: 'Fell today.', source: 'model' }]);
 });
+
+test('any caller: Remi adapts and never shares the elder\'s details with someone else', async () => {
+  const { buildInstructions: full } = await import('../brain/index.mjs');
+  const text = full(base, { now, env: {} });
+  assert.match(text, /IF THE CALLER IS NOT HAL/);
+  assert.match(text, /Never share anything about Hal/);
+});
