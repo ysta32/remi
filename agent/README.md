@@ -82,3 +82,23 @@ FaceTime call by Chert yet: watch the media line in `chert dev` on your first ca
 - The waiting room shows that the agent joined LiveKit. It does not verify the
   model key or the media path. The first call does.
 - Never commit or share `.env.local`. LiveKit and model usage may cost money.
+
+## Mock FaceTime (test without the line)
+
+`mock-facetime/` stands in for the Chert Mac so the agent can be tested in a browser
+while the line is down. It is our addition, not part of the Chert starter.
+
+```sh
+npm start        # terminal 1: the agent
+npm run mock     # terminal 2: open http://localhost:5175
+```
+
+It runs the same path as a real call: a waiting room with the agent dispatched by
+`AGENT_NAME` before the call, the caller joining as `chert-bridge-<callId>`, and
+`{"chert_bridge_ready": true}` written to the room metadata (after 2 s by default).
+The page applies the Mac's rules: it ends the call if the agent is silent 10 s after
+ready, or if a second participant publishes audio, and shows video only from the
+participant that speaks. The side panel logs the same records `chert dev` prints,
+live voice levels for both sides, and the agent's reply time after you stop talking.
+Set "FaceTime ready after" to "never" to check that the agent does not greet without
+the signal. Don't run `chert dev` at the same time: both would dispatch the same agent.
