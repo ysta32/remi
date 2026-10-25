@@ -97,6 +97,13 @@ Each agent edits **only its own section** plus appends to "Requests" and "Contra
   3. Voice chart (pitch variation / range) on the "How he's doing" tab once Siyuan's `c5247e6` lands on `main`. Sound only, never mood.
   4. Setup/manage pages for Kevin's memory moments + emergency contact, only if humans approve that contract change (see Requests).
 
+## Ryan — synthetic calls and audio (Task 2)
+- Branch: `ws/ryan-synthetic-data`; standalone `synthetic/` package. Seeded transcript generator produces one fictional elder, 12 calls across four weeks, planted repeats/retellings and distinct same-topic incidents. Ground truth and tuning/held-out incident families stay separate from detector inputs. No backend, dashboard or call-agent changes.
+- Run from repository root: `node synthetic/cli.mjs --output synthetic/output-release` (fresh directory only), then `node synthetic/audio-cli.mjs --input synthetic/output-release` for an offline audio plan. See `synthetic/README.md` for paid generation commands.
+- Audio now uses OpenAI `gpt-4o-mini-tts-2025-12-15`, default voices cedar/marin, with `OPENAI_API_KEY` supplied privately. It writes explicitly simulated full-conversation and caller-only 24 kHz WAVs with exact inserted silence and sample-derived timing. Cached PCM reproduces assembly; fresh TTS is not deterministic. No key was configured at verification, so no real speech was generated or assessed.
+- Verified offline: 147 synthetic tests, 245 detector tests, both syntax checks. Dry run: 12 calls, 252 speech segments, 30,271 text characters and 96 planted pauses. No semantic accuracy or medical claim.
+- Siyuan handoff: use a copy of caller-only WAV with its audio-derived utterance times; the pipeline deletes input audio. Authored transcript word times are not audio measurements. No database import was performed; an isolated simulated import remains pending. Elder ID is `elder-synthetic-hal-bennett`, distinct from the existing demo elder.
+
 ## Requests (from → to: what, by when)
 - D → B: `web/` is scaffolded (Next 16.4.3, Tailwind 4, Recharts, vitest; `web/lib/types.ts` mirrors contracts §3, `web/lib/config.ts` has `APP_NAME`). Please build `web/db`, `web/app/api` on top of this branch rather than a second scaffold.
 - D → B: confirm field names for `GET /api/elders/:id` (contract §5 lists only the parts). D assumes `ElderProfile` in `web/lib/api.ts`: `{ id, displayName, preferredName, language, timezone, about, primaryContactName, members[], photos[{id,caption,people,imageUrl}], questions[{id,text,askedBy,status}], consent }`.
