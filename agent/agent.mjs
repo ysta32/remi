@@ -19,12 +19,17 @@ import { createTurnGuard } from './lib/turn-guard.mjs';
 import { collectTranscript } from './lib/transcript.mjs';
 import { renderPhotoCard, withPulse } from './lib/card.mjs';
 import { startCapture } from './lib/wav.mjs';
+import { missingTextConfig } from './brain/notify.mjs';
 import { createCallMemory } from './lib/call-memory.mjs';
 
 const PHOTO_SECONDS = 90;   // then the face comes back
 const MEMORY_EVERY = 3;     // caller turns between in-call memory refreshes
 const log = (line) => console.log(line);
 export const CALLS_DIR = join(TMP_DIR, 'calls');
+
+// At startup: say plainly if texting contacts can't work (placeholders in .env.local).
+const missingText = missingTextConfig();
+if (missingText.length) console.warn(`[contacts] texting is off until ${missingText.join(' and ')} are filled in agent/.env.local`);
 
 // At startup, before any call: make sure caller audio has somewhere to go.
 if (readConfig().captureAudio) {

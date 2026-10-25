@@ -13,6 +13,13 @@ import { fileURLToPath } from 'node:url';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SDK_PKG = '@trychert/sdk@0.1.0';
 
+const PLACEHOLDER = /^(?:YOUR_|<|$)/;
+
+/** Names of the iMessage settings that are missing or still template placeholders. */
+export function missingTextConfig(env = process.env) {
+  return ['CHERT_BASE_URL', 'CHERT_API_KEY'].filter((k) => PLACEHOLDER.test(String(env[k] ?? '').trim()));
+}
+
 export function maskPhone(phone) {
   return phone ? `***${String(phone).slice(-4)}` : 'none';
 }
@@ -32,19 +39,22 @@ function runOnce(args, timeoutMs) {
     const done = (r) => { if (!settled) { settled = true; clearTimeout(timer); resolve(r); } };
     let child;
     try {
-      child = spawn(cmd, argv, { env: process.env, stdio: ['ignore', 'pipe', 'ignore'] });
+      child = spawn(cmd, argv, { env: process.env, stdio: ['ignore', 'pipe', 'pipe'] });
     } catch (err) {
       return done({ ok: false, detail: `spawn failed: ${err.message}` });
     }
     timer = setTimeout(() => { child.kill('SIGTERM'); done({ ok: false, detail: `timed out after ${timeoutMs} ms` }); }, timeoutMs);
+    let stderr = '';
     child.stdout.on('data', (d) => { stdout += d; });
+    // The SDK prints one JSON line with a generic reason and never the key or body.
+    child.stderr.on('data', (d) => { stderr += d; });
     child.on('error', (err) => done({ ok: false, detail: `spawn error: ${err.message}` }));
     child.on('close', (code) => {
       let parsed = null;
       try { parsed = JSON.parse(stdout.trim().split('\n').pop()); } catch { /* not JSON */ }
       done(code === 0 && parsed
         ? { ok: true, detail: 'queued (not proof of delivery)' }
-        : { ok: false, detail: `chert-sdk exit ${code}` });
+        : { ok: false, detail: `chert-sdk exit ${code}${stderr.trim() ? `: ${stderr.trim().split('\n').pop().slice(0, 200)}` : ''}` });
     });
   });
 }

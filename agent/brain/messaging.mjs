@@ -3,7 +3,7 @@
 // contact book, with per-call and per-day caps, because anyone can call the line.
 import { randomUUID } from 'node:crypto';
 import { lastFour, normalizePhone } from '../lib/contacts.mjs';
-import { maskPhone, sendIMessage } from './notify.mjs';
+import { maskPhone, missingTextConfig, sendIMessage } from './notify.mjs';
 
 export const MAX_TEXTS_PER_CALL = 3;
 export const MAX_TEXTS_PER_DAY = 20;
@@ -36,7 +36,7 @@ ${saved.length ? saved.join('\n') : '(none saved yet)'}
  * @param {boolean} [o.dryRun]   log instead of sending (tests, mock calls)
  * @param {Function} [o.send]    sendIMessage, injectable for tests
  */
-export function createMessagingTools({ book, elderName, callId = null, dryRun = false, send = sendIMessage, log = console.log }) {
+export function createMessagingTools({ book, elderName, callId = null, dryRun = false, send = sendIMessage, log = console.log, env = process.env }) {
   let textsThisCall = 0;
 
   const saveContact = {
@@ -84,6 +84,11 @@ export function createMessagingTools({ book, elderName, callId = null, dryRun = 
       if (!String(message ?? '').trim()) return 'The message is empty. Ask what to say.';
       if (textsThisCall >= MAX_TEXTS_PER_CALL || book.sentToday() >= MAX_TEXTS_PER_DAY) {
         return 'No text was sent: the limit for texts has been reached. Say so honestly. If this is an emergency, tell them to call 911.';
+      }
+      const missing = dryRun ? [] : missingTextConfig(env);
+      if (missing.length) {
+        log(`[contacts] texting is not set up: fill ${missing.join(', ')} in agent/.env.local`);
+        return `No text was sent: texting isn't set up on this phone line yet. Tell ${elderName} honestly that you couldn't send it${urgent ? ', and if they may be in danger, to call 911 now' : ''}.`;
       }
       textsThisCall += 1;
       book.recordSent();

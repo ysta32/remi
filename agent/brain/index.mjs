@@ -48,7 +48,7 @@ export function createBrain({ ctx, callId = null, emit, elapsedMs, contractV2 = 
   const tools = [
     ...createCallFlowTools({ postEvent: emit, elapsedMs, safety, contractV2, photos: ctx.photos ?? [], onShowPhoto }),
     ...createMessagingTools({
-      book, elderName: ctx.elder.preferredName, callId, send,
+      book, elderName: ctx.elder.preferredName, callId, send, env,
       dryRun: env.TEXT_DRY_RUN === '1' || env.MOCK_CONTEXT === '1',
     }),
   ];
