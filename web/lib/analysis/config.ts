@@ -1,6 +1,6 @@
 // Every analysis threshold in one place (markers.md §4–8, SPEC §11). [HEURISTIC] engineering
 // values, not clinical cut-offs. Pure constants only: lib/markers imports this file too.
-import type { Lang, MarkerKey } from '../types';
+import type { Lang, MarkerGroup, MarkerKey } from '../types';
 
 // Pauses (markers.md §4)
 export const PAUSE_MIN_MS = 400;
@@ -54,6 +54,11 @@ export const PITCH_OUTLIER_ST = 10; // drop frames further than this from the ca
 export const PITCH_SPAN_PAD_MS = 100; // padding around STT word spans
 export const PITCH_MIN_VOICED_FRAMES = 500; // ~10 s of voiced speech at a 20 ms hop → 'high'
 export const PITCH_MIN_FRAMES_ANY = 25; // ~0.5 s; below this, no value at all
+
+// Groups that can drift toward a nudge, in display order. 'voice' (pitch) is deliberately left
+// out: phone microphones, the FaceTime codec, a cold or room noise all shift pitch, so it is
+// chart only until real calls show it is stable (markers.md §4b). Add 'voice' here to enable.
+export const NUDGE_GROUPS: MarkerGroup[] = ['pace', 'pauses', 'words', 'repetition'];
 
 // Drift and nudges (markers.md §8)
 export const DRIFT_Z = 1.5;

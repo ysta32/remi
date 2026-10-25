@@ -1,4 +1,4 @@
-// Post-call pipeline (SPEC §9, contracts §7): stt → extract → markers → repetition → recompute → done.
+// Post-call pipeline (SPEC §9, contracts §7): stt → acoustic → extract → markers → repetition → done → recompute.
 // processCall never throws: failures land on the calls row (status/failed_step/error) and in timings.
 // Every step is idempotent so /complete re-sends and /api/dev/calls/:id/process can re-run it.
 import fs from 'node:fs/promises';
@@ -7,8 +7,10 @@ import { getDb, getSqlite } from '@/db/client';
 import { callEvents, calls, elders, familyQuestions, funFacts, topics } from '@/db/schema';
 import { APP_NAME, config } from '@/lib/config';
 import { computeMarkers } from '@/lib/markers';
+import { pitchMarkers, pitchNotAvailable } from '@/lib/markers/pitch';
+import { parseWav } from '@/lib/markers/wav';
 import { newId, nowIso } from '@/lib/server/ids';
-import type { Lang, Utterance, Word } from '@/lib/types';
+import type { Lang, MarkerResult, Utterance, Word } from '@/lib/types';
 import { PAUSE_MAX_MS, REPEAT_COSINE, REPEAT_WINDOW_DAYS } from './config';
 import { embed, EmbeddingsDisabledError } from './embeddings';
 import { extractCall, matchStories, type Extraction } from './llm';
@@ -59,16 +61,24 @@ export async function processCall(callId: string): Promise<void> {
     const lang = call.language as Lang;
     let utterances: Utterance[] = call.utterancesJson ? JSON.parse(call.utterancesJson) : [];
 
-    // 1. STT (soft): word timestamps for pause markers. The WAV is deleted in the outer finally.
+    // 1. STT (soft): word timestamps for pause markers.
+    // 1b. Acoustic (soft): pitch markers from the same WAV, limited to the caller's word spans.
+    // The WAV is deleted right after, and again in the outer finally if anything above throws.
     if (audioPath) {
       const wav = audioPath;
       const words = await step(callId, 'stt', () => transcribeWords(wav, lang), true);
-      await deleteAudio(callId, wav);
-      audioPath = null;
       if (words && words.length) {
         utterances = attachWords(utterances, words);
         db.update(calls).set({ utterancesJson: JSON.stringify(utterances) }).where(eq(calls.id, callId)).run();
       }
+      const final = utterances;
+      await step(callId, 'acoustic', async () => upsertMarkers(callId, await voiceMarkers(wav, final, lang), true), true);
+      await deleteAudio(callId, wav);
+      audioPath = null;
+    } else {
+      // No audio this run: mark voice markers not available, but never overwrite earlier real
+      // values (a re-run after the WAV was deleted).
+      upsertMarkers(callId, pitchNotAvailable(), false);
     }
 
     // 2. Extraction (soft): on failure keep any earlier extraction, else a neutral fallback summary.
@@ -98,16 +108,7 @@ export async function processCall(callId: string): Promise<void> {
       }), true);
 
     // 3. Markers (hard).
-    await step(callId, 'markers', () => {
-      const results = computeMarkers(utterances, lang);
-      const upsert = getSqlite().prepare(
-        `INSERT INTO call_markers (call_id, marker, value, unit, z, confidence) VALUES (?, ?, ?, ?, NULL, ?)
-         ON CONFLICT(call_id, marker) DO UPDATE SET value=excluded.value, unit=excluded.unit, z=NULL, confidence=excluded.confidence`,
-      );
-      getSqlite().transaction(() => {
-        for (const r of results) upsert.run(callId, r.marker, r.value, r.unit, r.confidence);
-      })();
-    });
+    await step(callId, 'markers', () => upsertMarkers(callId, computeMarkers(utterances, lang), true));
 
     // 4. Repetition (soft): link this call's caller-initiated stories to earlier tellings, then
     //    re-link later calls whose links pointed at this call's (now replaced) topics.
@@ -135,6 +136,28 @@ export async function processCall(callId: string): Promise<void> {
     // Raw audio never outlives processing, whatever happened above (SPEC §12).
     if (audioPath) await deleteAudio(callId, audioPath);
   }
+}
+
+/** Pitch markers (markers.md §4b) for one call's WAV. Adequacy comes from the transcript markers. */
+async function voiceMarkers(wav: string, utterances: Utterance[], lang: Lang): Promise<MarkerResult[]> {
+  const { sampleRate, samples } = parseWav(await fs.readFile(wav));
+  const spans = utterances
+    .filter((u) => u.speaker === 'caller')
+    .flatMap((u) => (u.words ?? []).map((w) => ({ startMs: w.startMs, endMs: w.endMs })));
+  const adequate = computeMarkers(utterances, lang).some((m) => m.confidence === 'high');
+  return pitchMarkers(samples, sampleRate, spans.length ? spans : undefined, adequate);
+}
+
+/** Upsert marker rows (z reset to NULL; recomputeElder fills it). `overwrite=false` keeps existing rows. */
+function upsertMarkers(callId: string, results: MarkerResult[], overwrite: boolean): void {
+  const sqlite = getSqlite();
+  const stmt = sqlite.prepare(
+    `INSERT INTO call_markers (call_id, marker, value, unit, z, confidence) VALUES (?, ?, ?, ?, NULL, ?)
+     ON CONFLICT(call_id, marker) DO ${overwrite ? 'UPDATE SET value=excluded.value, unit=excluded.unit, z=NULL, confidence=excluded.confidence' : 'NOTHING'}`,
+  );
+  sqlite.transaction(() => {
+    for (const r of results) stmt.run(callId, r.marker, r.value, r.unit, r.confidence);
+  })();
 }
 
 async function deleteAudio(callId: string, wav: string): Promise<void> {
