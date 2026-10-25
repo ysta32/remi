@@ -24,6 +24,26 @@ export const config = {
   get agentApiToken() {
     return process.env.AGENT_API_TOKEN || '';
   },
+  /** Passcode for the /control panel; the panel is closed when unset. */
+  get controlPasscode() {
+    return process.env.CONTROL_PASSCODE || '';
+  },
+  /** The agent folder whose scripts the control panel runs (npm run call|text|contacts). */
+  get agentDir() {
+    return process.env.AGENT_DIR || path.join(process.cwd(), '..', 'agent');
+  },
+  /** chert dev's --json log, for the line state on the control panel (optional). */
+  get chertDevLog() {
+    return process.env.CHERT_DEV_LOG || '';
+  },
+  /** The agent's stdout log, for the last call's latency line on the control panel (optional). */
+  get agentLog() {
+    return process.env.AGENT_LOG || '';
+  },
+  /** The elder whose contacts the control panel manages (matches the agent's ELDER_ID). */
+  get controlElderId() {
+    return process.env.ELDER_ID || 'elder-hal-demo';
+  },
   get llmProvider() {
     return (process.env.LLM_PROVIDER || 'openai') as 'openai' | 'gemini';
   },

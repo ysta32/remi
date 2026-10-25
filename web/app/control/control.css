@@ -1,0 +1,119 @@
+/* Switchboard: the operator's panel for live demos. Lamps report, jacks act. */
+.switchboard {
+  --board: #dfe5dc;
+  --face: #f5f7f2;
+  --ink: #17251e;
+  --ink-2: #4e5d56;
+  --rule: #c5cfc6;
+  --jack: #1f7a4d;
+  --jack-ink: #f2fbf5;
+  --lamp: #f2a516;
+  --hangup: #b8392a;
+  --dead: #9aa59e;
+  min-height: 100vh;
+  background: var(--board);
+  color: var(--ink);
+  font-family: var(--font-archivo), system-ui, sans-serif;
+  font-size: 17px;
+  line-height: 1.5;
+  padding: 20px 16px 64px;
+}
+@media (prefers-color-scheme: dark) {
+  .switchboard {
+    --board: #1c2621;
+    --face: #24302a;
+    --ink: #e7efe9;
+    --ink-2: #a7b6ad;
+    --rule: #34433b;
+    --jack: #3fae76;
+    --jack-ink: #0d1f15;
+    --hangup: #e0604f;
+    --dead: #5c6a62;
+  }
+}
+.switchboard * { box-sizing: border-box; }
+.sb-wrap { max-width: 640px; margin: 0 auto; }
+.sb-title {
+  font-stretch: 125%;
+  font-weight: 800;
+  font-size: 1.9rem;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+  margin: 0;
+}
+.sb-sub { color: var(--ink-2); margin: 4px 0 0; }
+
+/* Lamps: the one decorative idea, and it carries the system state. */
+.sb-lamps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 20px 0 28px; }
+.sb-lamp { background: var(--face); border: 1px solid var(--rule); border-radius: 14px; padding: 12px; display: flex; gap: 10px; align-items: center; min-width: 0; }
+.sb-bulb { flex: none; width: 18px; height: 18px; border-radius: 50%; background: var(--dead); box-shadow: inset 0 -2px 3px rgb(0 0 0 / 0.25); }
+.sb-bulb[data-state='on'] { background: var(--jack); box-shadow: 0 0 0 4px color-mix(in srgb, var(--jack) 22%, transparent), inset 0 -2px 3px rgb(0 0 0 / 0.2); }
+.sb-bulb[data-state='live'] { background: var(--lamp); box-shadow: 0 0 0 5px color-mix(in srgb, var(--lamp) 30%, transparent), 0 0 18px var(--lamp); animation: sb-glow 1.6s ease-in-out infinite; }
+.sb-bulb[data-state='bad'] { background: var(--hangup); }
+@keyframes sb-glow { 50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--lamp) 18%, transparent), 0 0 26px var(--lamp); } }
+@media (prefers-reduced-motion: reduce) { .sb-bulb[data-state='live'] { animation: none; } }
+.sb-lamp > div { min-width: 0; }
+.sb-lamp b { display: block; font-size: 0.95rem; }
+.sb-lamp span { display: block; color: var(--ink-2); font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.sb-section { margin-top: 28px; }
+.sb-h { font-stretch: 112%; font-weight: 750; font-size: 1.2rem; margin: 0 0 10px; }
+.sb-face { background: var(--face); border: 1px solid var(--rule); border-radius: 18px; padding: 16px; }
+.sb-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.sb-field { display: grid; gap: 4px; margin-bottom: 12px; }
+.sb-field label, .sb-label { font-weight: 600; font-size: 0.95rem; }
+.sb-input, .sb-select, .sb-textarea {
+  width: 100%; font: inherit; color: var(--ink); background: var(--board);
+  border: 1.5px solid var(--rule); border-radius: 12px; padding: 12px 14px; min-height: 48px;
+}
+.sb-textarea { min-height: 96px; resize: vertical; }
+.sb-input:focus-visible, .sb-select:focus-visible, .sb-textarea:focus-visible, .sb-btn:focus-visible, .sb-jack:focus-visible, .sb-check input:focus-visible {
+  outline: 3px solid var(--lamp); outline-offset: 2px;
+}
+.sb-check { display: inline-flex; gap: 8px; align-items: center; font-weight: 600; cursor: pointer; min-height: 44px; }
+.sb-check input { width: 22px; height: 22px; accent-color: var(--jack); }
+
+.sb-btn {
+  font: inherit; font-weight: 700; border-radius: 12px; padding: 12px 18px; min-height: 48px;
+  border: 1.5px solid var(--ink); background: transparent; color: var(--ink); cursor: pointer;
+}
+.sb-btn[data-tone='go'] { background: var(--jack); border-color: var(--jack); color: var(--jack-ink); }
+.sb-btn[data-tone='stop'] { background: var(--hangup); border-color: var(--hangup); color: #fff; }
+.sb-btn[data-tone='armed'] { background: var(--hangup); border-color: var(--hangup); color: #fff; }
+.sb-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* The call jack: the biggest target on the page. */
+.sb-callrow { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: end; }
+.sb-jack {
+  width: 96px; height: 96px; border-radius: 50%; border: 0; cursor: pointer;
+  font: inherit; font-stretch: 125%; font-weight: 800; font-size: 1.05rem;
+  background: var(--jack); color: var(--jack-ink);
+  box-shadow: inset 0 -6px 0 rgb(0 0 0 / 0.18), 0 0 0 6px color-mix(in srgb, var(--jack) 20%, transparent);
+}
+.sb-jack[data-tone='stop'] { background: var(--hangup); color: #fff; box-shadow: inset 0 -6px 0 rgb(0 0 0 / 0.2), 0 0 0 6px color-mix(in srgb, var(--hangup) 22%, transparent); }
+.sb-jack:active { transform: translateY(2px); }
+.sb-jack:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.sb-trail { list-style: none; margin: 14px 0 0; padding: 0 0 0 14px; border-left: 3px solid var(--rule); }
+.sb-trail li { position: relative; padding: 3px 0; color: var(--ink-2); }
+.sb-trail li::before { content: ''; position: absolute; left: -21px; top: 12px; width: 11px; height: 11px; border-radius: 50%; background: var(--rule); }
+.sb-trail li:last-child { color: var(--ink); font-weight: 600; }
+.sb-trail li:last-child::before { background: var(--lamp); }
+.sb-trail li[data-tone='bad'] { color: var(--hangup); }
+.sb-note { color: var(--ink-2); font-size: 0.92rem; margin: 8px 0 0; }
+.sb-result { margin-top: 10px; font-weight: 600; }
+.sb-result[data-tone='bad'] { color: var(--hangup); }
+.sb-result[data-tone='ok'] { color: var(--jack); }
+.sb-contacts { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.sb-contacts li { border: 1.5px solid var(--rule); border-radius: 999px; padding: 6px 12px; }
+.sb-links { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 32px; }
+.sb-links a, .sb-link { color: var(--ink); font-weight: 600; text-underline-offset: 3px; background: none; border: 0; font: inherit; cursor: pointer; padding: 0; text-decoration: underline; }
+.sb-login { max-width: 380px; margin: 12vh auto 0; }
+@media (max-width: 420px) {
+  .sb-lamps { grid-template-columns: 1fr; }
+  .sb-callrow { grid-template-columns: 1fr; }
+  .sb-jack { width: 100%; height: 64px; border-radius: 999px; }
+}
+/* The board runs edge to edge, past the end of short pages too. */
+body:has(.switchboard) { background: #dfe5dc; }
+@media (prefers-color-scheme: dark) { body:has(.switchboard) { background: #1c2621; } }
