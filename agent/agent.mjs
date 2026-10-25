@@ -156,7 +156,9 @@ export default defineAgent({
       if (item.role !== 'user') return;
       brain.safetyCheck(item.textContent);
       if (memory.callerTurns % MEMORY_EVERY === 0) {
-        agent.updateInstructions(`${instructions}\n\n${memory.section(context.elder.preferredName)}`)
+        const section = memory.section(context.elder.preferredName);
+        agent.updateInstructions(`${instructions}\n\n${section}`)
+          .then(() => log(`[memory] refreshed after ${memory.callerTurns} caller turns (${section.length} chars)`))
           .catch((err) => log(`[memory] update failed: ${err.message}`));
       }
     });
