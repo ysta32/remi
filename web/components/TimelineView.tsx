@@ -17,6 +17,8 @@ import { SnapshotCard } from './SnapshotCard';
 import { TimelineTabs } from './TimelineTabs';
 import { useTimelinePoll } from './useTimelinePoll';
 
+const FACTS_SHOWN = 3;
+
 function FixtureBar({ elderId, current, tab }: { elderId: string; current: FixtureVariant; tab: 'chats' | 'doing' }) {
   return (
     <nav aria-label="Demo data" className="flex items-center gap-2 overflow-x-auto whitespace-nowrap rounded-2xl bg-card px-4 py-2 text-base text-ink-2">
@@ -45,6 +47,7 @@ export function TimelineView({
 
   const { timeline, elder, error, newIds } = useTimelinePoll(id, variant);
   const [hiddenNudges, setHiddenNudges] = useState<Set<string>>(new Set());
+  const [allFacts, setAllFacts] = useState(false);
 
   if (!timeline) {
     return (
@@ -137,7 +140,19 @@ export function TimelineView({
                 {confirmed && (
                   <section aria-labelledby="facts" className="space-y-3">
                     <h2 id="facts" className="text-[30px] font-black tracking-tight">Fun facts</h2>
-                    <FunFacts facts={timeline.funFacts} newIds={newIds} />
+                    {/* Facts pile up with every call, so the sidebar shows the newest few; each
+                        chat's recap keeps its own facts one click away. */}
+                    <FunFacts facts={allFacts ? timeline.funFacts : timeline.funFacts.slice(0, FACTS_SHOWN)} newIds={newIds} />
+                    {timeline.funFacts.length > FACTS_SHOWN && (
+                      <button
+                        type="button"
+                        aria-expanded={allFacts}
+                        onClick={() => setAllFacts((v) => !v)}
+                        className="rounded-full border border-line bg-card px-5 py-2.5 font-bold hover:border-ink-2"
+                      >
+                        {allFacts ? 'Show fewer' : `See all ${timeline.funFacts.length} fun facts`}
+                      </button>
+                    )}
                   </section>
                 )}
               </div>
