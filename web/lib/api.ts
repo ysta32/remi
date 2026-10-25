@@ -35,8 +35,15 @@ export interface ElderProfile extends ElderSummary {
   consent: Timeline['consent'];
 }
 
-export async function getElder(elderId: string): Promise<ElderProfile> {
-  if (USE_FIXTURES) return structuredClone(elderFixture as ElderProfile);
+export async function getElder(elderId: string, variant: FixtureVariant = 'drift'): Promise<ElderProfile> {
+  if (USE_FIXTURES) {
+    const elder = structuredClone(elderFixture as ElderProfile);
+    // After the live call, Sam's question has been asked and answered (the API does this for real).
+    if (variant === 'after-call') {
+      elder.questions = elder.questions.map((q) => (q.id === 'q-first-car' ? { ...q, status: 'answered' } : q));
+    }
+    return elder;
+  }
   return getJson(`/api/elders/${encodeURIComponent(elderId)}`);
 }
 

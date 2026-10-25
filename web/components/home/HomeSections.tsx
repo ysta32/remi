@@ -17,12 +17,15 @@ export function HomeSections() {
       <section id="how" aria-labelledby="how-h" className="scroll-mt-6">
         <h2 id="how-h" className={h2}>How it works</h2>
         <p className="mt-2 text-[19px] text-ink-2">No app, no wearable, no test to take. Just a FaceTime call.</p>
-        <ol className="mt-6 grid gap-4 md:grid-cols-3">
+        {/* One connected panel, not three look-alike cards: the order is the information. */}
+        <ol className="mt-6 grid rounded-[28px] border border-line bg-card md:grid-cols-3">
           {STEPS.map((s, i) => (
-            <li key={s.title} className="rounded-[28px] border border-line bg-card p-6">
-              <span aria-hidden className="grid size-11 place-items-center rounded-full bg-sky-soft text-lg font-black">{i + 1}</span>
-              <h3 className="mt-3 text-[22px] font-extrabold leading-snug">{s.title}</h3>
-              <p className="mt-1 text-ink-2">{s.text}</p>
+            <li key={s.title} className="flex gap-4 border-line p-6 max-md:border-b max-md:last:border-0 md:border-r md:last:border-0">
+              <span aria-hidden className="grid size-11 shrink-0 place-items-center rounded-full bg-sky-soft text-lg font-black">{i + 1}</span>
+              <span>
+                <h3 className="text-[22px] font-extrabold leading-snug">{s.title}</h3>
+                <p className="mt-1 text-ink-2">{s.text}</p>
+              </span>
             </li>
           ))}
         </ol>
@@ -31,7 +34,7 @@ export function HomeSections() {
       <section aria-labelledby="eye-h">
         <h2 id="eye-h" className={h2}>What Remi gently keeps an eye on</h2>
         <p className="mt-2 max-w-[60ch] text-[19px] text-ink-2">
-          Four signals from speech research. Each one is compared only with his own usual, never with anyone else.
+          Four signals from speech research. Each one is compared only with his own usual, never with anyone else. Many things can cause a change, so Remi only ever leaves a note, never a verdict.
         </p>
         <ul className="mt-6 grid rounded-[28px] border border-line bg-card px-6 py-2 md:grid-cols-2 md:gap-x-12">
           {signals.map((s, i) => (
@@ -42,11 +45,6 @@ export function HomeSections() {
                 <span className="text-ink-2">{s.explainer}</span>
               </span>
             </li>
-          ))}
-        </ul>
-        <ul className="mt-4 flex flex-wrap gap-2">
-          {['His own usual', 'Many things can cause a change', 'A note, never a verdict'].map((t) => (
-            <li key={t} className="rounded-full bg-card px-4 py-2 text-[17px] font-bold">{t}</li>
           ))}
         </ul>
       </section>

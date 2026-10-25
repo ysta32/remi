@@ -32,6 +32,13 @@ export const STATUS_TEXT: Record<SignalStatus, string> = {
   learning: 'Still learning his usual',
 };
 
+// Plain words for a combined "change from usual" reading; same threshold as the status pill.
+export function zWords(z: number): string {
+  if (z >= DRIFT_Z) return 'More than his usual';
+  if (z <= -DRIFT_Z) return 'Less than his usual';
+  return 'Near his usual';
+}
+
 const COPY: Record<SignalKey, { title: string; explainer: string }> = {
   pauses: { title: 'Pauses & hesitation', explainer: 'Stopping mid-thought, or saying "um" while he searches for a word.' },
   pace: { title: 'Speaking pace', explainer: "How quickly he talks while he's speaking." },

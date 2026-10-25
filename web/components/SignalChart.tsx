@@ -4,7 +4,7 @@ import {
   Bar, BarChart, Line, LineChart, ReferenceArea, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts';
 import { formatShortDate, formatValue, unitLabel } from '@/lib/format';
-import type { Signal, SignalPoint } from '@/lib/signals';
+import { zWords, type Signal, type SignalPoint } from '@/lib/signals';
 
 // Hex mirrors of the CSS tokens: SVG presentation attributes don't reliably resolve var().
 const C = { ink: '#1d2b45', ink2: '#4f5b70', band: '#d6e8f8', line: '#e3ebf3', card: '#ffffff' };
@@ -13,9 +13,7 @@ interface Datum { t: number; v: number | null; p: SignalPoint }
 
 function describe(signal: Signal, v: number): string {
   if (signal.unit !== 'z') return `${formatValue(v, signal.unit)} ${unitLabel(signal.unit)}`.trim();
-  if (v >= 1) return 'More than his usual';
-  if (v <= -1) return 'Less than his usual';
-  return 'Near his usual';
+  return zWords(v);
 }
 
 // Live calls: larger solid ink dots. Simulated history: smaller grey dots. Short calls: hollow.

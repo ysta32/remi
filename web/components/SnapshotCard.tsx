@@ -46,7 +46,7 @@ export function SnapshotCard({
     <article
       ref={ref}
       className={`rounded-[10px] border border-line bg-card shadow-[0_16px_30px_-20px_rgba(0,0,0,0.35)] ${
-        feature ? 'p-4 md:-rotate-1 md:p-5' : 'p-4'
+        feature ? 'p-4 pb-7 md:-rotate-1 md:p-5 md:pb-8' : 'p-4 pb-6 md:rotate-[0.6deg]'
       } ${busy ? 'bg-[#f4f6f8]' : ''} ${isNew && call.status === 'done' ? 'animate-develop' : ''}`}
     >
       <header className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -57,7 +57,6 @@ export function SnapshotCard({
         </span>
         <span className="ml-auto flex items-center gap-2">
           {showNew && <span className="rounded-full bg-family-strong px-3 py-0.5 text-base font-extrabold text-ink">New</span>}
-          {call.isSimulated && <SimulatedBadge />}
         </span>
       </header>
 
@@ -73,7 +72,10 @@ export function SnapshotCard({
       ) : call.status === 'failed' ? (
         <p className="mt-3 text-ink-2">We couldn’t write up this chat. It still counts as a call.</p>
       ) : !confirmed ? (
-        <p className="mt-3 text-ink-2">Details appear after {name} confirms sharing.</p>
+        <p className="mt-3 flex flex-wrap items-center gap-2 text-ink-2">
+          Details appear after {name} confirms sharing.
+          {call.isSimulated && <SimulatedBadge />}
+        </p>
       ) : (
         <>
           {photo && (
@@ -95,8 +97,8 @@ export function SnapshotCard({
               {call.familyQuestion.answer && <p className="mt-0.5">{call.familyQuestion.answer}</p>}
             </div>
           )}
-          {(call.mood || (!feature && call.familyQuestion)) && (
-            <div className="mt-3 flex flex-wrap gap-2">
+          {(call.mood || call.isSimulated || (!feature && call.familyQuestion)) && (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
               {!feature && call.familyQuestion && (
                 <span className="rounded-full bg-family px-3 py-0.5 text-base font-bold text-family-ink">
                   {call.familyQuestion.askedBy}’s question
@@ -105,6 +107,7 @@ export function SnapshotCard({
               {call.mood && (
                 <span className="rounded-full bg-ok px-3 py-0.5 text-base font-bold text-ok-ink">{MOOD[call.mood]}</span>
               )}
+              {call.isSimulated && <SimulatedBadge />}
             </div>
           )}
         </>

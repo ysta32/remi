@@ -1,5 +1,5 @@
 import { formatValue, unitLabel } from '@/lib/format';
-import { STATUS_TEXT, type Signal } from '@/lib/signals';
+import { STATUS_TEXT, zWords, type Signal } from '@/lib/signals';
 import { SignalChart } from './SignalChart';
 
 const PILL: Record<Signal['status'], string> = {
@@ -10,9 +10,10 @@ const PILL: Record<Signal['status'], string> = {
 };
 
 function latestLine(signal: Signal): string | null {
-  if (signal.unit === 'z' || signal.unit === 'count') return null;
+  if (signal.unit === 'count') return null;
   const latest = [...signal.points].reverse().find((p) => p.value != null);
   if (!latest || latest.value == null) return null;
+  if (signal.unit === 'z') return `Latest chat: ${zWords(latest.value).toLowerCase()}`;
   const u = unitLabel(signal.unit);
   const usual = signal.band ? ` · his usual is about ${formatValue((signal.band[0] + signal.band[1]) / 2, signal.unit)}` : '';
   return `Latest ${formatValue(latest.value, signal.unit)} ${u}${usual}`;

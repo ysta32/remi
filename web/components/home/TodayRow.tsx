@@ -9,6 +9,7 @@ import { pollDelay, settled } from '@/lib/live';
 import { buildSignals } from '@/lib/signals';
 import type { Timeline } from '@/lib/types';
 import { SunGlyph } from '../GentleNote';
+import { QuestionsWaiting } from '../QuestionsWaiting';
 import { SignalCard } from '../SignalCard';
 import { SnapshotCard } from '../SnapshotCard';
 
@@ -60,13 +61,13 @@ export function TodayRow({ elderId }: { elderId: string }) {
   const heading = 'mb-3 text-[22px] font-extrabold';
 
   return (
-    <div className="grid gap-5 md:grid-cols-3">
+    <div className="grid items-start gap-5 md:grid-cols-3">
       <section aria-labelledby="latest" className="flex flex-col">
         <h2 id="latest" className={heading}>
           Latest snapshot{newest && <span className="font-normal text-ink-2"> · {formatRelative(newest.startedAt)}</span>}
         </h2>
         {newest ? (
-          <div className="grid flex-1">
+          <div>
             <SnapshotCard key={`${newest.id}:${newest.status}`} call={newest} variant="compact" isNew={false}
               confirmed={timeline.consent.elderConfirmed} photos={elder?.photos ?? []} name={name} />
           </div>
@@ -77,14 +78,14 @@ export function TodayRow({ elderId }: { elderId: string }) {
       <section aria-labelledby="doing" className="flex flex-col">
         <h2 id="doing" className={heading}>How he&apos;s doing</h2>
         {timeline.markers.length > 0 ? (
-          <div className="grid flex-1"><SignalCard signal={pauses} compact /></div>
+          <SignalCard signal={pauses} compact />
         ) : (
           <p className="rounded-[20px] border border-line bg-card p-4">Remi will start comparing after a few more chats.</p>
         )}
       </section>
       <section aria-labelledby="notes" className="flex flex-col">
         <h2 id="notes" className={heading}>Gentle notes</h2>
-        <div className="flex flex-1 items-start gap-3 rounded-[20px] border border-line bg-card p-4">
+        <div className="flex items-start gap-3 rounded-[20px] border border-line bg-card p-4">
           <SunGlyph size={40} />
           {hasNote ? (
             <p>
@@ -95,6 +96,11 @@ export function TodayRow({ elderId }: { elderId: string }) {
             <p>None right now. If several things shift for a few weeks, you&apos;ll see a gentle note here.</p>
           )}
         </div>
+        {elder && (
+          <div className="mt-4">
+            <QuestionsWaiting questions={elder.questions} name={name} />
+          </div>
+        )}
       </section>
     </div>
   );

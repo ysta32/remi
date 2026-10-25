@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import drift from '../../../fixtures/demo/timeline.json';
 import stable from '../../../fixtures/demo/timeline-stable.json';
-import { buildSignals, STATUS_TEXT } from '../signals';
+import { buildSignals, STATUS_TEXT, zWords } from '../signals';
 import type { MarkerSeries } from '../types';
 
 const driftMarkers = drift.markers as MarkerSeries[];
@@ -52,6 +52,14 @@ describe('buildSignals', () => {
     const s = byKey([pace]).pace;
     expect(s.points.find((p) => p.callId === 'short-1')?.value).toBeNull();
     expect(s.status).toBe('learning');
+  });
+});
+
+describe('zWords', () => {
+  it('uses the same 1.5 threshold as the status pill, in plain words', () => {
+    expect(zWords(1.6)).toBe('More than his usual');
+    expect(zWords(1.2)).toBe('Near his usual');
+    expect(zWords(-1.6)).toBe('Less than his usual');
   });
 });
 

@@ -23,7 +23,7 @@ const EARLIER_SHOWN = 4;
 
 function FixtureBar({ elderId, current, tab }: { elderId: string; current: FixtureVariant; tab: 'chats' | 'doing' }) {
   return (
-    <nav aria-label="Demo data" className="flex flex-wrap items-center gap-2 rounded-2xl bg-card px-4 py-2 text-base text-ink-2">
+    <nav aria-label="Demo data" className="flex items-center gap-2 overflow-x-auto whitespace-nowrap rounded-2xl bg-card px-4 py-2 text-base text-ink-2">
       <span className="font-bold">Sample data:</span>
       {(Object.keys(FIXTURE_VARIANTS) as FixtureVariant[]).map((v) => (
         <Link
@@ -65,7 +65,7 @@ export function TimelineView({
     if (known.current?.elderId !== id) known.current = null;
 
     async function tick() {
-      const [t, e] = await Promise.allSettled([getTimeline(id, variant), getElder(id)]);
+      const [t, e] = await Promise.allSettled([getTimeline(id, variant), getElder(id, variant)]);
       if (cancelled) return;
       setElder((prev) => settled(e, prev));
       if (t.status === 'fulfilled') {
@@ -142,28 +142,33 @@ export function TimelineView({
           <>
             {!confirmed && <p className="rounded-[20px] border border-line bg-card p-5">{copy.notYetConfirmed(name)}</p>}
 
-            <div className="grid items-start gap-8 lg:grid-cols-[1.4fr_1fr]">
-              <div className="space-y-8">
-              {newest ? (
-                <SnapshotCard
-                  key={`${newest.id}:${newest.status}`}
-                  call={newest} variant="feature" isNew={newIds.has(newest.id)}
-                  confirmed={confirmed} photos={photos} name={name}
-                />
-              ) : (
-                <p className="rounded-[20px] border border-line bg-card p-5">
-                  No chats yet. Once {name} calls Remi, his first snapshot shows up here.
-                </p>
+            {/* Phones: newest, note, stories, then earlier chats. Desktop: stories span the right column. */}
+            <div className="grid items-start gap-8 [grid-template-areas:'newest'_'note'_'side'_'earlier'] lg:grid-cols-[1.4fr_1fr] lg:grid-rows-[auto_auto_1fr] lg:[grid-template-areas:'newest_side'_'note_side'_'earlier_side']">
+              <div className="[grid-area:newest]">
+                {newest ? (
+                  <SnapshotCard
+                    key={`${newest.id}:${newest.status}`}
+                    call={newest} variant="feature" isNew={newIds.has(newest.id)}
+                    confirmed={confirmed} photos={photos} name={name}
+                  />
+                ) : (
+                  <p className="rounded-[20px] border border-line bg-card p-5">
+                    No chats yet. Once {name} calls Remi, his first snapshot shows up here.
+                  </p>
+                )}
+              </div>
+
+              {nudges.length > 0 && (
+                <div className="space-y-4 [grid-area:note]">
+                  {nudges.map((n) => <GentleNote key={n.id} nudge={n} onDismiss={() => hide(n.id)} />)}
+                </div>
               )}
 
-              {nudges.map((n) => (
-                <GentleNote key={n.id} nudge={n} onDismiss={() => hide(n.id)} />
-              ))}
-
               {earlier.length > 0 && (
-                <section aria-labelledby="earlier" className="space-y-3">
+                <section aria-labelledby="earlier" className="space-y-3 [grid-area:earlier]">
                   <h2 id="earlier" className="text-[30px] font-black tracking-tight">Earlier chats</h2>
-                  <div className="grid gap-3 sm:grid-cols-2">
+                  {/* Masonry columns: cards keep their natural height, so no half-empty cells. */}
+                  <div className="gap-4 sm:columns-2 [&>*]:mb-4 [&>*]:break-inside-avoid">
                     {shownEarlier.map((c) => (
                       <SnapshotCard
                         key={`${c.id}:${c.status}`}
@@ -175,6 +180,7 @@ export function TimelineView({
                   {earlier.length > EARLIER_SHOWN && (
                     <button
                       type="button"
+                      aria-expanded={showAll}
                       onClick={() => setShowAll((v) => !v)}
                       className="rounded-full border border-line bg-card px-5 py-2.5 font-bold hover:border-ink-2"
                     >
@@ -183,8 +189,8 @@ export function TimelineView({
                   )}
                 </section>
               )}
-              </div>
-              <div className="space-y-6">
+
+              <div className="space-y-6 [grid-area:side]">
                 {elder && <QuestionsWaiting questions={elder.questions} name={name} />}
                 {confirmed && (
                   <section aria-labelledby="facts" className="space-y-3">
