@@ -20,3 +20,6 @@ node_modules/
 
 # Impeccable runtime state
 .impeccable/hook.cache.json
+
+# Next build output when turbopack root is the repo root
+/.next/
