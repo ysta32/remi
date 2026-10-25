@@ -9,3 +9,7 @@ data/
 *.sqlite
 out/
 node_modules/
+
+# Chert
+.env.local
+.chert-agent/

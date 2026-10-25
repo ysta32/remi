@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "@trychert/facetime": "0.1.0-beta.10",
+    "@trychert/sdk": "0.1.0"
+  },
+  "name": "remi",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "chert": "node tools/chert-agent.mjs"
+  }
+}
