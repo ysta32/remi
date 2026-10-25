@@ -1,4 +1,4 @@
-// Mirrors docs/contracts.md §3 exactly. Change only via the [contract] process in CLAUDE.md.
+// Mirrors echo-docs/echo-docs/docs/contracts.md §3 exactly. Change only via the [contract] process.
 
 export type Lang = 'en' | 'zh';
 export type ConsentKey = 'summaries' | 'funFacts' | 'speechTrends' | 'mood';

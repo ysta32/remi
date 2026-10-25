@@ -1,0 +1,85 @@
+{
+  "endedAt": "2026-10-25T15:12:47Z",
+  "endReason": "caller_hangup",
+  "utterances": [
+    {
+      "speaker": "caller",
+      "text": "Hi there. Can you hear me okay?",
+      "startMs": 1200,
+      "endMs": 4578
+    },
+    {
+      "speaker": "agent",
+      "text": "Loud and clear, Hal! It's Remi. I have a question from your grandson Sam today. He asked: what was your first car?",
+      "startMs": 5245,
+      "endMs": 13352
+    },
+    {
+      "speaker": "caller",
+      "text": "Oh, Sam asked that? Ha. Well, um, that'd be the Bel Air. A fifty-seven Chevy Bel Air. Two-tone, turquoise and white. I bought it in, uh, sixty-two, I think, from a fella down on Union Avenue. Paid three hundred dollars for it.",
+      "startMs": 13976,
+      "endMs": 35184
+    },
+    {
+      "speaker": "agent",
+      "text": "A 1957 Bel Air for three hundred dollars! How did you save up for it?",
+      "startMs": 36061,
+      "endMs": 41661
+    },
+    {
+      "speaker": "caller",
+      "text": "I was working at the shops by then, you know, the railroad shops. Saved up, um, most of a summer. My dad thought I was crazy. He said, uh, you don't need a car, you got two feet and a bus. But I wanted it bad.",
+      "startMs": 42554,
+      "endMs": 65237
+    },
+    {
+      "speaker": "agent",
+      "text": "I can imagine. What do you remember most about driving it?",
+      "startMs": 66067,
+      "endMs": 70239
+    },
+    {
+      "speaker": "caller",
+      "text": "The, uh, the sound of it. That V8. And the fins, I mean, those fins were something. I took Dorothy to the drive-in in that car. And, um, it had this thing with the radiator, it would boil over going up the hill on the way to Altoona, so I kept a jug of water in the trunk. Every time. You learn to fix stuff yourself when you got no money.",
+      "startMs": 70880,
+      "endMs": 105397
+    },
+    {
+      "speaker": "agent",
+      "text": "That's a great memory. There's actually a photo here of you with a car in 1962. Is that the Bel Air?",
+      "startMs": 105862,
+      "endMs": 113586
+    },
+    {
+      "speaker": "caller",
+      "text": "That's it! Oh my. Look at that. I had more hair then. I washed that car every Saturday, whether it needed it or not.",
+      "startMs": 114431,
+      "endMs": 125594
+    },
+    {
+      "speaker": "agent",
+      "text": "Sam will love hearing this. What happened to the Bel Air in the end?",
+      "startMs": 126658,
+      "endMs": 131790
+    },
+    {
+      "speaker": "caller",
+      "text": "Sold it, um, when Linda was born. Needed something with, you know, more room and a heater that worked. Got a Ford wagon. Never loved that wagon the same way. I mean, I wish I'd kept the Chevy. They're worth a fortune now.",
+      "startMs": 132826,
+      "endMs": 153857
+    },
+    {
+      "speaker": "agent",
+      "text": "I'll make sure Sam gets the story. Thanks so much, Hal. Talk again soon?",
+      "startMs": 154660,
+      "endMs": 159746
+    },
+    {
+      "speaker": "caller",
+      "text": "You bet. Tell Sam to call his grandpa. Bye now.",
+      "startMs": 160554,
+      "endMs": 165286
+    }
+  ],
+  "audioPath": null
+}

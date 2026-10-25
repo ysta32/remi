@@ -1,0 +1,52 @@
+[
+  {
+    "a": "The 1977 blizzard when the roundhouse roof caved in under the snow",
+    "b": "Slept two nights at the railroad shops when heavy snow collapsed the roundhouse roof in 1977",
+    "same": true
+  },
+  {
+    "a": "First car was a 1957 Chevy Bel Air bought for $300 in 1962",
+    "b": "Paid three hundred dollars for a turquoise-and-white fifty-seven Bel Air as a young man",
+    "same": true
+  },
+  {
+    "a": "Met Dorothy at a church dance in 1964 when she stepped on his foot",
+    "b": "The church dance where his future wife Dorothy trod on his toes before they ever spoke",
+    "same": true
+  },
+  {
+    "a": "Swept floors at a bakery on 11th Avenue at 14 for fifty cents a day",
+    "b": "His first job as a boy: sweeping the bakery floor and getting day-old donuts from the owner",
+    "same": true
+  },
+  {
+    "a": "Puts crushed eggshells in the planting holes for his tomatoes",
+    "b": "Dorothy teased him for 'feeding the dirt breakfast' with eggshells in the tomato bed",
+    "same": true
+  },
+  {
+    "a": "The 1977 blizzard when the roundhouse roof caved in under the snow",
+    "b": "Shoveling the driveway for hours during the snowstorm of 1993",
+    "same": false
+  },
+  {
+    "a": "First car was a 1957 Chevy Bel Air bought for $300 in 1962",
+    "b": "Trading the Bel Air for a Ford station wagon after Linda was born",
+    "same": false
+  },
+  {
+    "a": "Met Dorothy at a church dance in 1964 when she stepped on his foot",
+    "b": "Dorothy and Hal's 40th anniversary trip to Niagara Falls",
+    "same": false
+  },
+  {
+    "a": "Army basic training at Fort Dix in 1965",
+    "b": "Fixing truck engines at a motor pool in Germany during his Army years",
+    "same": false
+  },
+  {
+    "a": "Watching the Steelers win the Super Bowl in 1975 with his father",
+    "b": "Arguing with grandson Sam about the Steelers quarterback after a Sunday game",
+    "same": false
+  }
+]

@@ -9,7 +9,7 @@ export type Scenario = 'drift' | 'stable';
 export const TIMEZONE = 'America/New_York';
 
 export const elder = {
-  id: 'elder-hal',
+  id: 'elder-hal-demo',
   displayName: 'Harold Bennett',
   preferredName: 'Hal',
   language: 'en' as const,

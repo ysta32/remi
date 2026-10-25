@@ -1,13 +1,15 @@
 # Remi
 
-Remi reads the small talk you already have, and watches for language changes worth mentioning to a doctor.
+Remi notices changes in how someone talks over time, compared with their own usual, and helps
+families know when it may be worth talking to a doctor.
 
 ## Idea
 
-Language changes early in Alzheimer's disease — vocabulary narrows, syntax simplifies, pronouns replace
-nouns, typing slows and corrections increase. A person's iMessage history is a dense, years-long,
-naturally occurring language sample. This project explores extracting privacy-preserving linguistic
-features from that history and tracking them over time to surface a trend worth bringing to a clinician.
+Speech research looks at interpretable features of everyday language: how varied the vocabulary is,
+how simple the sentences are, how often general words replace specific ones, how fast someone types
+or talks. A person's iMessage history is a dense, years-long, naturally occurring language sample.
+This project explores extracting privacy-preserving linguistic features from that history and
+comparing them with the person's own usual over time, to surface a change worth bringing to a clinician.
 
 **This is a hackathon research project, not a diagnostic tool.**
 
