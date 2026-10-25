@@ -7,7 +7,7 @@
     "driftIndex": {
       "driftDetectionPct": 92,
       "driftDelayMedianWeeks": 5,
-      "driftDelayIqr": "5â€“6",
+      "driftDelayIqr": "5–6",
       "stableAnyAlert8wPct": 1,
       "stableAlertsPerPersonaYear": 0.16,
       "stableWatchWeeksPct": 16.661533723437017,
@@ -19,7 +19,7 @@
     "current": {
       "driftDetectionPct": 93.5,
       "driftDelayMedianWeeks": 4,
-      "driftDelayIqr": "4â€“5",
+      "driftDelayIqr": "4–5",
       "stableAnyAlert8wPct": 10,
       "stableAlertsPerPersonaYear": 1.545,
       "stableWatchWeeksPct": null,
@@ -31,7 +31,7 @@
     "naive": {
       "driftDetectionPct": 100,
       "driftDelayMedianWeeks": 2,
-      "driftDelayIqr": "2â€“2",
+      "driftDelayIqr": "2–2",
       "stableAnyAlert8wPct": 99.5,
       "stableAlertsPerPersonaYear": 74.3,
       "stableWatchWeeksPct": null,
@@ -43,7 +43,7 @@
   },
   "sweep": [
     {
-      "name": "default (8-call baseline, skip 2, â‰¥1.5 in 3 of 4)",
+      "name": "default (8-call baseline, skip 2, ≥1.5 in 3 of 4)",
       "detectedPct": 92,
       "delayMedian": 5,
       "stableAlertsPerYear": 0.16,
@@ -375,6 +375,270 @@
         "nudge": false,
         "wellbeingCard": false,
         "routedToWellbeing": false
+      }
+    ]
+  },
+  "realistic": {
+    "weeks": 26,
+    "scenarios": [
+      {
+        "name": "Full-size change over 6 months",
+        "driftIndexDetectedPct": 99.5,
+        "driftIndexDelayMedian": 11,
+        "driftIndexDelayIqr": "9–13.5",
+        "driftIndexChangeAtNotePct": 46,
+        "currentDetectedPct": 100,
+        "currentDelayMedian": 9,
+        "currentDelayIqr": "6–12",
+        "currentChangeAtNotePct": 38
+      },
+      {
+        "name": "Half-size change over 6 months",
+        "driftIndexDetectedPct": 73.5,
+        "driftIndexDelayMedian": 17,
+        "driftIndexDelayIqr": "14–20",
+        "driftIndexChangeAtNotePct": 35,
+        "currentDetectedPct": 90.5,
+        "currentDelayMedian": 13,
+        "currentDelayIqr": "8–18",
+        "currentChangeAtNotePct": 27
+      }
+    ],
+    "exampleSeed": 10,
+    "example": [
+      {
+        "week": 1,
+        "calls": 3,
+        "weeklyD": 2.071067421421225,
+        "ewma": 0,
+        "baselineWeek": true,
+        "watch": false,
+        "nudge": false
+      },
+      {
+        "week": 2,
+        "calls": 4,
+        "weeklyD": 0.7389201562694279,
+        "ewma": 0,
+        "baselineWeek": true,
+        "watch": false,
+        "nudge": false
+      },
+      {
+        "week": 3,
+        "calls": 3,
+        "weeklyD": -0.9975545173102364,
+        "ewma": 0,
+        "baselineWeek": true,
+        "watch": false,
+        "nudge": false
+      },
+      {
+        "week": 4,
+        "calls": 4,
+        "weeklyD": -2.375899897850932,
+        "ewma": -1.259560030725801,
+        "baselineWeek": false,
+        "watch": false,
+        "nudge": false
+      },
+      {
+        "week": 5,
+        "calls": 4,
+        "weeklyD": -0.4573125206348416,
+        "ewma": -0.8194044864266292,
+        "baselineWeek": false,
+        "watch": false,
+        "nudge": false
+      },
+      {
+        "week": 6,
+        "calls": 4,
+        "weeklyD": 2.7389570850090474,
+        "ewma": 1.2686160731292837,
+        "baselineWeek": false,
+        "watch": true,
+        "nudge": false
+      },
+      {
+        "week": 7,
+        "calls": 3,
+        "weeklyD": -0.08529599736700268,
+        "ewma": 0.6045080246506378,
+        "baselineWeek": false,
+        "watch": false,
+        "nudge": false
+      },
+      {
+        "week": 8,
+        "calls": 4,
+        "weeklyD": -0.1115854730630636,
+        "ewma": -0.08914493386726952,
+        "baselineWeek": false,
+        "watch": false,
+        "nudge": false
+      },
+      {
+        "week": 9,
+        "calls": 3,
+        "weeklyD": 2.9421752568921904,
+        "ewma": 1.3580797090754713,
+        "baselineWeek": false,
+        "watch": true,
+        "nudge": false
+      },
+      {
+        "week": 10,
+        "calls": 4,
+        "weeklyD": 1.4808957405716403,
+        "ewma": 1.5873857090251966,
+        "baselineWeek": false,
+        "watch": true,
+        "nudge": false
+      },
+      {
+        "week": 11,
+        "calls": 4,
+        "weeklyD": 2.1202214083124034,
+        "ewma": 1.78606820371464,
+        "baselineWeek": false,
+        "watch": true,
+        "nudge": false
+      },
+      {
+        "week": 12,
+        "calls": 3,
+        "weeklyD": 2.1436140421364382,
+        "ewma": 2.0168259025805564,
+        "baselineWeek": false,
+        "watch": true,
+        "nudge": false
+      },
+      {
+        "week": 13,
+        "calls": 3,
+        "weeklyD": 5.211688771867489,
+        "ewma": 3.636363127963583,
+        "baselineWeek": false,
+        "watch": true,
+        "nudge": true
+      },
+      {
+        "week": 14,
+        "calls": 3,
+        "weeklyD": 0.48170093893024485,
+        "ewma": 2.14611632305448,
+        "baselineWeek": false,
+        "watch": true,
+        "nudge": false
+      },
+      {
+        "week": 15,
+        "calls": 4,
+        "weeklyD": 2.450685240511808,
+        "ewma": 2.4084782085962635,
+        "baselineWeek": false,
+        "watch": true,
+        "nudge": false
+      },
+      {
+        "week": 16,
+        "calls": 3,
+        "weeklyD": 5.862264488154087,
+        "ewma": 4.057104879530713,
+        "baselineWeek": false,
+        "watch": true,
+        "nudge": false
+      },
+      {
+        "week": 17,
+        "calls": 4,
+        "weeklyD": 3.280879206760365,
+        "ewma": 3.6576801377840327,
+        "baselineWeek": false,
+        "watch": true,
+        "nudge": true
+      },
+      {
+        "week": 18,
+        "calls": 4,
+        "weeklyD": 5.129009661484591,
+        "ewma": 4.534167137824395,
+        "baselineWeek": false,
+        "watch": true,
+        "nudge": false
+      },
+      {
+        "week": 19,
+        "calls": 4,
+        "weeklyD": 4.4880455677160604,
+        "ewma": 4.607006414208491,
+        "baselineWeek": false,
+        "watch": true,
+        "nudge": false
+      },
+      {
+        "week": 20,
+        "calls": 2,
+        "weeklyD": 5.776233387054718,
+        "ewma": 5.0689579259201984,
+        "baselineWeek": false,
+        "watch": true,
+        "nudge": false
+      },
+      {
+        "week": 21,
+        "calls": 2,
+        "weeklyD": 5.8323657011981265,
+        "ewma": 5.419130650982354,
+        "baselineWeek": false,
+        "watch": true,
+        "nudge": false
+      },
+      {
+        "week": 22,
+        "calls": 3,
+        "weeklyD": 4.084234793132594,
+        "ewma": 4.767446463565388,
+        "baselineWeek": false,
+        "watch": true,
+        "nudge": false
+      },
+      {
+        "week": 23,
+        "calls": 4,
+        "weeklyD": 6.037151100914798,
+        "ewma": 5.5407692647822815,
+        "baselineWeek": false,
+        "watch": true,
+        "nudge": false
+      },
+      {
+        "week": 24,
+        "calls": 4,
+        "weeklyD": 6.32432019956023,
+        "ewma": 6.095889223852658,
+        "baselineWeek": false,
+        "watch": true,
+        "nudge": true
+      },
+      {
+        "week": 25,
+        "calls": 4,
+        "weeklyD": 5.779233770799808,
+        "ewma": 6.021259877192784,
+        "baselineWeek": false,
+        "watch": true,
+        "nudge": false
+      },
+      {
+        "week": 26,
+        "calls": 3,
+        "weeklyD": 7.215367454287548,
+        "ewma": 6.607356331955511,
+        "baselineWeek": false,
+        "watch": true,
+        "nudge": false
       }
     ]
   }

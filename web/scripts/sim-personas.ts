@@ -1,6 +1,6 @@
-﻿// Monte Carlo check of the nudge rules on SIMULATED personas (marker-level generative model, no
+// Monte Carlo check of the nudge rules on SIMULATED personas (marker-level generative model, no
 // transcripts). Compares the Drift Index persistence rule (lib/analysis/drift-index.ts) with the
-// current SPEC Â§11 rule (lib/analysis/drift.ts) and a naive "alert on any unusual call" rule.
+// current SPEC §11 rule (lib/analysis/drift.ts) and a naive "alert on any unusual call" rule.
 // Every number this prints is "on simulated data"; the noise model is derived from published
 // reliability figures plus [HEURISTIC] choices, not from real FaceTime calls.
 //   cd web && npx tsx scripts/sim-personas.ts [--seeds 200] [--out ../synthetic/reports]
@@ -41,8 +41,8 @@ function poisson(r: Rng, lambda: number) {
 }
 
 // ---------- Persona model ------------------------------------------------------------------------
-// Î¼, call-level Ïƒ (at 300 caller words) and the total change by week 8 for the drift persona.
-// Sources: speech rate Hamrick 2023 (Ïƒ via SEM = SDÂ·âˆš(1âˆ’ICC)); pauses Pistono et al.; others [HEURISTIC].
+// μ, call-level σ (at 300 caller words) and the total change by week 8 for the drift persona.
+// Sources: speech rate Hamrick 2023 (σ via SEM = SD·√(1−ICC)); pauses Pistono et al.; others [HEURISTIC].
 const MARKERS: { key: MarkerKey; mu: number; sigma: number; drift: number }[] = [
   { key: 'speech_rate', mu: 140, sigma: 9, drift: -20 },
   { key: 'mean_pause_ms', mu: 650, sigma: 80, drift: 200 },
@@ -57,7 +57,7 @@ const MOOD = { mu: 0.6, sigma: 0.1, lowBelow: 0.4 };
 const SCHEDULE_DAYS = [0, 2, 4, 5]; // ~4 calls/week
 const MISS_P = 0.15;
 const OUTLIER_P = 0.05;
-const WEEK_SHOCK = 0.4; // Ã— Ïƒ
+const WEEK_SHOCK = 0.4; // × σ
 const WORDS = { mean: 500, sd: 150, min: 60, max: 1200, adequate: 100 };
 const DRIFT_ONSET_DAY = 14; // drift starts in week 3
 const DRIFT_FULL_DAY = 56; // full change reached by the end of week 8
@@ -69,14 +69,14 @@ interface SimCall extends IndexCall { week: number; mood: number }
 
 function simulate(persona: Persona, seed: number, weeks: number, fullDay = DRIFT_FULL_DAY, scale = 1): SimCall[] {
   const r = mulberry32(seed * 7919 + (persona === 'drift' ? 1 : persona === 'stable' ? 2 : 3));
-  // Markers don't all start moving together: each gets an onset 0â€“7 days after the drift onset.
+  // Markers don't all start moving together: each gets an onset 0–7 days after the drift onset.
   const onset = new Map(MARKERS.map((m) => [m.key, DRIFT_ONSET_DAY + 7 * r()]));
   const repeatOnset = DRIFT_ONSET_DAY + 7 * r();
-  // Stable persona: colds (+1Ïƒ on pauses for one week) â€” one per 8 weeks of simulated time.
+  // Stable persona: colds (+1σ on pauses for one week) — one per 8 weeks of simulated time.
   const coldWeeks = new Set<number>();
   if (persona === 'stable') for (let i = 0; i < Math.max(1, Math.round(weeks / 8)); i++) coldWeeks.add(2 + Math.floor(r() * (weeks - 2)));
   const ramp = (day: number, start: number) => Math.max(0, Math.min(1, (day - start) / (fullDay - start)));
-  // Mood dip: weeks 4â€“5 full, week 6 half (recovering).
+  // Mood dip: weeks 4–5 full, week 6 half (recovering).
   const moodDip = (w: number) => (persona !== 'mood' ? 0 : w === 3 || w === 4 ? 1 : w === 5 ? 0.5 : 0);
 
   const out: SimCall[] = [];
@@ -132,7 +132,7 @@ function driftIndexRule(calls: SimCall[], opts: DriftIndexOptions = DEFAULT_DRIF
   };
 }
 
-/** SPEC Â§11 as recompute.ts runs it, evaluated at each week end; family dismisses at once, refire after 14 days. */
+/** SPEC §11 as recompute.ts runs it, evaluated at each week end; family dismisses at once, refire after 14 days. */
 function currentRule(calls: SimCall[], weeks: number): RuleRun {
   const keys = MARKERS.map((m) => m.key);
   const adequate = calls.filter((c) => c.adequate);
@@ -167,7 +167,7 @@ function currentRule(calls: SimCall[], weeks: number): RuleRun {
   return { alertWeeks, wellbeingWeeks };
 }
 
-/** Naive: alert on any monitored call with any marker â‰¥ 2 robust SDs in the concerning direction. */
+/** Naive: alert on any monitored call with any marker ≥ 2 robust SDs in the concerning direction. */
 function naiveRule(calls: SimCall[]): RuleRun {
   const b = buildIndexBaseline(calls);
   if (!b) return { alertWeeks: [] };
@@ -242,7 +242,7 @@ for (const name of Object.keys(RULES) as RuleName[]) {
   results[name] = {
     driftDetectionPct: pct(detected, SEEDS),
     driftDelayMedianWeeks: quantile(delays, 0.5),
-    driftDelayIqr: `${quantile(delays, 0.25)}â€“${quantile(delays, 0.75)}`,
+    driftDelayIqr: `${quantile(delays, 0.25)}–${quantile(delays, 0.75)}`,
     stableAnyAlert8wPct: pct(stableAny8, SEEDS),
     stableAlertsPerPersonaYear: stableAlerts52 / SEEDS,
     stableWatchWeeksPct: stableMon > 0 ? pct(stableWatch, stableMon) : NaN,
@@ -255,7 +255,7 @@ for (const name of Object.keys(RULES) as RuleName[]) {
 
 // Sensitivity sweep of the Drift Index rule: each row changes one or two [HEURISTIC] settings.
 const SWEEP: { name: string; opts: Partial<DriftIndexOptions> }[] = [
-  { name: 'default (8-call baseline, skip 2, â‰¥1.5 in 3 of 4)', opts: {} },
+  { name: 'default (8-call baseline, skip 2, ≥1.5 in 3 of 4)', opts: {} },
   { name: 'threshold 1.25', opts: { weeklyThreshold: 1.25 } },
   { name: 'threshold 2.0', opts: { weeklyThreshold: 2.0 } },
   { name: '2 of 4 weeks', opts: { persistNeeded: 2 } },
@@ -309,17 +309,17 @@ const realistic = [
 // One drift example for a chart: weekly D, EWMA and the rule state.
 const example = runDriftIndex(simulate('drift', 0, SHORT));
 
-const f = (v: number | string, d = 1) => (typeof v === 'string' ? v : Number.isFinite(v) ? v.toFixed(d) : 'â€”');
+const f = (v: number | string, d = 1) => (typeof v === 'string' ? v : Number.isFinite(v) ? v.toFixed(d) : '—');
 const label: Record<RuleName, string> = {
-  driftIndex: 'Drift Index: weekly D â‰¥ 1.5 in 3 of 4 weeks + upward trend (new)',
-  current: 'SPEC Â§11: â‰¥ 2 groups at weekly z â‰¥ 1.5, 2 weeks in a row (current)',
-  naive: 'Naive: any call with a marker â‰¥ 2 SD (alerts counted per call)',
+  driftIndex: 'Drift Index: weekly D ≥ 1.5 in 3 of 4 weeks + upward trend (new)',
+  current: 'SPEC §11: ≥ 2 groups at weekly z ≥ 1.5, 2 weeks in a row (current)',
+  naive: 'Naive: any call with a marker ≥ 2 SD (alerts counted per call)',
 };
 const md = [
   `# Nudge rules on simulated personas`,
   ``,
   `**SIMULATED DATA.** Marker-level generative model (web/scripts/sim-personas.ts), ${SEEDS} seeds per persona, about 4 calls a week with 15% missed.`,
-  `Drift persona: changes ramp from week 3 to week 8. Stable persona: no drift, plus one "cold" week per 8 weeks. Mood-dip persona: low mood in weeks 4â€“5.`,
+  `Drift persona: changes ramp from week 3 to week 8. Stable persona: no drift, plus one "cold" week per 8 weeks. Mood-dip persona: low mood in weeks 4–5.`,
   `These are design checks of the rules, not measured performance on real people. Real decline unfolds over months.`,
   ``,
   `| Rule | Drift: detected by wk 8 | Drift: median delay (IQR), weeks from onset | Stable: any alert in 8 wk | Stable: alerts / persona-year | Stable: % weeks watching | Mood dip: cognitive alert | Mood dip: wellbeing card |`,
@@ -330,9 +330,9 @@ const md = [
   }),
   ``,
   `Mood dip, Drift Index: the cognitive rule held but was routed to the wellbeing card in ${f(results.driftIndex.moodRoutedToWellbeingPct)}% of seeds.`,
-  `Stable 52-week runs, wellbeing cards per persona-year: Drift Index ${f(results.driftIndex.stableWellbeingPerYear, 2)}, SPEC Â§11 ${f(results.current.stableWellbeingPerYear, 2)}.`,
+  `Stable 52-week runs, wellbeing cards per persona-year: Drift Index ${f(results.driftIndex.stableWellbeingPerYear, 2)}, SPEC §11 ${f(results.current.stableWellbeingPerYear, 2)}.`,
   ``,
-  `Targets from the research brief (heuristic): detection â‰¥ 90%, median delay â‰¤ 4 weeks after onset, stable â‰¤ 0.1 false nudges / persona-year, mood dip â‰ˆ 0% cognitive and â‰¥ 80% wellbeing card.`,
+  `Targets from the research brief (heuristic): detection ≥ 90%, median delay ≤ 4 weeks after onset, stable ≤ 0.1 false nudges / persona-year, mood dip ≈ 0% cognitive and ≥ 80% wellbeing card.`,
   ``,
   `Sensitivity of the Drift Index rule (same seeds):`,
   ``,
@@ -358,6 +358,15 @@ mkdirSync(OUT, { recursive: true });
 writeFileSync(join(OUT, 'drift-eval.json'), JSON.stringify({ isSimulated: true, seeds: SEEDS, results, sweep, example }, null, 2));
 writeFileSync(join(OUT, 'drift-eval.md'), md);
 
+// A typical 6-month run for the chart: the first seed whose note lands at the median delay.
+const medianDelay = realistic[0].driftIndexDelayMedian as number;
+let typicalSeed = 0;
+for (let s = 0; s < SEEDS; s++) {
+  const first = runDriftIndex(simulate('drift', s, REAL_WEEKS, REAL_WEEKS * 7)).weeks.find((w) => w.nudge && w.week >= ONSET_WEEK);
+  if (first && first.week + 1 - ONSET_WEEK === medianDelay) { typicalSeed = s; break; }
+}
+const typicalRun = runDriftIndex(simulate('drift', typicalSeed, REAL_WEEKS, REAL_WEEKS * 7));
+
 // Compact copy for the /research page: the three rules, the sweep, and one seed-0 run per persona.
 const weeksFor = (p: Persona) =>
   runDriftIndex(simulate(p, 0, SHORT)).weeks.map((w) => ({
@@ -369,6 +378,9 @@ writeFileSync(
   JSON.stringify({
     isSimulated: true, seeds: SEEDS, weeks: SHORT, onsetWeek: ONSET_WEEK + 1, results, sweep,
     examples: { drift: weeksFor('drift'), stable: weeksFor('stable'), mood: weeksFor('mood') },
+    realistic: { weeks: REAL_WEEKS, scenarios: realistic, exampleSeed: typicalSeed, example: typicalRun.weeks.map((w) => ({
+      week: w.week + 1, calls: w.calls, weeklyD: w.weeklyD, ewma: w.ewma, baselineWeek: w.baselineWeek, watch: w.watch, nudge: w.nudge,
+    })) },
   }, null, 2) + '\n',
 );
 console.log(md);
