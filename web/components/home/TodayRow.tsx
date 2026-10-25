@@ -5,7 +5,8 @@ import { useEffect, useRef, useState } from 'react';
 import { getElder, getTimeline, type ElderProfile } from '@/lib/api';
 import { DEMO_ELDER_PATH } from '@/lib/demo';
 import { formatRelative } from '@/lib/format';
-import { pollDelay, settled } from '@/lib/live';
+import { isBusy, pollDelay, settled } from '@/lib/live';
+import { recapHref } from '../ChatCard';
 import { buildSignals } from '@/lib/signals';
 import type { Timeline } from '@/lib/types';
 import { FunFacts } from '../FunFacts';
@@ -19,7 +20,7 @@ export function TodayRow({ elderId }: { elderId: string }) {
   const [timeline, setTimeline] = useState<Timeline | null>(null);
   const [elder, setElder] = useState<ElderProfile | null>(null);
   const [failed, setFailed] = useState(false);
-  const lastProcessing = useRef(false);
+  const lastBusy = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -29,13 +30,13 @@ export function TodayRow({ elderId }: { elderId: string }) {
       if (cancelled) return;
       setElder((prev) => settled(e, prev));
       if (t.status === 'fulfilled') {
-        lastProcessing.current = t.value.processing;
+        lastBusy.current = isBusy(t.value);
         setTimeline(t.value);
         setFailed(false);
       } else {
         setFailed(true); // keep the last good data if there is any
       }
-      timer = setTimeout(tick, pollDelay(lastProcessing.current));
+      timer = setTimeout(tick, pollDelay(lastBusy.current));
     }
     tick();
     return () => {
@@ -72,7 +73,8 @@ export function TodayRow({ elderId }: { elderId: string }) {
         {newest ? (
           <div>
             <SnapshotCard key={`${newest.id}:${newest.status}`} call={newest} variant="compact" isNew={false}
-              confirmed={timeline.consent.elderConfirmed} photos={elder?.photos ?? []} name={name} />
+              confirmed={timeline.consent.elderConfirmed} photos={elder?.photos ?? []} name={name}
+              href={recapHref(elderId, newest.id)} />
           </div>
         ) : (
           <p className="rounded-[20px] border border-line bg-card p-4">No chats yet.</p>

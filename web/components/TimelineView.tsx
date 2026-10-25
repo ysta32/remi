@@ -1,16 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { use, useEffect, useRef, useState } from 'react';
-import {
-  dismissNudge, FIXTURE_VARIANTS, getElder, getTimeline, isFixtureVariant,
-  type ElderProfile, type FixtureVariant,
-} from '@/lib/api';
+import { use, useState } from 'react';
+import { dismissNudge, FIXTURE_VARIANTS, isFixtureVariant, type FixtureVariant } from '@/lib/api';
 import { USE_FIXTURES } from '@/lib/config';
 import { copy } from '@/lib/copy';
 import { formatRelative } from '@/lib/format';
-import { freshIds, pollDelay, settled } from '@/lib/live';
-import type { Timeline } from '@/lib/types';
+import { hasHighlight, recapHighlights } from '@/lib/recap';
+import { ChatCard, recapHref } from './ChatCard';
 import { FunFacts } from './FunFacts';
 import { GentleNote } from './GentleNote';
 import { HowHesDoing } from './HowHesDoing';
@@ -18,8 +15,7 @@ import { QuestionsWaiting } from './QuestionsWaiting';
 import { SiteNav } from './SiteNav';
 import { SnapshotCard } from './SnapshotCard';
 import { TimelineTabs } from './TimelineTabs';
-
-const EARLIER_SHOWN = 4;
+import { useTimelinePoll } from './useTimelinePoll';
 
 function FixtureBar({ elderId, current, tab }: { elderId: string; current: FixtureVariant; tab: 'chats' | 'doing' }) {
   return (
@@ -47,50 +43,8 @@ export function TimelineView({
   const variant: FixtureVariant = isFixtureVariant(query.fixture) ? query.fixture : 'drift';
   const tab = query.tab === 'doing' ? 'doing' : 'chats';
 
-  const [timeline, setTimeline] = useState<Timeline | null>(null);
-  const [elder, setElder] = useState<ElderProfile | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [newIds, setNewIds] = useState<Set<string>>(new Set());
+  const { timeline, elder, error, newIds } = useTimelinePoll(id, variant);
   const [hiddenNudges, setHiddenNudges] = useState<Set<string>>(new Set());
-  const [showAll, setShowAll] = useState(false);
-  // Ids seen so far for this elder; anything not in here on a later poll is highlighted as new.
-  // Kept across fixture switches so processing → after-call plays the live-update moment.
-  const known = useRef<{ elderId: string; ids: Set<string> } | null>(null);
-  const lastProcessing = useRef(false);
-
-  // Poll fast while a call is processing (lib/live.ts pollDelay).
-  useEffect(() => {
-    let cancelled = false;
-    let timer: ReturnType<typeof setTimeout>;
-    if (known.current?.elderId !== id) known.current = null;
-
-    async function tick() {
-      const [t, e] = await Promise.allSettled([getTimeline(id, variant), getElder(id, variant)]);
-      if (cancelled) return;
-      setElder((prev) => settled(e, prev));
-      if (t.status === 'fulfilled') {
-        const tl = t.value;
-        lastProcessing.current = tl.processing;
-        // A call's key includes its status, so "processing → done" also counts as new.
-        const keys = [...tl.calls.map((c) => `${c.id}|${c.status}`), ...tl.funFacts.map((f) => f.id)];
-        const fresh = freshIds(known.current?.ids ?? null, keys);
-        // Replace, don't accumulate: an older card must not show "New" again when it moves down.
-        if (!known.current) setNewIds(new Set());
-        else if (fresh.length) setNewIds(new Set(fresh));
-        known.current = { elderId: id, ids: new Set(keys) };
-        setTimeline(tl);
-        setError(null);
-      } else {
-        setError(t.reason instanceof Error ? t.reason.message : 'Could not load the timeline.');
-      }
-      timer = setTimeout(tick, pollDelay(lastProcessing.current));
-    }
-    tick();
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-    };
-  }, [id, variant]);
 
   if (!timeline) {
     return (
@@ -107,7 +61,7 @@ export function TimelineView({
   const confirmed = timeline.consent.elderConfirmed;
   const [newest, ...earlier] = timeline.calls;
   const nudges = timeline.nudges.filter((n) => !hiddenNudges.has(n.id));
-  const shownEarlier = showAll ? earlier : earlier.slice(0, EARLIER_SHOWN);
+  const fixture = USE_FIXTURES ? variant : undefined;
   const anySimulated = timeline.calls.some((c) => c.isSimulated);
   const photos = elder?.photos ?? [];
 
@@ -142,14 +96,15 @@ export function TimelineView({
           <>
             {!confirmed && <p className="rounded-[20px] border border-line bg-card p-5">{copy.notYetConfirmed(name)}</p>}
 
-            {/* Phones: newest, note, stories, then earlier chats. Desktop: stories span the right column. */}
-            <div className="grid items-start gap-8 [grid-template-areas:'newest'_'note'_'side'_'earlier'] lg:grid-cols-[1.4fr_1fr] lg:grid-rows-[auto_auto_1fr] lg:[grid-template-areas:'newest_side'_'note_side'_'earlier_side']">
+            {/* Phones: newest, note, stories, then earlier chats. Desktop: stories sit right of the newest chat and note; earlier chats run full width below. */}
+            <div className="grid items-start gap-8 [grid-template-areas:'newest'_'note'_'side'_'earlier'] lg:grid-cols-[1.4fr_1fr] lg:grid-rows-[auto_1fr_auto] lg:[grid-template-areas:'newest_side'_'note_side'_'earlier_earlier']">
               <div className="[grid-area:newest]">
                 {newest ? (
                   <SnapshotCard
                     key={`${newest.id}:${newest.status}`}
                     call={newest} variant="feature" isNew={newIds.has(newest.id)}
                     confirmed={confirmed} photos={photos} name={name}
+                    href={recapHref(id, newest.id, fixture)}
                   />
                 ) : (
                   <p className="rounded-[20px] border border-line bg-card p-5">
@@ -165,38 +120,15 @@ export function TimelineView({
               )}
 
               {earlier.length > 0 && (
-                <section aria-labelledby="earlier" className="space-y-3 [grid-area:earlier]">
+                <section aria-labelledby="earlier" className="space-y-4 [grid-area:earlier]">
                   <h2 id="earlier" className="text-[30px] font-black tracking-tight">Earlier chats</h2>
-                  {/* Two stacks that alternate cards, so rows read in date order with no half-empty cells.
-                      Phones get one column in date order. */}
-                  {(() => {
-                    const card = (c: (typeof shownEarlier)[number]) => (
-                      <SnapshotCard key={`${c.id}:${c.status}`} call={c} variant="compact" isNew={newIds.has(c.id)}
-                        confirmed={confirmed} photos={photos} name={name} />
-                    );
-                    return (
-                      <>
-                        <div className="space-y-4 sm:hidden">{shownEarlier.map(card)}</div>
-                        <div className="hidden items-start gap-4 sm:grid sm:grid-cols-2">
-                          {[0, 1].map((col) => (
-                            <div key={col} className="space-y-4">
-                              {shownEarlier.filter((_, i) => i % 2 === col).map(card)}
-                            </div>
-                          ))}
-                        </div>
-                      </>
-                    );
-                  })()}
-                  {earlier.length > EARLIER_SHOWN && (
-                    <button
-                      type="button"
-                      aria-expanded={showAll}
-                      onClick={() => setShowAll((v) => !v)}
-                      className="rounded-full border border-line bg-card px-5 py-2.5 font-bold hover:border-ink-2"
-                    >
-                      {showAll ? 'Show fewer' : `Show all ${earlier.length} earlier chats`}
-                    </button>
-                  )}
+                  <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    {earlier.map((c) => (
+                      <ChatCard key={`${c.id}:${c.status}`} call={c} href={recapHref(id, c.id, fixture)}
+                        highlight={confirmed && hasHighlight(timeline, c)}
+                        factCount={confirmed ? recapHighlights(timeline, c).facts.length : 0} />
+                    ))}
+                  </div>
                 </section>
               )}
 
