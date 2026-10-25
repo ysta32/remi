@@ -71,43 +71,6 @@ call, and the audio is deleted after it's analysed.
 The four weeks of history in the demo are simulated so the charts have something to show. Every
 simulated chat is labeled "Simulated" in the app.
 
-## Running it locally
-
-You need Node 22 or 24.
-
-```bash
-cd web
-npm install
-npm run dev            # http://localhost:3000, with built-in sample data
-```
-
-That's enough to click through every page. To use the real database and API instead:
-
-```bash
-cp ../env.local.template .env.local   # fill in the values; never commit this file
-npm run seed -- --scenario drift      # loads Hal's simulated history
-NEXT_PUBLIC_USE_FIXTURES=0 npm run dev
-```
-
-Tests and checks: `npm test`, `npm run typecheck`, `npm run lint`.
-
-The call side needs a LiveKit project, an OpenAI key and a Chert FaceTime line (`LIVEKIT_URL`,
-`LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `OPENAI_API_KEY`, `AGENT_NAME` and the `CHERT_*` values in
-`env.local.template`).
-
-## What's in the repo
-
-| Folder | What it is |
-|---|---|
-| `web/` | Next.js app: the family pages, the API the agent talks to, SQLite storage, and the post-call analysis (markers, baselines, drift, notes) |
-| `detector/` | Standalone check for stories retold across calls |
-| `synthetic/` | Generated practice conversations used to test the analysis without real people |
-| `echo-docs/` | Our spec, the API contract between the parts, and the copy and safety rules we wrote for ourselves |
-| `fixtures/` | Sample data for the demo |
-
 ## Team
 
 Stanley, Siyuan, Kevin, Ryan and Jimmy.
-
-The call agent started from Chert's `chert new --video` starter. The hero illustration was made by
-our team with an image generator.
