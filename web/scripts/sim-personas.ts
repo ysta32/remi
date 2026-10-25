@@ -64,11 +64,14 @@ const DRIFT_FULL_DAY = 56; // full change reached by the end of week 8
 const REPEATS_BASE = 0.3; // per 7 days
 const REPEATS_DRIFT = 3;
 
-type Persona = 'drift' | 'stable' | 'mood';
+type Persona = 'drift' | 'stable' | 'mood' | 'slowdown';
+// Sudden slowdown: talking pace drops by SLOWDOWN_WPM (× scale) from SLOWDOWN_DAY and stays down.
+const SLOWDOWN_DAY = 42; // start of week 7
+const SLOWDOWN_WPM = 30;
 interface SimCall extends IndexCall { week: number; mood: number }
 
 function simulate(persona: Persona, seed: number, weeks: number, fullDay = DRIFT_FULL_DAY, scale = 1): SimCall[] {
-  const r = mulberry32(seed * 7919 + (persona === 'drift' ? 1 : persona === 'stable' ? 2 : 3));
+  const r = mulberry32(seed * 7919 + ({ drift: 1, stable: 2, mood: 3, slowdown: 4 } as const)[persona]);
   // Markers don't all start moving together: each gets an onset 0–7 days after the drift onset.
   const onset = new Map(MARKERS.map((m) => [m.key, DRIFT_ONSET_DAY + 7 * r()]));
   const repeatOnset = DRIFT_ONSET_DAY + 7 * r();
@@ -100,6 +103,7 @@ function simulate(persona: Persona, seed: number, weeks: number, fullDay = DRIFT
         const dir = markerMeta(m.key).concern === 'up' ? 1 : -1;
         let x = m.mu + shock.get(m.key)! + m.sigma * g * normal(r);
         if (persona === 'drift') x += scale * m.drift * ramp(day, onset.get(m.key)!);
+        if (persona === 'slowdown' && m.key === 'speech_rate' && day >= SLOWDOWN_DAY) x -= scale * SLOWDOWN_WPM;
         if (coldWeeks.has(w) && PAUSE_KEYS.includes(m.key)) x += m.sigma;
         const dip = moodDip(w);
         if (dip > 0 && (m.key === 'speech_rate' || m.key === 'pause_rate' || m.key === 'mean_pause_ms')) x += dir * 0.8 * m.sigma * dip;
@@ -306,6 +310,66 @@ const realistic = [
   return out;
 });
 
+// Sudden slowdown: the sharp-change check on talking pace (12-week runs, pace drops from week 7).
+const SLOW_WEEKS = 12;
+function sharpEval(opts: DriftIndexOptions, scale: number) {
+  const callsTo: number[] = [];
+  const daysTo: number[] = [];
+  let caught = 0;
+  let nudged = 0;
+  for (let s = 0; s < SEEDS; s++) {
+    const res = runDriftIndex(simulate('slowdown', s, SLOW_WEEKS, DRIFT_FULL_DAY, scale), opts);
+    const after = res.calls.filter((c) => c.day >= SLOWDOWN_DAY);
+    const i = after.findIndex((c) => c.sharp.length > 0);
+    if (i >= 0) { caught++; callsTo.push(i + 1); daysTo.push(after[i].day - SLOWDOWN_DAY); }
+    if (res.weeks.some((w) => w.nudge)) nudged++;
+  }
+  return { caughtPct: pct(caught, SEEDS), callsMedian: quantile(callsTo, 0.5), daysMedian: Math.round(quantile(daysTo, 0.5)), weeklyRuleNudgedPct: pct(nudged, SEEDS) };
+}
+function sharpFalse(opts: DriftIndexOptions) {
+  let episodes = 0;
+  let mood = 0;
+  for (let s = 0; s < SEEDS; s++) {
+    episodes += runDriftIndex(simulate('stable', s + 100000, LONG), opts).weeks.reduce((t, w) => t + w.sharpChange.length, 0);
+    if (runDriftIndex(simulate('mood', s, SHORT), opts).weeks.some((w) => w.sharpChange.length > 0)) mood++;
+  }
+  return { stableFlagsPerYear: episodes / SEEDS, moodFlagPct: pct(mood, SEEDS) };
+}
+const SHARP_VARIANTS: { name: string; opts: Partial<DriftIndexOptions> }[] = [
+  { name: 'Chosen: 2.5 spreads slower on 3 calls in a row', opts: {} },
+  { name: '2 spreads on 3 calls in a row', opts: { sharpZ: 2 } },
+  { name: '3 spreads on 3 calls in a row', opts: { sharpZ: 3 } },
+  { name: '3 spreads on 2 calls in a row', opts: { sharpZ: 3, sharpCalls: 2 } },
+  { name: '2.5 spreads on 2 calls in a row', opts: { sharpCalls: 2 } },
+  { name: '3.5 spreads on a single call', opts: { sharpZ: 3.5, sharpCalls: 1 } },
+  { name: '4 spreads on a single call', opts: { sharpZ: 4, sharpCalls: 1 } },
+];
+const slowdownVariants = SHARP_VARIANTS.map(({ name, opts }) => {
+  const o = { ...DEFAULT_DRIFT_INDEX_OPTIONS, ...opts };
+  return { name, ...sharpEval(o, 1), ...sharpFalse(o) };
+});
+const slowdownSizes = [20, 30, 40].map((wpm) => ({ wpm, ...sharpEval(DEFAULT_DRIFT_INDEX_OPTIONS, wpm / SLOWDOWN_WPM) }));
+// A typical slowdown run for the chart: the first seed flagged at the median number of calls.
+const typicalCalls = slowdownVariants[0].callsMedian;
+let slowSeed = 0;
+for (let s = 0; s < SEEDS; s++) {
+  const res = runDriftIndex(simulate('slowdown', s, SLOW_WEEKS));
+  const after = res.calls.filter((c) => c.day >= SLOWDOWN_DAY);
+  if (after.findIndex((c) => c.sharp.length > 0) + 1 === typicalCalls) { slowSeed = s; break; }
+}
+const slowSim = simulate('slowdown', slowSeed, SLOW_WEEKS);
+const slowRun = runDriftIndex(slowSim);
+const slowExample = {
+  seed: slowSeed,
+  usual: slowRun.baseline?.markers.speech_rate ?? null,
+  calls: slowRun.calls.map((c) => ({
+    day: Math.round(c.day * 10) / 10,
+    wpm: Math.round((slowSim.find((x) => x.callId === c.callId)!.values.speech_rate as number) * 10) / 10,
+    inBaseline: c.inBaseline,
+    flagged: c.sharp.length > 0,
+  })),
+};
+
 // One drift example for a chart: weekly D, EWMA and the rule state.
 const example = runDriftIndex(simulate('drift', 0, SHORT));
 
@@ -346,6 +410,16 @@ const md = [
   `|---|---|---|---|---|---|`,
   ...realistic.map((r) => `| ${r.name} | ${f(r.driftIndexDetectedPct)}% | ${f(r.driftIndexDelayMedian)} (${r.driftIndexDelayIqr}) | ${r.driftIndexChangeAtNotePct}% | ${f(r.currentDetectedPct)}% | ${f(r.currentDelayMedian)} |`),
   ``,
+  `Sudden slowdown (${SLOW_WEEKS}-week runs, pace drops ${SLOWDOWN_WPM} wpm from day ${SLOWDOWN_DAY} and stays down):`,
+  ``,
+  `| Sharp-change setting | Caught | Median calls to flag | Median days | Steady: flags / year | Mood dip: flagged |`,
+  `|---|---|---|---|---|---|`,
+  ...slowdownVariants.map((v) => `| ${v.name} | ${f(v.caughtPct)}% | ${f(v.callsMedian)} | ${v.daysMedian} | ${f(v.stableFlagsPerYear, 2)} | ${f(v.moodFlagPct)}% |`),
+  ``,
+  `| Slowdown size | Caught | Median calls | Median days | Weekly rule alone nudged |`,
+  `|---|---|---|---|---|`,
+  ...slowdownSizes.map((v) => `| ${v.wpm} wpm | ${f(v.caughtPct)}% | ${f(v.callsMedian)} | ${v.daysMedian} | ${f(v.weeklyRuleNudgedPct)}% |`),
+  ``,
   `Example drift run (seed 0), weekly Drift Index:`,
   ``,
   `| Week | Calls | Weekly D | EWMA | Watching | Nudge |`,
@@ -378,6 +452,10 @@ writeFileSync(
   JSON.stringify({
     isSimulated: true, seeds: SEEDS, weeks: SHORT, onsetWeek: ONSET_WEEK + 1, results, sweep,
     examples: { drift: weeksFor('drift'), stable: weeksFor('stable'), mood: weeksFor('mood') },
+    slowdown: {
+      weeks: SLOW_WEEKS, onsetDay: SLOWDOWN_DAY, wpmDrop: SLOWDOWN_WPM,
+      variants: slowdownVariants, sizes: slowdownSizes, example: slowExample,
+    },
     realistic: { weeks: REAL_WEEKS, scenarios: realistic, exampleSeed: typicalSeed, example: typicalRun.weeks.map((w) => ({
       week: w.week + 1, calls: w.calls, weeklyD: w.weeklyD, ewma: w.ewma, baselineWeek: w.baselineWeek, watch: w.watch, nudge: w.nudge,
     })) },

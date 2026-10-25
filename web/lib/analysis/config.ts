@@ -89,6 +89,11 @@ export const DI_MK_ALPHA = 0.1; // one-sided Mann-Kendall p for "trending up"
 export const DI_REPEATS_WEEKLY = 3;
 export const DI_REPEATS_WEEKS = 2; // consecutive
 export const DI_COOLDOWN_WEEKS = 4;
+// Sharp change: a big, sudden shift in one marker (e.g. talking much more slowly) flags after a few
+// calls instead of waiting weeks for the composite. Consecutive calls guard against one bad call.
+export const DI_SHARP_MARKERS: MarkerKey[] = ['speech_rate'];
+export const DI_SHARP_Z = 2.5;
+export const DI_SHARP_CALLS = 3;
 
 // Repetition (markers.md §6)
 export const REPEAT_WINDOW_DAYS = 7;

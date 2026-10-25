@@ -99,6 +99,27 @@ describe('runDriftIndex', () => {
     expect(r.weeks.map((w) => w.repeatsCard)).toEqual([false, false, false, false, true, true]);
   });
 
+  it('sharp change: a big sustained drop in pace flags on the 3rd slow call, once per episode', () => {
+    const calls = series(8, () => 0).map((c) => (c.day >= 35 ? { ...c, values: { ...c.values, speech_rate: (c.values.speech_rate as number) - 40 } } : c));
+    const r = runDriftIndex(calls);
+    const flagged = r.calls.filter((c) => c.sharp.includes('speech_rate'));
+    expect(flagged.map((c) => c.day)).toEqual([39]); // calls on days 35, 37 and 39 are all slow
+    expect(r.weeks[5].sharpChange).toEqual(['speech_rate']);
+    expect(r.weeks.filter((w) => w.sharpChange.length > 0)).toHaveLength(1);
+  });
+
+  it('sharp change: one very slow call alone does not flag', () => {
+    const calls = series(8, () => 0).map((c) => (c.day === 35 ? { ...c, values: { ...c.values, speech_rate: 80 } } : c));
+    const r = runDriftIndex(calls);
+    expect(r.calls.find((c) => c.day === 35)!.sharpZ.speech_rate!).toBeGreaterThan(5);
+    expect(r.weeks.some((w) => w.sharpChange.length > 0)).toBe(false);
+  });
+
+  it('sharp change: slow calls while mood reads low do not flag', () => {
+    const calls = series(8, () => 0, (w) => w >= 5).map((c) => (c.day >= 35 ? { ...c, values: { ...c.values, speech_rate: (c.values.speech_rate as number) - 40 } } : c));
+    expect(runDriftIndex(calls).weeks.some((w) => w.sharpChange.length > 0)).toBe(false);
+  });
+
   it('weeks with fewer than 2 adequate calls have no weekly score', () => {
     const calls = series(5, () => 0).filter((c) => !(c.day >= 28 && c.day % 7 !== 0));
     const r = runDriftIndex(calls);

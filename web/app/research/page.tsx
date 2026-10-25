@@ -1,7 +1,10 @@
 import type { Metadata } from 'next';
 import { SiteNav } from '@/components/SiteNav';
 import { SimulatedBadge } from '@/components/SimulatedBadge';
-import { DriftIndexChart, DriftLegend, type WeekPoint } from '@/components/research/DriftIndexChart';
+import { DriftIndexChart, DriftLegend } from '@/components/research/DriftIndexChart';
+import { driftDomain, type WeekPoint } from '@/components/research/drift-domain';
+import { SlowdownChart, type SlowCall } from '@/components/research/SlowdownChart';
+import { DEFAULT_DRIFT_INDEX_OPTIONS } from '@/lib/analysis/drift-index';
 import { TradeoffChart, type SweepPoint } from '@/components/research/TradeoffChart';
 import { CorpusCharts, CorpusLegend, type CorpusRow } from '@/components/research/CorpusCharts';
 import { APP_NAME } from '@/lib/config';
@@ -23,6 +26,13 @@ const results = evalData.results as Record<'driftIndex' | 'current' | 'naive', R
 const examples = evalData.examples as Record<'drift' | 'stable' | 'mood', WeekPoint[]>;
 const realistic = evalData.realistic.scenarios as Realistic[];
 const realisticExample = evalData.realistic.example as WeekPoint[];
+type SlowResult = { caughtPct: number; callsMedian: number; daysMedian: number; weeklyRuleNudgedPct: number };
+const slowdown = evalData.slowdown as {
+  onsetDay: number; wpmDrop: number;
+  variants: (SlowResult & { name: string; stableFlagsPerYear: number; moodFlagPct: number })[];
+  sizes: (SlowResult & { wpm: number })[];
+  example: { usual: { median: number; scale: number }; calls: SlowCall[] };
+};
 
 const card = 'rounded-[28px] border border-line bg-card p-5 md:p-6';
 const h2 = 'text-[30px] font-black tracking-tight';
@@ -50,9 +60,10 @@ function Stat({ value, label }: { value: string; label: string }) {
   );
 }
 
-const PERSONAS: { key: 'drift' | 'stable' | 'mood'; title: string; who: string }[] = [
+const PERSONAS: { key: 'drift' | 'stable' | 'mood' | 'slowdown'; title: string; who: string }[] = [
   { key: 'drift', title: 'Cognitive-decline pattern', who: 'Someone whose speech gradually shifts the way studies describe early cognitive decline: longer pauses, slower talking, more "um"s, and more retold stories.' },
   { key: 'stable', title: 'Steady', who: 'Someone who doesn’t change, apart from ordinary ups and downs and one week with a cold.' },
+  { key: 'slowdown', title: 'Sudden slowdown', who: 'Someone whose talking suddenly becomes much slower (about 30 words a minute) and stays that way.' },
   { key: 'mood', title: 'Two low weeks', who: 'Someone who feels down for two weeks, talks a little slower, then recovers.' },
 ];
 
@@ -72,6 +83,8 @@ export default function ResearchPage() {
   const rows = corpus.rows as CorpusRow[];
   const corpusFirstNote = (corpus.driftIndex as WeekPoint[]).find((w) => w.nudge)?.week;
   const realisticNotes = realisticExample.filter((w) => w.nudge).map((w) => w.week);
+  const sideDomain = driftDomain(examples.drift, examples.stable, examples.mood);
+  const sharp = slowdown.variants[0];
 
   return (
     <>
@@ -98,7 +111,7 @@ export default function ResearchPage() {
 
         <section aria-labelledby="s1" className="space-y-4">
           <Step n={1} title="Who we simulated" />
-          <div className="grid gap-4 lg:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {PERSONAS.map((p) => (
               <article key={p.key} className={card}>
                 <h3 className="text-[22px] font-extrabold">{p.title}</h3>
@@ -149,18 +162,62 @@ export default function ResearchPage() {
             nothing to worry about. Smaller changes take longer to notice, and some aren&apos;t noticed within six months.
           </p>
 
+          <h3 className="pt-6 text-[24px] font-black">A sudden slowdown in talking speed</h3>
+          <p className={lede}>
+            A big drop in pace shouldn&apos;t wait weeks for the weekly score. After every call, {APP_NAME} also checks
+            talking speed on its own: if it is far below his usual on {DEFAULT_DRIFT_INDEX_OPTIONS.sharpCalls} chats in a
+            row, the family gets a check-in right away. Requiring a few chats in a row keeps one tired or noisy call from
+            setting it off.
+          </p>
+          <div className={card}>
+            <SlowdownChart calls={slowdown.example.calls} usual={slowdown.example.usual} flagZ={DEFAULT_DRIFT_INDEX_OPTIONS.sharpZ}
+              onsetDay={slowdown.onsetDay} />
+          </div>
+          <section aria-label="Sudden slowdown results" className="grid gap-4 md:grid-cols-3">
+            <Stat value={pc(sharp.caughtPct)} label={`of ${slowdown.wpmDrop}-words-a-minute slowdowns caught, typically after ${sharp.callsMedian} chats (${sharp.daysMedian} days)`} />
+            <Stat value={`1 in ${Math.round(1 / sharp.stableFlagsPerYear)} yrs`} label="an unneeded check-in for a steady person" />
+            <Stat value={pc(sharp.moodFlagPct)} label="of low-mood fortnights set it off (they get the wellbeing card)" />
+          </section>
+          <div className={`${card} overflow-x-auto p-0 md:p-0`}>
+            <table className="w-full min-w-[640px] text-left">
+              <thead className="text-base text-ink-2">
+                <tr className="border-b border-line">
+                  <th className="px-5 py-3 font-bold">Size of slowdown</th>
+                  <th className="px-4 py-3 text-right font-bold">Caught</th>
+                  <th className="px-4 py-3 text-right font-bold">Typical chats until check-in</th>
+                  <th className="px-5 py-3 text-right font-bold">Weekly score alone would have noticed</th>
+                </tr>
+              </thead>
+              <tbody>
+                {slowdown.sizes.map((s) => (
+                  <tr key={s.wpm} className="border-b border-line last:border-0">
+                    <td className="px-5 py-3 font-extrabold">{s.wpm} words/min slower</td>
+                    <td className="px-4 py-3 text-right font-bold tabular-nums">{pc(s.caughtPct)}</td>
+                    <td className="px-4 py-3 text-right tabular-nums">{s.callsMedian} <span className="text-ink-2">({s.daysMedian} days)</span></td>
+                    <td className="px-5 py-3 text-right tabular-nums">{pc(s.weeklyRuleNudgedPct)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className={small}>
+            The weekly score blends seven markers, so one marker changing on its own barely moves it; that&apos;s why the
+            pace check runs separately. Readings are computed from each chat&apos;s transcript within about 30 seconds of
+            hanging up.
+          </p>
+
           <h3 className="pt-6 text-[24px] font-black">Three people side by side (8 weeks, compressed)</h3>
           <DriftLegend />
           <div className="grid gap-4 lg:grid-cols-3">
-            {PERSONAS.map((p) => {
-              const weeks = examples[p.key];
+            {PERSONAS.filter((p) => p.key !== 'slowdown').map((p) => {
+              const weeks = examples[p.key as keyof typeof examples];
               const noted = weeks.find((w) => w.nudge);
               const wellbeing = weeks.find((w) => w.wellbeingCard);
               return (
                 <article key={p.key} className={card}>
                   <h4 className="text-[22px] font-extrabold">{p.title}</h4>
                   <div className="mt-3">
-                    <DriftIndexChart weeks={weeks} height={210} title={`${p.title}: weekly score`} />
+                    <DriftIndexChart weeks={weeks} height={210} domain={sideDomain} title={`${p.title}: weekly score`} />
                   </div>
                   <p className="mt-2 font-bold">
                     {noted

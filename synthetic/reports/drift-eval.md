@@ -36,6 +36,24 @@ Realistic pace (26-week runs, change ramps from week 3 to week 26):
 | Full-size change over 6 months | 99.5% | 11.0 (9–13.5) | 46% | 100.0% | 9.0 |
 | Half-size change over 6 months | 73.5% | 17.0 (14–20) | 35% | 90.5% | 13.0 |
 
+Sudden slowdown (12-week runs, pace drops 30 wpm from day 42 and stays down):
+
+| Sharp-change setting | Caught | Median calls to flag | Median days | Steady: flags / year | Mood dip: flagged |
+|---|---|---|---|---|---|
+| Chosen: 2.5 spreads slower on 3 calls in a row | 91.0% | 3.0 | 5 | 0.20 | 2.0% |
+| 2 spreads on 3 calls in a row | 96.5% | 3.0 | 4 | 0.43 | 4.5% |
+| 3 spreads on 3 calls in a row | 81.5% | 3.0 | 5 | 0.09 | 0.5% |
+| 3 spreads on 2 calls in a row | 87.0% | 2.0 | 2 | 0.42 | 4.0% |
+| 2.5 spreads on 2 calls in a row | 94.0% | 2.0 | 2 | 0.73 | 7.0% |
+| 3.5 spreads on a single call | 89.0% | 1.0 | 2 | 2.03 | 18.5% |
+| 4 spreads on a single call | 87.0% | 2.0 | 2 | 1.38 | 15.0% |
+
+| Slowdown size | Caught | Median calls | Median days | Weekly rule alone nudged |
+|---|---|---|---|---|
+| 20 wpm | 68.0% | 4.0 | 7 | 12.0% |
+| 30 wpm | 91.0% | 3.0 | 5 | 17.0% |
+| 40 wpm | 98.0% | 3.0 | 4 | 21.0% |
+
 Example drift run (seed 0), weekly Drift Index:
 
 | Week | Calls | Weekly D | EWMA | Watching | Nudge |

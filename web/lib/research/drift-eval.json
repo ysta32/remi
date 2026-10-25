@@ -378,6 +378,348 @@
       }
     ]
   },
+  "slowdown": {
+    "weeks": 12,
+    "onsetDay": 42,
+    "wpmDrop": 30,
+    "variants": [
+      {
+        "name": "Chosen: 2.5 spreads slower on 3 calls in a row",
+        "caughtPct": 91,
+        "callsMedian": 3,
+        "daysMedian": 5,
+        "weeklyRuleNudgedPct": 17,
+        "stableFlagsPerYear": 0.2,
+        "moodFlagPct": 2
+      },
+      {
+        "name": "2 spreads on 3 calls in a row",
+        "caughtPct": 96.5,
+        "callsMedian": 3,
+        "daysMedian": 4,
+        "weeklyRuleNudgedPct": 17,
+        "stableFlagsPerYear": 0.435,
+        "moodFlagPct": 4.5
+      },
+      {
+        "name": "3 spreads on 3 calls in a row",
+        "caughtPct": 81.5,
+        "callsMedian": 3,
+        "daysMedian": 5,
+        "weeklyRuleNudgedPct": 17,
+        "stableFlagsPerYear": 0.085,
+        "moodFlagPct": 0.5
+      },
+      {
+        "name": "3 spreads on 2 calls in a row",
+        "caughtPct": 87,
+        "callsMedian": 2,
+        "daysMedian": 2,
+        "weeklyRuleNudgedPct": 17,
+        "stableFlagsPerYear": 0.425,
+        "moodFlagPct": 4
+      },
+      {
+        "name": "2.5 spreads on 2 calls in a row",
+        "caughtPct": 94,
+        "callsMedian": 2,
+        "daysMedian": 2,
+        "weeklyRuleNudgedPct": 17,
+        "stableFlagsPerYear": 0.73,
+        "moodFlagPct": 7
+      },
+      {
+        "name": "3.5 spreads on a single call",
+        "caughtPct": 89,
+        "callsMedian": 1,
+        "daysMedian": 2,
+        "weeklyRuleNudgedPct": 17,
+        "stableFlagsPerYear": 2.03,
+        "moodFlagPct": 18.5
+      },
+      {
+        "name": "4 spreads on a single call",
+        "caughtPct": 87,
+        "callsMedian": 2,
+        "daysMedian": 2,
+        "weeklyRuleNudgedPct": 17,
+        "stableFlagsPerYear": 1.38,
+        "moodFlagPct": 15
+      }
+    ],
+    "sizes": [
+      {
+        "wpm": 20,
+        "caughtPct": 68,
+        "callsMedian": 4,
+        "daysMedian": 7,
+        "weeklyRuleNudgedPct": 12
+      },
+      {
+        "wpm": 30,
+        "caughtPct": 91,
+        "callsMedian": 3,
+        "daysMedian": 5,
+        "weeklyRuleNudgedPct": 17
+      },
+      {
+        "wpm": 40,
+        "caughtPct": 98,
+        "callsMedian": 3,
+        "daysMedian": 4,
+        "weeklyRuleNudgedPct": 21
+      }
+    ],
+    "example": {
+      "seed": 1,
+      "usual": {
+        "median": 143.04118359321265,
+        "scale": 5.308360172164156
+      },
+      "calls": [
+        {
+          "day": 2.1,
+          "wpm": 146.4,
+          "inBaseline": false,
+          "flagged": false
+        },
+        {
+          "day": 5.1,
+          "wpm": 144.7,
+          "inBaseline": false,
+          "flagged": false
+        },
+        {
+          "day": 7,
+          "wpm": 143.9,
+          "inBaseline": true,
+          "flagged": false
+        },
+        {
+          "day": 9,
+          "wpm": 143.8,
+          "inBaseline": true,
+          "flagged": false
+        },
+        {
+          "day": 11.1,
+          "wpm": 145.2,
+          "inBaseline": true,
+          "flagged": false
+        },
+        {
+          "day": 16,
+          "wpm": 132.7,
+          "inBaseline": true,
+          "flagged": false
+        },
+        {
+          "day": 18.1,
+          "wpm": 152.7,
+          "inBaseline": true,
+          "flagged": false
+        },
+        {
+          "day": 19.2,
+          "wpm": 142.3,
+          "inBaseline": true,
+          "flagged": false
+        },
+        {
+          "day": 21.2,
+          "wpm": 138,
+          "inBaseline": true,
+          "flagged": false
+        },
+        {
+          "day": 23,
+          "wpm": 123.6,
+          "inBaseline": true,
+          "flagged": false
+        },
+        {
+          "day": 26.1,
+          "wpm": 130.5,
+          "inBaseline": false,
+          "flagged": false
+        },
+        {
+          "day": 28.1,
+          "wpm": 141.7,
+          "inBaseline": false,
+          "flagged": false
+        },
+        {
+          "day": 32.2,
+          "wpm": 140.4,
+          "inBaseline": false,
+          "flagged": false
+        },
+        {
+          "day": 33.2,
+          "wpm": 140.9,
+          "inBaseline": false,
+          "flagged": false
+        },
+        {
+          "day": 35,
+          "wpm": 133.9,
+          "inBaseline": false,
+          "flagged": false
+        },
+        {
+          "day": 37.1,
+          "wpm": 140.6,
+          "inBaseline": false,
+          "flagged": false
+        },
+        {
+          "day": 39,
+          "wpm": 147.1,
+          "inBaseline": false,
+          "flagged": false
+        },
+        {
+          "day": 40,
+          "wpm": 143.6,
+          "inBaseline": false,
+          "flagged": false
+        },
+        {
+          "day": 42,
+          "wpm": 104.5,
+          "inBaseline": false,
+          "flagged": false
+        },
+        {
+          "day": 44.1,
+          "wpm": 107,
+          "inBaseline": false,
+          "flagged": false
+        },
+        {
+          "day": 46.2,
+          "wpm": 103.8,
+          "inBaseline": false,
+          "flagged": true
+        },
+        {
+          "day": 47,
+          "wpm": 112.8,
+          "inBaseline": false,
+          "flagged": false
+        },
+        {
+          "day": 49.2,
+          "wpm": 130.3,
+          "inBaseline": false,
+          "flagged": false
+        },
+        {
+          "day": 51.1,
+          "wpm": 106.7,
+          "inBaseline": false,
+          "flagged": false
+        },
+        {
+          "day": 53,
+          "wpm": 105.3,
+          "inBaseline": false,
+          "flagged": false
+        },
+        {
+          "day": 54.1,
+          "wpm": 110.7,
+          "inBaseline": false,
+          "flagged": false
+        },
+        {
+          "day": 60.2,
+          "wpm": 114.2,
+          "inBaseline": false,
+          "flagged": false
+        },
+        {
+          "day": 61,
+          "wpm": 106.5,
+          "inBaseline": false,
+          "flagged": false
+        },
+        {
+          "day": 63,
+          "wpm": 110.2,
+          "inBaseline": false,
+          "flagged": false
+        },
+        {
+          "day": 65.1,
+          "wpm": 96.5,
+          "inBaseline": false,
+          "flagged": false
+        },
+        {
+          "day": 67.1,
+          "wpm": 99.3,
+          "inBaseline": false,
+          "flagged": false
+        },
+        {
+          "day": 68,
+          "wpm": 107.4,
+          "inBaseline": false,
+          "flagged": false
+        },
+        {
+          "day": 70.1,
+          "wpm": 121.2,
+          "inBaseline": false,
+          "flagged": false
+        },
+        {
+          "day": 72.2,
+          "wpm": 116.8,
+          "inBaseline": false,
+          "flagged": false
+        },
+        {
+          "day": 74.1,
+          "wpm": 119.2,
+          "inBaseline": false,
+          "flagged": false
+        },
+        {
+          "day": 75.1,
+          "wpm": 101.7,
+          "inBaseline": false,
+          "flagged": false
+        },
+        {
+          "day": 77,
+          "wpm": 135.6,
+          "inBaseline": false,
+          "flagged": false
+        },
+        {
+          "day": 79.2,
+          "wpm": 119,
+          "inBaseline": false,
+          "flagged": false
+        },
+        {
+          "day": 81.1,
+          "wpm": 112.8,
+          "inBaseline": false,
+          "flagged": false
+        },
+        {
+          "day": 82.1,
+          "wpm": 126.1,
+          "inBaseline": false,
+          "flagged": true
+        }
+      ]
+    }
+  },
   "realistic": {
     "weeks": 26,
     "scenarios": [

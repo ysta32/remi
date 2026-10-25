@@ -19,6 +19,9 @@ import {
   DI_REPEATS_WEEKLY,
   DI_REPEATS_WEEKS,
   DI_SD_FLOOR,
+  DI_SHARP_CALLS,
+  DI_SHARP_MARKERS,
+  DI_SHARP_Z,
   DI_SKIP_FIRST,
   DI_SPREAD_FLOOR,
   DI_TREND_DAYS,
@@ -72,6 +75,9 @@ export interface DriftIndexOptions {
   cooldownWeeks: number;
   moodWindow: number;
   moodLowMin: number;
+  sharpMarkers: MarkerKey[];
+  sharpZ: number;
+  sharpCalls: number;
 }
 
 export const DEFAULT_DRIFT_INDEX_OPTIONS: DriftIndexOptions = {
@@ -98,6 +104,9 @@ export const DEFAULT_DRIFT_INDEX_OPTIONS: DriftIndexOptions = {
   cooldownWeeks: DI_COOLDOWN_WEEKS,
   moodWindow: MOOD_WINDOW,
   moodLowMin: MOOD_LOW_MIN,
+  sharpMarkers: DI_SHARP_MARKERS,
+  sharpZ: DI_SHARP_Z,
+  sharpCalls: DI_SHARP_CALLS,
 };
 
 export interface IndexBaseline {
@@ -123,6 +132,10 @@ export interface CallScore {
   d: number;
   ewma: number;
   cusum: number;
+  /** Raw (unclipped) direction-aligned z for the sharp-change markers. */
+  sharpZ: Partial<Record<MarkerKey, number>>;
+  /** Markers whose sharp-change run completed on this call (a new episode). */
+  sharp: MarkerKey[];
 }
 
 export interface WeekState {
@@ -151,6 +164,8 @@ export interface WeekState {
   routedToWellbeing: boolean;
   /** Weeks meeting the threshold within the persistence window. */
   meetsInWindow: number;
+  /** Sharp-change episodes that began this week (e.g. a big, sudden slowdown in pace). */
+  sharpChange: MarkerKey[];
 }
 
 export interface DriftIndexResult {
@@ -258,6 +273,9 @@ export function runDriftIndex(calls: IndexCall[], opts: DriftIndexOptions = DEFA
     const inBase = new Set(baseline.callIds);
     let e = 0;
     let s = 0;
+    // Consecutive monitored calls per sharp marker at or beyond sharpZ (resets when a call falls back).
+    const run = new Map<MarkerKey, number>();
+    const lastSharp = new Map<MarkerKey, number>();
     for (const c of sorted) {
       if (!c.adequate) continue;
       const z = scoreMarkers(c.values, baseline.markers, opts);
@@ -270,7 +288,26 @@ export function runDriftIndex(calls: IndexCall[], opts: DriftIndexOptions = DEFA
         e = opts.ewmaLambda * d + (1 - opts.ewmaLambda) * e;
         s = Math.max(0, s + d - opts.cusumK);
       }
-      scores.push({ callId: c.callId, day: c.day, week: weekOf(c.day), inBaseline: inBase.has(c.callId), z, c: comp, d, ewma: e, cusum: s });
+      // Sharp change: one marker far outside his usual on sharpCalls calls in a row. Raw (unclipped)
+      // z, so a large drop isn't capped. Flags once per episode, on the call that completes the run.
+      const sharp: MarkerKey[] = [];
+      const sharpZ: Partial<Record<MarkerKey, number>> = {};
+      for (const k of opts.sharpMarkers) {
+        const b = baseline.markers[k];
+        const v = c.values[k];
+        if (!b || typeof v !== 'number' || !Number.isFinite(v)) continue;
+        const raw = ((markerMeta(k).concern === 'up' ? 1 : -1) * (v - b.median)) / b.scale;
+        sharpZ[k] = raw;
+        // A low-mood call breaks the run: slowing down while low goes to the wellbeing card instead.
+        const n = monitoring && raw >= opts.sharpZ && c.moodLow !== true ? (run.get(k) ?? 0) + 1 : 0;
+        run.set(k, n);
+        // Same cooldown as the weekly rule: no repeat flag for this marker within cooldownWeeks.
+        if (n === opts.sharpCalls && c.day - (lastSharp.get(k) ?? -Infinity) >= opts.cooldownWeeks * DAYS_PER_WEEK) {
+          sharp.push(k);
+          lastSharp.set(k, c.day);
+        }
+      }
+      scores.push({ callId: c.callId, day: c.day, week: weekOf(c.day), inBaseline: inBase.has(c.callId), z, c: comp, d, ewma: e, cusum: s, sharpZ, sharp });
     }
   }
 
@@ -341,6 +378,7 @@ export function runDriftIndex(calls: IndexCall[], opts: DriftIndexOptions = DEFA
       nudge,
       routedToWellbeing: ruleHolds && moodFlag,
       meetsInWindow,
+      sharpChange: [...new Set(wkScores.flatMap((sc) => sc.sharp))],
     });
   }
   return { baseline, calls: scores, weeks };
