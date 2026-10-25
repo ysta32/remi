@@ -24,12 +24,10 @@ function noSymlinks(filename: string): void {
 }
 export function validateMeasuredWords(value: unknown, durationMs: number): Word[] {
   if (!Array.isArray(value) || !value.length) throw fail('STT_WORDS_MISSING');
-  let previous = -1;
   for (const word of value) {
-    if (!word || typeof word.w !== 'string' || !word.w.trim() || !Number.isFinite(word.startMs) || !Number.isFinite(word.endMs) || word.startMs < previous || word.startMs < 0 || word.endMs < word.startMs || word.endMs > durationMs) throw fail('STT_TIMING_INVALID');
-    previous = word.startMs;
+    if (!word || typeof word.w !== 'string' || !word.w.trim() || !Number.isFinite(word.startMs) || !Number.isFinite(word.endMs) || word.startMs < 0 || word.endMs < word.startMs || word.endMs > durationMs) throw fail('STT_TIMING_INVALID');
   }
-  return value as Word[];
+  return [...value as Word[]].sort((a,b) => a.startMs - b.startMs || a.endMs - b.endMs);
 }
 interface AudioTiming {
   sampleRate: number; totalSamples: number;

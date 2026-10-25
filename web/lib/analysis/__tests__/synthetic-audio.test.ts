@@ -1,11 +1,37 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
 import fs from 'node:fs';
 import { createHash } from 'node:crypto';
 const digest = (bytes: Buffer) => createHash('sha256').update(bytes).digest('hex');
 import os from 'node:os';
 import path from 'node:path';
 import { analyzeSyntheticAudio, validateMeasuredWords, validateAudioTiming } from '../synthetic-audio';
-const root = path.resolve('..');
+import { generateBundle } from '../../../../synthetic/src/generate.mjs';
+import { bundleFiles } from '../../../../synthetic/src/write.mjs';
+import { planAudioCall } from '../../../../synthetic/src/audio-plan.mjs';
+import { assembleAudioCall } from '../../../../synthetic/src/audio-pcm.mjs';
+let root: string;
+beforeAll(() => {
+  root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(),'audio-hermetic-')));
+  const inputDir=path.join(root,'synthetic/output-release'), audioDir=path.join(root,'synthetic/audio-openai-all');
+  fs.mkdirSync(inputDir,{recursive:true}); fs.mkdirSync(audioDir,{recursive:true});
+  const bundle=generateBundle();
+  for (const [relative,bytes] of bundleFiles(bundle)) {
+    const filename=path.join(inputDir,relative); fs.mkdirSync(path.dirname(filename),{recursive:true}); fs.writeFileSync(filename,bytes);
+  }
+  const files: Record<string,string> = {}, calls: {callId:string;callerPath:string;timingPath:string}[]=[];
+  for (const [index,call] of bundle.calls.entries()) {
+    const plan=planAudioCall(call,bundle.timings[index],{callerVoiceId:'cedar',agentVoiceId:'marin'});
+    // 100ms fake PCM per segment; no provider, credentials or ignored recordings.
+    const assembled=assembleAudioCall(plan,plan.segments.map(()=>Buffer.alloc(4800)));
+    const callerPath='caller/'+call.callId+'.wav', timingPath='timing/'+call.callId+'.json';
+    for (const [relative,bytes] of [[callerPath,assembled.callerWav],[timingPath,Buffer.from(JSON.stringify(assembled.timing))]] as [string,Buffer][]) {
+      const filename=path.join(audioDir,relative); fs.mkdirSync(path.dirname(filename),{recursive:true}); fs.writeFileSync(filename,bytes); files[relative]=digest(bytes);
+    }
+    calls.push({callId:call.callId,callerPath,timingPath});
+  }
+  fs.writeFileSync(path.join(audioDir,'manifest.json'),JSON.stringify({schemaVersion:1,isSimulated:true,timingSource:'synthetic_audio_samples',sourceManifestSha256:digest(fs.readFileSync(path.join(inputDir,'manifest.json'))),calls,files}));
+});
+afterAll(()=>fs.rmSync(root,{recursive:true,force:true}));
 describe('existing synthetic audio', () => {
   it('dry runs without STT or writes', async () => {
     const parent = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'audio-measure-')));
@@ -87,6 +113,13 @@ describe('existing synthetic audio', () => {
       {...timing,utterances:[{...timing.utterances[0],endMs:31}]},
       {...timing,segments:[{...timing.segments[0],turnIndex:1}]},
     ]) expect(()=>validateAudioTiming(altered,turns,1000,100)).toThrow();
+  });
+  it('sorts valid out-of-order provider timestamps without mutating input', () => {
+    const words=[{w:'earlier-listed',startMs:115620,endMs:116000},{w:'later-listed',startMs:115500,endMs:116060}];
+    const before=structuredClone(words);
+    const normalized=validateMeasuredWords(words,120000);
+    expect(normalized.map(w=>w.startMs)).toEqual([115500,115620]);
+    expect(words).toEqual(before); expect(normalized).not.toBe(words);
   });
   it.each([null, [], [{w:'x', startMs:NaN,endMs:4}], [{w:'x',startMs:5,endMs:4}], [{w:'x',startMs:0,endMs:101}], [{w:'',startMs:0,endMs:1}]])('rejects missing or invalid measured words %j', words => {
     expect(() => validateMeasuredWords(words, 100)).toThrow();
