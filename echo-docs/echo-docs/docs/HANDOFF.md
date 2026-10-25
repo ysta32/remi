@@ -107,7 +107,7 @@ Each agent edits **only its own section** plus appends to "Requests" and "Contra
   - It needs a human decision. It also conflicts with "never quiz/test memory" and with "family alerting is roadmap".
 
 ## Contract changes (date time — change — affected workstreams)
--
+- Sun Oct 25 — `[contract]` additive: `MarkerKey` += `pitch_var`, `pitch_range`; `MarkerGroup` += `voice`; unit `st` (semitones). No DB change (`call_markers.marker` is text). Timeline now returns 10 marker series. Chart only: voice never drives nudges. Definitions in markers.md §4b. Affects C (computes), B (timeline passes through), D (render 2 more charts; group `voice`).
 
 ## Decisions log (human-confirmed only)
 - Sat Oct 24 ~6:14 PM — Team committed to the elder FaceTime conversation + memory + family loop project.

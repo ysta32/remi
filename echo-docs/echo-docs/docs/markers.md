@@ -55,6 +55,19 @@ Consecutive words are taken across the caller's whole word stream sorted by `sta
 **`mattr`** (`ratio`; concern: down; group: words) — moving-average type-token ratio, window `W = 50` (`MATTR_WINDOW`). Tokens: en → lowercase word tokens **excluding fillers**; zh → `Intl.Segmenter('zh', { granularity: 'word' })` `isWordLike` tokens excluding fillers. If `n ≥ W`: mean over `i = 0 … n−W` of `unique(tokens[i … i+W−1]) / W`. If `n < W`: plain TTR `unique / n`, confidence `low`. If `n = 0`: `null`, `na`.
 **`repeat_stories`** (`count`; up; repetition) — computed in the pipeline (section 6), not in `computeMarkers`.
 
+## 4b. Pitch variation (voice group) — `[HEURISTIC]` extension, chart only
+
+Added Oct 25 (see HANDOFF "Contract changes"). Computed from the caller's call audio (`audioPath`, from agent capture A6), **not** from the transcript. No trained model: classic YIN pitch tracking (de Cheveigné & Kawahara 2002, *JASA* 111(4)), pure TypeScript in `web/lib/markers/pitch.ts`. **Never** described or used as mood, emotion or mental-health information (claims policy).
+
+- **Pitch track:** downsample to 8 kHz; 40 ms frames, 10 ms hop; voicing gate = frame RMS > 3 × 20th-percentile RMS; YIN cumulative-mean-normalised difference, absolute threshold 0.15, parabolic interpolation, search band 60–400 Hz; 5-frame median filter; drop frames more than 12 semitones from the call median (octave errors). Only caller speech is analysed: STT word spans ± 100 ms when present, else the whole file.
+- **`pitch_var`** (unit `st`; concern: down; group: voice) — standard deviation of voiced-frame F0 in semitones, `12·log2(f / median f)`.
+- **`pitch_range`** (unit `st`; concern: down; group: voice) — 90th minus 10th percentile of voiced-frame F0 in semitones.
+- **Confidence:** `high` if ≥ 1000 voiced frames (~10 s voiced speech) and the call is adequate by §5; `low` if fewer voiced frames or an inadequate call; `na` when there is no audio.
+- Baselines and z follow §7 (absolute spread floor 0.3 st). **Chart only:** the voice group is excluded from drift and nudges (`NUDGE_GROUPS` in `web/lib/analysis/config.ts`) because phone microphones, the FaceTime codec, a cold or room noise all shift pitch. Revisit after real calls.
+- Adequacy (§5) is decided by the transcript markers only; voice markers never make a call adequate.
+
+**Test vectors (synthetic):** a steady 150 Hz tone → F0 150 ± 1 Hz, `pitch_var` ≈ 0. A linear 120 → 180 Hz glide → `pitch_range` ≈ 7.0 st (± 0.3). A harmonic-rich 220 Hz tone → no octave halving or doubling. White noise or silence → no voiced frames.
+
 ## 5. Confidence
 
 A call is **adequate** if `U ≥ 100` (en) or `U ≥ 150` (zh). For an inadequate call, every computed marker is downgraded to `low`. `low` and `na` points are plotted hollow / omitted and are excluded from baselines and drift. `markerMeta()` provides each marker's label and one-sentence explainer:
@@ -69,6 +82,8 @@ A call is **adequate** if `U ≥ 100` (en) or `U ≥ 150` (zh). For an inadequat
 | `vague_rate` | General words | Words like "thing" or "stuff" in place of a specific word. |
 | `mattr` | Word variety | How varied his vocabulary is within a stretch of talk. |
 | `repeat_stories` | Retold stories | Stories he brought up himself that he also told in another call that week. |
+| `pitch_var` | Voice rise and fall | How much his voice rises and falls while he talks, compared with his usual. |
+| `pitch_range` | Voice range | The spread between his lower and higher notes when he talks. |
 
 ## 6. Repetition (pipeline step)
 

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { getSqlite } from '@/db/client';
 import { recomputeElder } from '@/lib/analysis/recompute';
-import { markerMeta } from '@/lib/markers/meta';
+import { markerMeta, type TextMarkerKey } from '@/lib/markers/meta';
 import { newId, nowIso } from '@/lib/server/ids';
 import type { MarkerKey, NudgeReason } from '@/lib/types';
 import { freshDb, insertCall, insertElder } from '@/test/helpers';
@@ -18,7 +18,7 @@ function prng(seed: number): () => number {
   };
 }
 
-type Spec = Record<Exclude<MarkerKey, 'repeat_stories'>, [number, number]>;
+type Spec = Record<TextMarkerKey, [number, number]>;
 // demo.md §2 marker table: [mean, ± uniform spread]
 const BASE: Spec = {
   speech_rate: [134, 5],
