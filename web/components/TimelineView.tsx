@@ -142,17 +142,20 @@ export function TimelineView({
                     <h2 id="facts" className="text-[30px] font-black tracking-tight">Fun facts</h2>
                     {/* Facts pile up with every call, so the sidebar shows the newest few; each
                         chat's recap keeps its own facts one click away. */}
-                    <FunFacts facts={allFacts ? timeline.funFacts : timeline.funFacts.slice(0, FACTS_SHOWN)} newIds={newIds} />
-                    {timeline.funFacts.length > FACTS_SHOWN && (
-                      <button
-                        type="button"
-                        aria-expanded={allFacts}
-                        onClick={() => setAllFacts((v) => !v)}
-                        className="rounded-full border border-line bg-card px-5 py-2.5 font-bold hover:border-ink-2"
-                      >
-                        {allFacts ? 'Show fewer' : `See all ${timeline.funFacts.length} fun facts`}
-                      </button>
-                    )}
+                    <FunFacts
+                      facts={allFacts ? timeline.funFacts : timeline.funFacts.slice(0, FACTS_SHOWN)}
+                      newIds={newIds}
+                      more={timeline.funFacts.length > FACTS_SHOWN && (
+                        <button
+                          type="button"
+                          aria-expanded={allFacts}
+                          onClick={() => setAllFacts((v) => !v)}
+                          className="text-base font-semibold text-ink-2 hover:text-ink hover:underline hover:underline-offset-4"
+                        >
+                          {allFacts ? 'Show fewer' : `See all ${timeline.funFacts.length} fun facts →`}
+                        </button>
+                      )}
+                    />
                   </section>
                 )}
               </div>
