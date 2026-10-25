@@ -118,6 +118,21 @@ for (const w of di.weeks) {
 }
 console.log(`\nDrift Index, standard options (8-call baseline after skipping 2): baseline ${diStandard.baseline ? 'built' : 'NOT built (too few calls)'}; nudge=${diStandard.weeks.some((w) => w.nudge)}`);
 
+// Compact copy for the /research page.
+writeFileSync('lib/research/corpus-eval.json', JSON.stringify({
+  isSimulated: true, seed, calls: rows.length,
+  rows: rows.map((r) => ({
+    call: r.i + 1, week: weeks.findIndex((w) => w.isoWeek === r.isoWeek) + 1, plantedPauseMs: r.plantedPauseCenterMs,
+    meanPauseMs: r.values.mean_pause_ms ?? null, speechRate: r.values.speech_rate ?? null,
+    d: di.calls.find((c) => c.callId === r.callId)?.d ?? null, repeats7d: r.repeats, repeatsAll: r.repeatsAll,
+  })),
+  currentRule: {
+    nudge: currentNudge !== null, nudgeAllHistory: currentNudgeAll !== null,
+    weeks: weeks.map((w, i) => ({ week: i + 1, drifting: w.driftingGroups, driftingAllHistory: weeksAll[i].driftingGroups, repeats7d: w.repeatSum, repeatsAll: weeksAll[i].repeatSum })),
+  },
+  driftIndex: di.weeks.map((w) => ({ week: w.week + 1, weeklyD: w.weeklyD, baselineWeek: w.baselineWeek, watch: w.watch, nudge: w.nudge, repeatsCard: w.repeatsCard })),
+}, null, 2) + '\n');
+
 if (jsonOut) {
   writeFileSync(jsonOut, JSON.stringify({ isSimulated: true, seed, rows, currentRule: { weeks, nudge: currentNudge }, driftIndexCompressed: di, driftIndexStandard: diStandard }, null, 2));
 }

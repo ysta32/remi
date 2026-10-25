@@ -1,0 +1,205 @@
+{
+  "isSimulated": true,
+  "seed": 42,
+  "calls": 12,
+  "rows": [
+    {
+      "call": 1,
+      "week": 1,
+      "plantedPauseMs": 600,
+      "meanPauseMs": 619.5,
+      "speechRate": 127.20658796223974,
+      "d": 0.3157327752906004,
+      "repeats7d": 0,
+      "repeatsAll": 0
+    },
+    {
+      "call": 2,
+      "week": 1,
+      "plantedPauseMs": 600,
+      "meanPauseMs": 590,
+      "speechRate": 127.31823870747525,
+      "d": -0.49972083446684135,
+      "repeats7d": 0,
+      "repeatsAll": 0
+    },
+    {
+      "call": 3,
+      "week": 1,
+      "plantedPauseMs": 600,
+      "meanPauseMs": 624.25,
+      "speechRate": 127.04932298374466,
+      "d": 0.18398805917624086,
+      "repeats7d": 0,
+      "repeatsAll": 0
+    },
+    {
+      "call": 4,
+      "week": 2,
+      "plantedPauseMs": 850,
+      "meanPauseMs": 847.875,
+      "speechRate": 125.91152970880883,
+      "d": 3.5970545308767745,
+      "repeats7d": 0,
+      "repeatsAll": 0
+    },
+    {
+      "call": 5,
+      "week": 2,
+      "plantedPauseMs": 850,
+      "meanPauseMs": 852.5,
+      "speechRate": 125.90879048248514,
+      "d": 4.764094646290038,
+      "repeats7d": 0,
+      "repeatsAll": 0
+    },
+    {
+      "call": 6,
+      "week": 2,
+      "plantedPauseMs": 850,
+      "meanPauseMs": 860,
+      "speechRate": 125.87873462214412,
+      "d": 2.6942553872906507,
+      "repeats7d": 0,
+      "repeatsAll": 0
+    },
+    {
+      "call": 7,
+      "week": 3,
+      "plantedPauseMs": 1100,
+      "meanPauseMs": 1115.875,
+      "speechRate": 124.4643839121889,
+      "d": 4.910528895288688,
+      "repeats7d": 0,
+      "repeatsAll": 2
+    },
+    {
+      "call": 8,
+      "week": 3,
+      "plantedPauseMs": 1100,
+      "meanPauseMs": 1102.375,
+      "speechRate": 124.47790269592062,
+      "d": 4.606197671097785,
+      "repeats7d": 0,
+      "repeatsAll": 2
+    },
+    {
+      "call": 9,
+      "week": 3,
+      "plantedPauseMs": 1100,
+      "meanPauseMs": 1098.75,
+      "speechRate": 124.31174433785547,
+      "d": 3.53426315664504,
+      "repeats7d": 0,
+      "repeatsAll": 1
+    },
+    {
+      "call": 10,
+      "week": 4,
+      "plantedPauseMs": 1400,
+      "meanPauseMs": 1407.625,
+      "speechRate": 122.82730871357127,
+      "d": 3.7108538554091277,
+      "repeats7d": 0,
+      "repeatsAll": 1
+    },
+    {
+      "call": 11,
+      "week": 4,
+      "plantedPauseMs": 1400,
+      "meanPauseMs": 1397.5,
+      "speechRate": 123.01121195942339,
+      "d": 5.442079225239469,
+      "repeats7d": 0,
+      "repeatsAll": 1
+    },
+    {
+      "call": 12,
+      "week": 4,
+      "plantedPauseMs": 1400,
+      "meanPauseMs": 1377.375,
+      "speechRate": 123.0990095297275,
+      "d": 4.062727550306178,
+      "repeats7d": 0,
+      "repeatsAll": 2
+    }
+  ],
+  "currentRule": {
+    "nudge": false,
+    "nudgeAllHistory": true,
+    "weeks": [
+      {
+        "week": 1,
+        "drifting": [],
+        "driftingAllHistory": [],
+        "repeats7d": 0,
+        "repeatsAll": 0
+      },
+      {
+        "week": 2,
+        "drifting": [],
+        "driftingAllHistory": [],
+        "repeats7d": 0,
+        "repeatsAll": 0
+      },
+      {
+        "week": 3,
+        "drifting": [
+          "pauses"
+        ],
+        "driftingAllHistory": [
+          "pauses",
+          "repetition"
+        ],
+        "repeats7d": 0,
+        "repeatsAll": 5
+      },
+      {
+        "week": 4,
+        "drifting": [
+          "pauses"
+        ],
+        "driftingAllHistory": [
+          "pauses",
+          "repetition"
+        ],
+        "repeats7d": 0,
+        "repeatsAll": 4
+      }
+    ]
+  },
+  "driftIndex": [
+    {
+      "week": 1,
+      "weeklyD": -2.7755575615628914e-17,
+      "baselineWeek": true,
+      "watch": false,
+      "nudge": false,
+      "repeatsCard": false
+    },
+    {
+      "week": 2,
+      "weeklyD": 3.6851348548191543,
+      "baselineWeek": false,
+      "watch": true,
+      "nudge": false,
+      "repeatsCard": false
+    },
+    {
+      "week": 3,
+      "weeklyD": 4.350329907677171,
+      "baselineWeek": false,
+      "watch": true,
+      "nudge": true,
+      "repeatsCard": false
+    },
+    {
+      "week": 4,
+      "weeklyD": 4.405220210318259,
+      "baselineWeek": false,
+      "watch": true,
+      "nudge": false,
+      "repeatsCard": true
+    }
+  ]
+}

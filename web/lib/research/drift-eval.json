@@ -1,0 +1,381 @@
+{
+  "isSimulated": true,
+  "seeds": 200,
+  "weeks": 8,
+  "onsetWeek": 3,
+  "results": {
+    "driftIndex": {
+      "driftDetectionPct": 92,
+      "driftDelayMedianWeeks": 5,
+      "driftDelayIqr": "5–6",
+      "stableAnyAlert8wPct": 1,
+      "stableAlertsPerPersonaYear": 0.16,
+      "stableWatchWeeksPct": 16.661533723437017,
+      "stableWellbeingPerYear": 0.005,
+      "moodCognitiveAlertPct": 0,
+      "moodWellbeingCardPct": 99.5,
+      "moodRoutedToWellbeingPct": 7
+    },
+    "current": {
+      "driftDetectionPct": 93.5,
+      "driftDelayMedianWeeks": 4,
+      "driftDelayIqr": "4–5",
+      "stableAnyAlert8wPct": 10,
+      "stableAlertsPerPersonaYear": 1.545,
+      "stableWatchWeeksPct": null,
+      "stableWellbeingPerYear": 0.005,
+      "moodCognitiveAlertPct": 22,
+      "moodWellbeingCardPct": 99.5,
+      "moodRoutedToWellbeingPct": null
+    },
+    "naive": {
+      "driftDetectionPct": 100,
+      "driftDelayMedianWeeks": 2,
+      "driftDelayIqr": "2–2",
+      "stableAnyAlert8wPct": 99.5,
+      "stableAlertsPerPersonaYear": 74.3,
+      "stableWatchWeeksPct": null,
+      "stableWellbeingPerYear": null,
+      "moodCognitiveAlertPct": 100,
+      "moodWellbeingCardPct": null,
+      "moodRoutedToWellbeingPct": null
+    }
+  },
+  "sweep": [
+    {
+      "name": "default (8-call baseline, skip 2, ≥1.5 in 3 of 4)",
+      "detectedPct": 92,
+      "delayMedian": 5,
+      "stableAlertsPerYear": 0.16,
+      "moodCognitivePct": 0
+    },
+    {
+      "name": "threshold 1.25",
+      "detectedPct": 95.5,
+      "delayMedian": 5,
+      "stableAlertsPerYear": 0.31,
+      "moodCognitivePct": 0
+    },
+    {
+      "name": "threshold 2.0",
+      "detectedPct": 80,
+      "delayMedian": 5,
+      "stableAlertsPerYear": 0.06,
+      "moodCognitivePct": 0
+    },
+    {
+      "name": "2 of 4 weeks",
+      "detectedPct": 100,
+      "delayMedian": 4,
+      "stableAlertsPerYear": 0.795,
+      "moodCognitivePct": 0
+    },
+    {
+      "name": "2 of 3 weeks",
+      "detectedPct": 100,
+      "delayMedian": 4,
+      "stableAlertsPerYear": 0.765,
+      "moodCognitivePct": 0
+    },
+    {
+      "name": "6-call baseline",
+      "detectedPct": 92.5,
+      "delayMedian": 5,
+      "stableAlertsPerYear": 0.33,
+      "moodCognitivePct": 0
+    },
+    {
+      "name": "12-call baseline",
+      "detectedPct": 77,
+      "delayMedian": 6,
+      "stableAlertsPerYear": 0.095,
+      "moodCognitivePct": 0
+    },
+    {
+      "name": "no trend requirement",
+      "detectedPct": 94,
+      "delayMedian": 5,
+      "stableAlertsPerYear": 0.39,
+      "moodCognitivePct": 0
+    },
+    {
+      "name": "6-call baseline, 2 of 3 weeks, threshold 1.75",
+      "detectedPct": 98,
+      "delayMedian": 4,
+      "stableAlertsPerYear": 0.8,
+      "moodCognitivePct": 1
+    }
+  ],
+  "examples": {
+    "drift": [
+      {
+        "week": 1,
+        "calls": 3,
+        "weeklyD": 0.5050798181218669,
+        "ewma": 0,
+        "baselineWeek": true,
+        "watch": false,
+        "nudge": false,
+        "wellbeingCard": false,
+        "routedToWellbeing": false
+      },
+      {
+        "week": 2,
+        "calls": 4,
+        "weeklyD": 0.38180771196781443,
+        "ewma": 0,
+        "baselineWeek": true,
+        "watch": false,
+        "nudge": false,
+        "wellbeingCard": false,
+        "routedToWellbeing": false
+      },
+      {
+        "week": 3,
+        "calls": 4,
+        "weeklyD": -0.0681511342765882,
+        "ewma": 0.25268492776326384,
+        "baselineWeek": true,
+        "watch": false,
+        "nudge": false,
+        "wellbeingCard": false,
+        "routedToWellbeing": false
+      },
+      {
+        "week": 4,
+        "calls": 4,
+        "weeklyD": -0.1832887836074242,
+        "ewma": 0.0998721790725116,
+        "baselineWeek": false,
+        "watch": false,
+        "nudge": false,
+        "wellbeingCard": false,
+        "routedToWellbeing": false
+      },
+      {
+        "week": 5,
+        "calls": 4,
+        "weeklyD": 0.6815858488161913,
+        "ewma": 0.4502859362824686,
+        "baselineWeek": false,
+        "watch": false,
+        "nudge": false,
+        "wellbeingCard": false,
+        "routedToWellbeing": false
+      },
+      {
+        "week": 6,
+        "calls": 2,
+        "weeklyD": 2.431169200420091,
+        "ewma": 1.157747831947633,
+        "baselineWeek": false,
+        "watch": true,
+        "nudge": false,
+        "wellbeingCard": false,
+        "routedToWellbeing": false
+      },
+      {
+        "week": 7,
+        "calls": 2,
+        "weeklyD": 2.9634497679766127,
+        "ewma": 1.8183775966653979,
+        "baselineWeek": false,
+        "watch": true,
+        "nudge": false,
+        "wellbeingCard": false,
+        "routedToWellbeing": false
+      },
+      {
+        "week": 8,
+        "calls": 4,
+        "weeklyD": 3.028602470251,
+        "ewma": 2.531100172927405,
+        "baselineWeek": false,
+        "watch": true,
+        "nudge": true,
+        "wellbeingCard": false,
+        "routedToWellbeing": false
+      }
+    ],
+    "stable": [
+      {
+        "week": 1,
+        "calls": 3,
+        "weeklyD": -0.5749279210144768,
+        "ewma": 0,
+        "baselineWeek": true,
+        "watch": false,
+        "nudge": false,
+        "wellbeingCard": false,
+        "routedToWellbeing": false
+      },
+      {
+        "week": 2,
+        "calls": 3,
+        "weeklyD": 0.8934922083310708,
+        "ewma": 0,
+        "baselineWeek": true,
+        "watch": false,
+        "nudge": false,
+        "wellbeingCard": false,
+        "routedToWellbeing": false
+      },
+      {
+        "week": 3,
+        "calls": 3,
+        "weeklyD": -0.15512135388854334,
+        "ewma": 0,
+        "baselineWeek": true,
+        "watch": false,
+        "nudge": false,
+        "wellbeingCard": false,
+        "routedToWellbeing": false
+      },
+      {
+        "week": 4,
+        "calls": 4,
+        "weeklyD": -0.24428288024025688,
+        "ewma": 0.143948308311246,
+        "baselineWeek": true,
+        "watch": false,
+        "nudge": false,
+        "wellbeingCard": false,
+        "routedToWellbeing": false
+      },
+      {
+        "week": 5,
+        "calls": 4,
+        "weeklyD": -0.17307924217382967,
+        "ewma": -0.0907458775193015,
+        "baselineWeek": false,
+        "watch": false,
+        "nudge": false,
+        "wellbeingCard": false,
+        "routedToWellbeing": false
+      },
+      {
+        "week": 6,
+        "calls": 3,
+        "weeklyD": 0.016920209615544524,
+        "ewma": -0.11721783114354517,
+        "baselineWeek": false,
+        "watch": false,
+        "nudge": false,
+        "wellbeingCard": false,
+        "routedToWellbeing": false
+      },
+      {
+        "week": 7,
+        "calls": 4,
+        "weeklyD": 1.1969719724886312,
+        "ewma": 0.6910188225589184,
+        "baselineWeek": false,
+        "watch": false,
+        "nudge": false,
+        "wellbeingCard": false,
+        "routedToWellbeing": false
+      },
+      {
+        "week": 8,
+        "calls": 4,
+        "weeklyD": -0.9804494573050027,
+        "ewma": -0.36022434502832645,
+        "baselineWeek": false,
+        "watch": false,
+        "nudge": false,
+        "wellbeingCard": false,
+        "routedToWellbeing": false
+      }
+    ],
+    "mood": [
+      {
+        "week": 1,
+        "calls": 4,
+        "weeklyD": -1.240890002114585,
+        "ewma": 0,
+        "baselineWeek": true,
+        "watch": false,
+        "nudge": false,
+        "wellbeingCard": false,
+        "routedToWellbeing": false
+      },
+      {
+        "week": 2,
+        "calls": 4,
+        "weeklyD": -0.15280668962978436,
+        "ewma": 0,
+        "baselineWeek": true,
+        "watch": false,
+        "nudge": false,
+        "wellbeingCard": false,
+        "routedToWellbeing": false
+      },
+      {
+        "week": 3,
+        "calls": 3,
+        "weeklyD": 0.9043914493989051,
+        "ewma": 0.08181086031985313,
+        "baselineWeek": true,
+        "watch": false,
+        "nudge": false,
+        "wellbeingCard": false,
+        "routedToWellbeing": false
+      },
+      {
+        "week": 4,
+        "calls": 3,
+        "weeklyD": -0.18168851703707775,
+        "ewma": -0.002543721367782484,
+        "baselineWeek": false,
+        "watch": false,
+        "nudge": false,
+        "wellbeingCard": true,
+        "routedToWellbeing": false
+      },
+      {
+        "week": 5,
+        "calls": 3,
+        "weeklyD": -0.5684220544977573,
+        "ewma": -0.2495574177417869,
+        "baselineWeek": false,
+        "watch": false,
+        "nudge": false,
+        "wellbeingCard": true,
+        "routedToWellbeing": false
+      },
+      {
+        "week": 6,
+        "calls": 4,
+        "weeklyD": -0.5703805542617575,
+        "ewma": -0.3297793878435338,
+        "baselineWeek": false,
+        "watch": false,
+        "nudge": false,
+        "wellbeingCard": true,
+        "routedToWellbeing": false
+      },
+      {
+        "week": 7,
+        "calls": 4,
+        "weeklyD": -0.1850746978893728,
+        "ewma": -0.23355907885492028,
+        "baselineWeek": false,
+        "watch": false,
+        "nudge": false,
+        "wellbeingCard": false,
+        "routedToWellbeing": false
+      },
+      {
+        "week": 8,
+        "calls": 4,
+        "weeklyD": -1.0239224473293222,
+        "ewma": -0.6812573970404703,
+        "baselineWeek": false,
+        "watch": false,
+        "nudge": false,
+        "wellbeingCard": false,
+        "routedToWellbeing": false
+      }
+    ]
+  }
+}

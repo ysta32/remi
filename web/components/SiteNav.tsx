@@ -18,6 +18,7 @@ export function SiteNav({ variant }: { variant: 'home' | 'app' }) {
             <a href="#privacy" className="hidden rounded-full px-4 py-2.5 hover:bg-card md:inline">Privacy</a>
           </>
         )}
+        <Link href="/research" className="hidden rounded-full px-4 py-2.5 hover:bg-card md:inline">How it decides</Link>
         <Link href={DEMO_ELDER_PATH} className={pill}>
           See Hal&apos;s chats
         </Link>

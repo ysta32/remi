@@ -327,5 +327,19 @@ const md = [
 mkdirSync(OUT, { recursive: true });
 writeFileSync(join(OUT, 'drift-eval.json'), JSON.stringify({ isSimulated: true, seeds: SEEDS, results, sweep, example }, null, 2));
 writeFileSync(join(OUT, 'drift-eval.md'), md);
+
+// Compact copy for the /research page: the three rules, the sweep, and one seed-0 run per persona.
+const weeksFor = (p: Persona) =>
+  runDriftIndex(simulate(p, 0, SHORT)).weeks.map((w) => ({
+    week: w.week + 1, calls: w.calls, weeklyD: w.weeklyD, ewma: w.ewma, baselineWeek: w.baselineWeek,
+    watch: w.watch, nudge: w.nudge, wellbeingCard: w.wellbeingCard, routedToWellbeing: w.routedToWellbeing,
+  }));
+writeFileSync(
+  join('lib', 'research', 'drift-eval.json'),
+  JSON.stringify({
+    isSimulated: true, seeds: SEEDS, weeks: SHORT, onsetWeek: ONSET_WEEK + 1, results, sweep,
+    examples: { drift: weeksFor('drift'), stable: weeksFor('stable'), mood: weeksFor('mood') },
+  }, null, 2) + '\n',
+);
 console.log(md);
 console.log(`(${((Date.now() - t0) / 1000).toFixed(1)} s)`);
