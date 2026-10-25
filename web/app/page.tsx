@@ -16,7 +16,6 @@ export default function Home() {
         <HomeSections />
         <footer className="flex flex-wrap justify-between gap-4 border-t border-line pt-6 text-base text-ink-2">
           <span>Remi · built at HackPSU Fall 2026</span>
-          <span>Inspired by the I-CONECT research on regular video conversations with older adults.</span>
         </footer>
       </main>
     </>
