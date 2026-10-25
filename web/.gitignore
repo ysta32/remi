@@ -49,3 +49,4 @@ next-env.d.ts
 .impeccable/hook.cache.json
 .impeccable/questions/
 .impeccable/live/
+.impeccable/review/

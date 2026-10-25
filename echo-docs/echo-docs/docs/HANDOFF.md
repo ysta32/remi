@@ -84,14 +84,13 @@ Each agent edits **only its own section** plus appends to "Requests" and "Contra
   - REPEAT_COSINE 0.56 was tuned on hand-written pairs, and its margin over the closest different-story pair (0.51) is thin.
 
 ## D — Family app + demo
-- Status: D0 + D2 done against fixtures on branch `ws/d-family-app` (Sat ~10 PM). Next: D1 `/setup`.
-- Pages done: `/` (elder picker), `/elders/[id]` (timeline: nudge card, call cards w/ processing shimmer + "New" highlight, fun facts, waiting questions, 8 Recharts trend charts w/ baseline band + simulated/low-confidence styling, retold stories, approved disclaimers). Polls 3 s while processing, else 15 s.
-- How to run: `cd web && npm install && npm run dev` → http://localhost:3000/elders/elder-hal. Fixture switcher bar on the page: `?fixture=drift|stable|unconfirmed|processing|after-call`.
-- Fixtures: `npm run fixtures` regenerates `fixtures/demo/*.json` from `web/scripts/demo-data.ts` (Hal persona, demo.md §2 marker table, seeded PRNG 42). Seed (D4) will reuse `demo-data.ts`.
-- Live vs fixture: all fixture. `web/lib/api.ts` is the single switch; set `NEXT_PUBLIC_USE_FIXTURES=0` once B's endpoints exist.
-- Seed results (drift → nudge? stable → none?): not yet (D4).
-- Screenshots: `fixtures/demo/screenshots/`
-- Known issues: none known. Product name is **Remi** (`APP_NAME` in `web/lib/config.ts`).
+- Status (Sat ~11:20 PM): redesign built on `ws/d-family-app` (merged with `ws/bc-backend`). Brighter Sky design; spec `docs/superpowers/specs/2026-10-24-remi-family-frontend-design.md`, plan `docs/superpowers/plans/2026-10-24-remi-family-frontend.md`.
+- Pages done: `/` judge-facing home (hero, live "Today on Remi" row, how it works, signals, privacy, closing CTA); `/elders/[id]` with **Chats** (newest snapshot + develop/NEW moment, gentle note below it, earlier chats, waiting questions, fun facts) and **How he's doing** (`?tab=doing`: four signals — pauses & hesitation, speaking pace, vague words, retold stories — with plain status words).
+- How to run: `cd web && npm install && npm run dev` → http://localhost:3000 and http://localhost:3000/elders/elder-hal-demo. Sample-data bar on Hal's page: `?fixture=drift|stable|unconfirmed|processing|after-call`.
+- Fixture vs live: fixtures by default; `NEXT_PUBLIC_USE_FIXTURES=0` reads B's API. The API is empty until the seed exists.
+- Seed results: **not yet** — `web/scripts/seed.ts` is still B's stub (owned by D). Next D task: implement it from `web/scripts/demo-data.ts` (demo elder id `elder-hal-demo`).
+- Screenshots: `web/.impeccable/review/` (git-ignored).
+- Known issues: no licensed family photos yet (cards show an honest photo-icon panel); setup/manage pages (incl. Kevin's memory moments + emergency contact) not built yet.
 
 ## Requests (from → to: what, by when)
 - D → B: `web/` is scaffolded (Next 16.4.3, Tailwind 4, Recharts, vitest; `web/lib/types.ts` mirrors contracts §3, `web/lib/config.ts` has `APP_NAME`). Please build `web/db`, `web/app/api` on top of this branch rather than a second scaffold.

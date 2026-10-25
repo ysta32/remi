@@ -10,19 +10,19 @@ related_targets: ["app/page.tsx"]
 Scope: `/elders/[id]` (Operate: the family member's check-in on Dad) and `/` (Persuade: welcome page for judges and new families; opens Hal's chats).
 Audience: adult child on a phone between other things (primary); judges on a laptop at the expo (secondary).
 Job: enjoy Dad's latest stories first; notice gently if it may be time to check in.
-Constraints: contract shapes unchanged; approved copy verbatim; Simulated badges; no transcripts; no red; nudge text has no numbers; 4 signals shown (pauses & hesitation, speaking pace, vague words, retold stories), backend still sends 8.
-Open: real family photos (none licensed yet); AI illustration for home hero pending from the user.
+Constraints: contract shapes unchanged; approved copy verbatim; Simulated badges; no transcripts; no red; nudge text has no numbers; 4 signals shown (pauses & hesitation, speaking pace, vague words, retold stories); nothing overlaps anything (user rule); no dead zones, not cramped.
+Spec: docs/superpowers/specs/2026-10-24-remi-family-frontend-design.md (this brief follows it).
 
 ## Direction contract
 
-THESIS: Every chat with Dad lands like a fresh instant photo you can't wait to see develop. Refuses the category default of a white wellness dashboard with status tiles and a chart grid.
+THESIS: Every chat with Dad lands like a fresh instant photo, stories first and health second. Refuses the white wellness dashboard of status tiles and a chart grid.
 
-OWN-WORLD: Soft sky ground (#dcebf7 / #eef6fc), warm off-white snapshot frames (#fffdf9) with a deep bottom caption strip, deep navy ink (#22314a). Three named accents with jobs: butter (#ffe39b) = attention and the gentle note, peach (#ffcdb8) = fun facts and family, mint (#c9ead9) = good spirits and privacy. Figtree for everything readable, Patrick Hand marker only for snapshot captions and small handwritten labels. Rounded pills, big radii, soft navy-tinted shadows, slight snapshot tilt.
+OWN-WORLD: B · Brighter Sky. Ground #e7f0f8, hero panel #a9cdee, sky-soft #d6e8f8 (usual bands, photo stand-ins, calm cards), white cards with 1px #e3ebf3 lines and neutral shadows, ink #1d2b45. Accents with jobs: butter #ffd668 joy only (the "stories" highlight, sun glyph), peach #ffd9c7/#ffb595 family and NEW, mint #a8dcc1 good spirits and privacy. Figtree for everything readable; Patrick Hand only for short snapshot captions (70 chars max). Round pills, 28–40px radii.
 
-STORY: The family member sees Dad's newest chat as a snapshot, reads what he talked about and the fun fact, sees any gentle note, and only then, on a second tab, how he's been talking compared with his usual, in plain words.
+STORY: The family member sees Dad's newest chat as a snapshot, the gentle note right below it, earlier chats beside questions and fun facts; a second tab shows four signals in plain words ("About his usual" / "Different from his usual lately"). The judge sees the hero, then the live Today row, then how it works.
 
-FIRST VIEWPORT: Timeline (390 wide first): sky header with Remi wordmark and two pill tabs (Chats | How he's doing), "Hal's chats" and last-chat time; butter gentle-note card overlapping the header edge; label "today's snapshot"; newest call as a large tilted snapshot (photo window, handwritten caption), summary below, chips for the family answer and mood. Home (1440): sky hero panel, headline left "Grandpa calls. Remi listens. You get his stories.", primary navy pill "See Hal's chats", illustration of an older man on a video call right (pending), how-it-works, the four signals, privacy and not-a-diagnosis cards.
+FIRST VIEWPORT: Home (1440): nav (wordmark, How it works, Privacy, See Hal's chats); sky hero panel, headline left "Grandpa calls. Remi listens. You get his stories.", navy pill CTA, judges line; Hal-in-armchair illustration right with Remi's bubble beside his phone (above it on phones); the Today row starts below. Timeline: "Hal's chats", subtitle, Chats | How he's doing tabs, then a two-column grid: newest snapshot + gentle note left, waiting questions + fun facts right.
 
-FORM: Instant Snapshots, position 7 of 7 on the grounded list (assigned by the roll). Signature move: a newly arrived call develops like an instant photo (blank warm grey frame blooms into colour) and keeps a NEW tag until scrolled into view. Raises: change stays lit until seen (boarding pass); plain note beside each chart (centre rail); three type sizes, rank by weight and colour (timetable); every colour from one sky ramp plus three accents (exposure record). seed: none (unavailable)
+FORM: Instant Snapshots, position 7 of 7 on the grounded list (assigned by the roll). Signature move: a newly arrived call develops from grey into colour and keeps a NEW tag for 8 s after it is seen. seed: none (unavailable)
 
 FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
