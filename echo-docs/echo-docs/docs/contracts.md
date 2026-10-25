@@ -22,6 +22,12 @@ Conventions: IDs are `crypto.randomUUID()` strings. Timestamps are ISO-8601 UTC 
 | `CAPTURE_AUDIO` | agent | `1` = record caller audio to `tmp/calls/<callId>.wav` |
 | `DEMO_MODE` | agent, web | `1` = compressed call flow; timeline shows demo hints |
 | `TURN_SILENCE_MS` | agent | End-of-turn silence threshold, default `1000` |
+| `SAFETY_MODE` | agent | `family` (default) \| `911`; overrides `elders.safety_mode` |
+| `EMERGENCY_CONTACT_PHONE`, `EMERGENCY_CONTACT_NAME`, `ELDER_ADDRESS` | agent | Override the context's emergency contact (demo: a teammate's phone) |
+| `SAFETY_NOTIFY_MIN_LEVEL` | agent | `watch` \| `urgent` (default) \| `emergency` |
+| `EMERGENCY_DISPATCH_URL`, `EMERGENCY_DISPATCH_TOKEN` | agent | Optional dispatch webhook used in `911` mode |
+| `MEMORY_PROMPTS_PER_CALL` | agent | Default `2` |
+| `CHERT_BASE_URL`, `CHERT_API_KEY` | agent | Chert iMessage send, used for family safety alerts |
 | `LLM_PROVIDER` | web | `gemini` \| `openai` |
 | `GEMINI_API_KEY` | web | If `LLM_PROVIDER=gemini` |
 | `STT_PROVIDER` | web | `deepgram` \| `openai` \| `none` |
@@ -129,7 +135,7 @@ CREATE TABLE calls (
 CREATE TABLE call_events (
   id TEXT PRIMARY KEY,
   call_id TEXT NOT NULL REFERENCES calls(id) ON DELETE CASCADE,
-  type TEXT NOT NULL CHECK (type IN ('photo_shown','question_asked','consent','safety')),
+  type TEXT NOT NULL CHECK (type IN ('photo_shown','question_asked','consent','safety','memory_prompt')),
   payload_json TEXT NOT NULL,
   at_ms INTEGER NOT NULL
 );
@@ -193,11 +199,38 @@ CREATE TABLE nudges (
 CREATE TABLE safety_events (
   id TEXT PRIMARY KEY,
   call_id TEXT NOT NULL REFERENCES calls(id) ON DELETE CASCADE,
-  category TEXT NOT NULL CHECK (category IN ('self_harm','medical_emergency','other')),
+  category TEXT NOT NULL CHECK (category IN ('self_harm','medical_emergency','fall','disorientation','exploitation','other')),
+  level TEXT NOT NULL DEFAULT 'urgent' CHECK (level IN ('watch','urgent','emergency')),
+  source TEXT NOT NULL DEFAULT 'model' CHECK (source IN ('model','keyword')),
+  notified INTEGER NOT NULL DEFAULT 0,   -- family iMessage queued
+  dispatched INTEGER NOT NULL DEFAULT 0, -- emergency webhook attempted (SAFETY_MODE=911)
   note TEXT NOT NULL,
   created_at TEXT NOT NULL
 );
+
+-- Family-supplied memory moments (see docs/call-flow.md §2)
+CREATE TABLE memory_prompts (
+  id TEXT PRIMARY KEY,
+  elder_id TEXT NOT NULL REFERENCES elders(id) ON DELETE CASCADE,
+  question TEXT NOT NULL,
+  answer TEXT NOT NULL,
+  hint TEXT,
+  asked_by TEXT NOT NULL,
+  last_asked_at TEXT,
+  last_outcome TEXT CHECK (last_outcome IN ('recalled','recalled_with_hint','answer_shared','skipped')),
+  times_asked INTEGER NOT NULL DEFAULT 0,
+  is_simulated INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL
+);
+
+-- Emergency contact (added to elders; all nullable)
+ALTER TABLE elders ADD COLUMN emergency_contact_name TEXT;
+ALTER TABLE elders ADD COLUMN emergency_contact_phone TEXT;  -- E.164
+ALTER TABLE elders ADD COLUMN safety_mode TEXT NOT NULL DEFAULT 'family' CHECK (safety_mode IN ('family','911'));
+ALTER TABLE elders ADD COLUMN address TEXT;
 ```
+
+`call_events.type` also allows `'memory_prompt'` (side effect: updates `memory_prompts.last_asked_at`, `last_outcome`, `times_asked`).
 
 Themes seed (B inserts on migrate): First jobs · Childhood home · Favorite meals · Music and dancing · Friends and neighbors · Travel and trips · Holidays · Proud moments. Each with a one-line `prompt_en` and `prompt_zh`.
 
@@ -232,13 +265,21 @@ export interface CallContext {
   theme: { id: string; title: string; prompt: string };                       // prompt in elder's language
   isFirstCall: boolean;
   demoMode: boolean;
+  // <= 3, least recently asked first; agent uses up to MEMORY_PROMPTS_PER_CALL
+  memoryPrompts?: { id: string; question: string; answer: string; hint: string | null; askedBy: string }[];
+  emergency?: { contactName: string; contactPhone: string; mode: 'family' | '911'; address: string | null } | null;
 }
+
+export type SafetyCategory = 'self_harm' | 'medical_emergency' | 'fall' | 'disorientation' | 'exploitation' | 'other';
+export type SafetyLevel = 'watch' | 'urgent' | 'emergency';
+export type MemoryOutcome = 'recalled' | 'recalled_with_hint' | 'answer_shared' | 'skipped';
 
 export type CallEvent =
   | { type: 'photo_shown'; atMs: number; payload: { photoId: string } }
   | { type: 'question_asked'; atMs: number; payload: { questionId: string } }
   | { type: 'consent'; atMs: number; payload: Partial<ConsentMap> }
-  | { type: 'safety'; atMs: number; payload: { category: 'self_harm' | 'medical_emergency' | 'other'; note: string } };
+  | { type: 'memory_prompt'; atMs: number; payload: { promptId: string; outcome: MemoryOutcome } }
+  | { type: 'safety'; atMs: number; payload: { category: SafetyCategory; note: string; level?: SafetyLevel; source?: 'model' | 'keyword'; notified?: boolean; dispatched?: boolean } };
 
 export type MarkerKey =
   | 'speech_rate' | 'pause_rate' | 'mean_pause_ms' | 'wfp_rate'
@@ -339,12 +380,14 @@ Body: one `CallEvent`. → `204`. Side effects: `photo_shown` updates `photos.la
 | `GET /api/elders` | — | `{ id, displayName, preferredName }[]` |
 | `POST /api/elders` | `{ displayName, preferredName, language, timezone?, about?, primaryContactName, members?: {name, relation}[] }` | `201 { id }` (also creates `consents` row with defaults) |
 | `GET /api/elders/:id` | — | profile + members + photos (with `imageUrl` at `/api/photos/:id/file`) + questions + consent |
-| `PATCH /api/elders/:id` | any subset of create fields | `200` profile |
+| `PATCH /api/elders/:id` | any subset of create fields, plus `emergencyContactName?`, `emergencyContactPhone?` (E.164), `safetyMode?` (`family` \| `911`), `address?` | `200` profile |
 | `POST /api/elders/:id/photos` | multipart: `file` (jpeg/png/heic→ convert or reject), `caption`, `people?` | `201` photo (max 8 MB) |
 | `GET /api/photos/:id/file` | — | image bytes |
 | `DELETE /api/photos/:id` | — | `204` (deletes file) |
 | `POST /api/elders/:id/questions` | `{ text, askedBy }` | `201` question |
 | `DELETE /api/questions/:id` | — | `204` |
+| `POST /api/elders/:id/memory-prompts` | `{ question, answer, hint?, askedBy }` | `201` memory prompt |
+| `DELETE /api/memory-prompts/:id` | — | `204` |
 | `PUT /api/elders/:id/consent` | `{ summaries, funFacts, speechTrends, mood }` (family-proposed) | `200 { proposed, elderConfirmed, effective }` |
 | `GET /api/elders/:id/timeline` | — | `Timeline` (consent filtering done **here**, server-side) |
 | `POST /api/nudges/:id/dismiss` | — | `204` |
