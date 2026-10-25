@@ -24,9 +24,10 @@ export function readConfig(env = process.env) {
     // Caller WAV for the backend's STT + voice markers. On unless CAPTURE_AUDIO=0.
     captureAudio: env.CAPTURE_AUDIO !== '0',
     demoMode: on(env.DEMO_MODE),
-    // End-of-turn silence for the realtime model's server VAD (contracts default 1000).
+    // End-of-turn silence for the realtime model's server VAD (contracts default 1000). 450 ms:
+    // at 700 the caller heard ~1.5 s of dead air (845 ms median reply after the VAD fired).
     // TURN_DETECTION=semantic keeps the plugin's semantic VAD instead.
-    turnSilenceMs: int(env.TURN_SILENCE_MS, 700),
+    turnSilenceMs: int(env.TURN_SILENCE_MS, 450),
     vadThreshold: Number.parseFloat(env.VAD_THRESHOLD) || 0.6,
     // near_field for a phone held close; far_field when it sits on a table on speaker.
     noiseReduction: env.NOISE_REDUCTION === 'near_field' ? 'near_field' : 'far_field',

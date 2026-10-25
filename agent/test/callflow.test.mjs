@@ -105,3 +105,11 @@ test('any caller: Remi adapts and never shares the elder\'s details with someone
   assert.match(text, /IF THE CALLER IS NOT HAL/);
   assert.match(text, /Never share anything about Hal/);
 });
+
+test('style: adds material instead of parroting, asks fewer and deeper questions', () => {
+  const text = render(base);
+  assert.match(text, /Never parrot/);
+  assert.match(text, /fun fact/);
+  assert.match(text, /Most turns end with a statement/);
+  assert.doesNotMatch(text, /What did the shop floor smell like/);
+});
