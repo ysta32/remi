@@ -24,3 +24,11 @@ Files: scripts/export-repeat-evaluation.py; web/public/evaluation/repeat-review-
 - [ ] Build derived metrics and page, outcome filter and item selection, six-miss graphic, evidence pairs, readable methodology and print/download controls. Expected: no requests to model/database, no fabricated score, no mobile overflow.
 - [ ] Verify focused tests, typecheck/lint/build, export reproducibility, browser desktop/mobile controls and print styles. Full web suite once implementation settles.
 - [ ] Commit, fresh final review, address important findings with regression tests, publish and merge using existing authorization. Final task command: npm --prefix web test.
+
+## Completion and review
+
+Implemented all snapshot, visualization, evidence, methodology and navigation work. Full web suite330pass/1skip; typecheck/lint/build pass. Export reproduced byte-for-byte and rejected tampered counts/labels/summaries/correction hash. Public JSON HTTP200 matches artifact exactly. Browser desktop/390px mobile show no horizontal overflow; outcome filters, empty false-alarm state, keyboard selection11.2 and prior-item4.5 navigation work. CSS is globally prefixed `eval-*` because the existing Tailwind Turbopack loader does not export CSS-module names; actual browser styling verified.
+
+Fresh review found no Critical/Important issues and independently regenerated the snapshot. Deferred minor: miss-chart selection uses smooth scrolling even with reduced-motion enabled. Print styles/action exist, but the automated dialog/download UI timed out; completed PDF pagination is unverified (JSON endpoint itself verified). No blocker to the interactive judge page.
+
+Review boundaries: executor verified browser interaction; reviewer checked markup/CSS. Stanley owns live FaceTime testing. No clinical/generalization claim or independent second human review. Detector tuning and existing research simulation claims remain outside this static report. Existing frozen inputs remain untouched.
