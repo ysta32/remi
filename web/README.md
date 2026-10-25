@@ -18,3 +18,4 @@ and `OPENAI_API_KEY` for summaries/fun facts (without it the pipeline still fini
 - `app/api/` — routes from contracts §4–6 · `lib/server/` — context, consent filter, timeline
 - `lib/markers/` — pure speech markers · `lib/analysis/` — pipeline, baselines, drift, nudges, model adapters
 - `scripts/seed.ts` — demo seed (workstream D); `scripts/try-extract.ts`, `scripts/tune-repeat.ts` — live model checks
+- `npm run pitch:check` — voice markers: TTS flat vs expressive (needs `OPENAI_API_KEY`), or `-- --file x.wav` for any recording

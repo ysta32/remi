@@ -10,11 +10,13 @@ import {
   MIN_CALLS_FOR_NUDGE,
   MOOD_LOW_MIN,
   MOOD_WINDOW,
+  NUDGE_GROUPS,
   REPEAT_WEEKLY_MIN,
 } from './config';
 import { median } from './stats';
 
-export const GROUP_ORDER: MarkerGroup[] = ['pace', 'pauses', 'words', 'repetition'];
+/** Groups that can drift toward a nudge (config NUDGE_GROUPS; 'voice' is chart only). */
+export const GROUP_ORDER: MarkerGroup[] = NUDGE_GROUPS;
 const Z_MARKERS: MarkerKey[] = MARKER_KEYS.filter((k) => k !== 'repeat_stories');
 
 export interface DriftCall {

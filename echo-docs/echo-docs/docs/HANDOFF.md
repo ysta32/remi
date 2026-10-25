@@ -77,6 +77,18 @@ Each agent edits **only its own section** plus appends to "Requests" and "Contra
   - An invalid timezone falls back to America/New_York.
   - "mm-hmm" counts as a filler for word-finding pauses, and the pause agent-overlap check uses a closed interval.
   - "1 minute" is singular in the fallback summary.
+- Voice markers (`pitch_var`, `pitch_range`, group `voice`):
+  - Added Oct 25. Defined in markers.md §4b.
+  - YIN pitch tracking in pure TS (`web/lib/markers/pitch.ts`, `wav.ts`), with no dependencies, so it behaves the same on the demo Mac and on Windows.
+  - Runs as the soft pipeline step `acoustic` after STT and before the WAV is deleted, and analyses only the caller's word spans.
+  - **Chart only:** they get baselines, z-scores and charts, but `NUDGE_GROUPS` in `web/lib/analysis/config.ts` leaves out `voice`. Add it there to let voice drive nudges once real calls show it's stable.
+  - Adequacy is decided by transcript markers only.
+  - Cost: at most about 3.5 s for 10 minutes of continuous voiced speech.
+  - Checks:
+    - unit tests on synthetic tones and glides;
+    - `npm run pitch:check -- --file x.wav` on a synthetic 140 ± 25 Hz voice gave a median of 142 Hz and pitch_range 5.96 st (expected about 6);
+    - the TTS flat-vs-expressive comparison (`npm run pitch:check`) is not yet run, because it needs `OPENAI_API_KEY` in `web/.env.local`.
+  - Real values need agent capture (A6, `CAPTURE_AUDIO=1`). Without audio both markers are `na`.
 - Known issues:
   - The check-up rule uses the latest 2 *evaluated* weeks (weeks with fewer than 2 adequate calls are skipped), so the demo nudge survives a single live call. It has no recency limit.
   - `hal-zh-sample.json` uses a separate fictional elder (王奶奶).
@@ -112,6 +124,8 @@ Each agent edits **only its own section** plus appends to "Requests" and "Contra
   - Write captures to `agent/tmp/calls/<callId>.wav` and pass the absolute path.
   - Send all four keys in one `consent` event, because `elderConfirmed` needs all four.
   - Fetch photo `imageUrl`s with the Bearer token.
+- C → D: the timeline now has 10 marker series. The 2 new ones are `pitch_var` and `pitch_range`, group `voice`, unit `st` (semitones). Use the same chart component, with label and explainer from the API. Keep their copy about sound only, never mood (safety-and-copy).
+- C → A: the voice markers need caller audio. Use `CAPTURE_AUDIO=1` (A6) to write a 16 kHz mono PCM16 WAV to `agent/tmp/calls/<callId>.wav`, and pass its absolute path as `audioPath` in `/complete`.
 - B → humans: branch `ws/A-call-flow` has a `[contract]` commit (memory prompts, more safety categories, emergency fields) that B has not implemented.
   - The current API rejects those events with 400.
   - It needs a human decision. It also conflicts with "never quiz/test memory" and with "family alerting is roadmap".
@@ -119,7 +133,7 @@ Each agent edits **only its own section** plus appends to "Requests" and "Contra
 - D → A (Kevin) + humans, Sat 11:30 PM: `ws/A-call-flow` (3 commits) is still not on `main`. Decide on its `[contract]` commit, then merge so the demo path runs end to end.
 
 ## Contract changes (date time — change — affected workstreams)
--
+- Sun Oct 25 — `[contract]` additive: `MarkerKey` += `pitch_var`, `pitch_range`; `MarkerGroup` += `voice`; unit `st` (semitones). No DB change (`call_markers.marker` is text). Timeline now returns 10 marker series. Chart only: voice never drives nudges. Definitions in markers.md §4b. Affects C (computes), B (timeline passes through), D (render 2 more charts; group `voice`).
 
 ## Decisions log (human-confirmed only)
 - Sat Oct 24 ~6:14 PM — Team committed to the elder FaceTime conversation + memory + family loop project.

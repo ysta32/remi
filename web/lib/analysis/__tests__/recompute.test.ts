@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { getSqlite } from '@/db/client';
 import { recomputeElder } from '@/lib/analysis/recompute';
-import { markerMeta } from '@/lib/markers/meta';
+import { markerMeta, type TextMarkerKey } from '@/lib/markers/meta';
 import { newId, nowIso } from '@/lib/server/ids';
 import type { MarkerKey, NudgeReason } from '@/lib/types';
 import { freshDb, insertCall, insertElder } from '@/test/helpers';
@@ -18,7 +18,7 @@ function prng(seed: number): () => number {
   };
 }
 
-type Spec = Record<Exclude<MarkerKey, 'repeat_stories'>, [number, number]>;
+type Spec = Record<TextMarkerKey, [number, number]>;
 // demo.md §2 marker table: [mean, ± uniform spread]
 const BASE: Spec = {
   speech_rate: [134, 5],
@@ -262,5 +262,69 @@ describe('recomputeElder', () => {
     moods.forEach((m, i) => insertCall(other, { started_at: new Date(W_MINUS_4 + i * DAY).toISOString(), mood_label: m }));
     await recomputeElder(other);
     expect(nudgesOf(other)).toHaveLength(0);
+  });
+});
+
+describe('voice markers (chart only, markers.md §4b)', () => {
+  beforeEach(() => freshDb());
+
+  function seedWithPitch(pitchFor: (week: number) => number) {
+    const rand = prng(7);
+    const elderId = insertElder({ is_simulated: 1 });
+    setAllConsent(elderId);
+    const callIds: string[] = [];
+    for (let n = 1; n <= 12; n++) {
+      const week = Math.floor((n - 1) / 3);
+      const startedAt = new Date(W_MINUS_4 + (week * 7 + [0, 2, 4][(n - 1) % 3]) * DAY).toISOString();
+      const callId = insertCall(elderId, { started_at: startedAt, is_simulated: 1, mood_label: 'positive' });
+      const values: Partial<Record<MarkerKey, number>> = {};
+      // Speech markers held exactly at the baseline means, so only what a test changes can drift.
+      for (const [k, [mean]] of Object.entries(BASE)) values[k as MarkerKey] = mean;
+      values.pitch_var = pitchFor(week) + (rand() * 2 - 1) * 0.1;
+      values.pitch_range = 2 * pitchFor(week) + (rand() * 2 - 1) * 0.2;
+      insertMarkers(callId, values);
+      callIds.push(callId);
+    }
+    return { elderId, callIds };
+  }
+
+  it('a flattening voice gets a baseline and positive (concerning) z, but never a nudge', async () => {
+    const { elderId, callIds } = seedWithPitch((week) => (week < 2 ? 3.0 : 1.5));
+    await recomputeElder(elderId);
+    const b = getSqlite().prepare("SELECT n FROM baselines WHERE elder_id = ? AND marker = 'pitch_var'").get(elderId) as { n: number };
+    expect(b.n).toBe(6);
+    const z = getSqlite()
+      .prepare("SELECT z FROM call_markers WHERE call_id = ? AND marker = 'pitch_var'")
+      .get(callIds[11]) as { z: number };
+    expect(z.z).toBeGreaterThan(1.5); // flatter than usual → positive z (concern is 'down')
+    expect(nudgesOf(elderId)).toHaveLength(0);
+  });
+
+  it('pace + voice drifting together still gives no nudge (voice is not a nudge group)', async () => {
+    const { elderId, callIds } = seedWithPitch((week) => (week < 2 ? 3.0 : 1.5));
+    // Slow speech in weeks 3-4 so the pace group drifts too.
+    for (const id of callIds.slice(6)) {
+      getSqlite().prepare("UPDATE call_markers SET value = 110 WHERE call_id = ? AND marker = 'speech_rate'").run(id);
+    }
+    await recomputeElder(elderId);
+    // Both drift strongly, so with voice counted this would be 2 groups in 2 weeks and would fire.
+    const zs = getSqlite()
+      .prepare("SELECT z FROM call_markers WHERE call_id = ? AND marker IN ('speech_rate','pitch_var')")
+      .all(callIds[11]) as { z: number }[];
+    expect(zs.every((r) => r.z > 1.5)).toBe(true);
+    expect(nudgesOf(elderId)).toHaveLength(0);
+  });
+
+  it('voice markers never make a call adequate', async () => {
+    const elderId = insertElder();
+    setAllConsent(elderId);
+    for (let n = 0; n < 6; n++) {
+      const callId = insertCall(elderId, { started_at: new Date(W_MINUS_4 + n * DAY).toISOString() });
+      insertMarkers(callId, { speech_rate: 130, filler_rate: 4 }, 'low'); // inadequate transcript
+      insertMarkers(callId, { pitch_var: 3, pitch_range: 6 }, 'high');
+    }
+    await recomputeElder(elderId);
+    const n = getSqlite().prepare('SELECT COUNT(*) AS n FROM baselines WHERE elder_id = ?').get(elderId) as { n: number };
+    expect(n.n).toBe(0);
   });
 });

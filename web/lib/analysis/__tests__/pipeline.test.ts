@@ -10,6 +10,8 @@ import { setEmbeddingsTransportForTests } from '../embeddings';
 import { setLlmTransportForTests, type Extraction } from '../llm';
 import { attachWords, processCall } from '../pipeline';
 import { setSttTransportForTests } from '../stt';
+import { getTimings } from '../timings';
+import { encodeWav16 } from '@/lib/markers/wav';
 
 const fixture = JSON.parse(
   fs.readFileSync(path.join(process.cwd(), '..', 'fixtures', 'transcripts', 'hal-first-car.json'), 'utf8'),
@@ -76,7 +78,7 @@ describe('processCall', () => {
     expect(facts).toHaveLength(2);
     expect(facts.filter((f) => f.question_id === questionId)).toHaveLength(1);
     expect(row<{ status: string }>('SELECT status FROM family_questions WHERE id = ?', questionId).status).toBe('answered');
-    expect(rows('SELECT * FROM call_markers WHERE call_id = ?', callId)).toHaveLength(8);
+    expect(rows('SELECT * FROM call_markers WHERE call_id = ?', callId)).toHaveLength(10); // 7 speech + repeat_stories + 2 voice ('na' without audio)
     expect(row<{ confidence: string }>("SELECT confidence FROM call_markers WHERE call_id = ? AND marker = 'filler_rate'", callId).confidence).toBe('high');
   });
 
@@ -97,7 +99,7 @@ describe('processCall', () => {
     const call = row<{ status: string; summary: string }>('SELECT * FROM calls WHERE id = ?', callId);
     expect(call.status).toBe('done');
     expect(call.summary).toBe('Hal and Remi chatted for 5 minutes.');
-    expect(rows('SELECT * FROM call_markers WHERE call_id = ?', callId)).toHaveLength(8);
+    expect(rows('SELECT * FROM call_markers WHERE call_id = ?', callId)).toHaveLength(10);
   });
 
   it('links a retold story to an earlier telling within 7 days', async () => {
@@ -215,6 +217,73 @@ describe('processCall review fixes', () => {
     const link = row<{ repeat_of_topic_id: string | null }>('SELECT repeat_of_topic_id FROM topics WHERE call_id = ?', later);
     const earlierTopic = row<{ id: string }>('SELECT id FROM topics WHERE call_id = ?', earlier);
     expect(link.repeat_of_topic_id).toBe(earlierTopic.id);
+  });
+});
+
+describe('voice markers in the pipeline', () => {
+  beforeEach(() => freshDb());
+  afterEach(() => {
+    setLlmTransportForTests(null);
+    setEmbeddingsTransportForTests(null);
+  });
+
+  function toneWav(seconds: number, hz: (t: number) => number): string {
+    const sr = 16000;
+    const s = new Float32Array(seconds * sr);
+    let phase = 0;
+    for (let i = 0; i < s.length; i++) {
+      phase += (2 * Math.PI * hz(i / sr)) / sr;
+      s[i] = 0.3 * (Math.sin(phase) + Math.sin(2 * phase) / 2 + Math.sin(3 * phase) / 3);
+    }
+    const dir = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'remi-')), 'tmp', 'calls');
+    fs.mkdirSync(dir, { recursive: true });
+    const wav = path.join(dir, 'call.wav');
+    fs.writeFileSync(wav, encodeWav16(s, sr));
+    return wav;
+  }
+  const pitchRow = (callId: string, marker: string) =>
+    row<{ value: number | null; confidence: string; unit: string }>(
+      'SELECT value, confidence, unit FROM call_markers WHERE call_id = ? AND marker = ?',
+      callId,
+      marker,
+    );
+
+  it('computes pitch_var and pitch_range from the WAV, then deletes it', async () => {
+    const wav = toneWav(15, (t) => 120 + 4 * t); // rising voice, 120 → 180 Hz
+    const { callId } = setupCall({ audioPath: wav });
+    setLlmTransportForTests(async () => JSON.stringify(extraction()));
+    setEmbeddingsTransportForTests(async (texts) => texts.map(() => [1, 0]));
+    await processCall(callId);
+
+    expect(fs.existsSync(wav)).toBe(false);
+    expect(pitchRow(callId, 'pitch_var')).toMatchObject({ confidence: 'high', unit: 'st' });
+    expect(pitchRow(callId, 'pitch_var').value!).toBeGreaterThan(1);
+    expect(pitchRow(callId, 'pitch_range').value!).toBeGreaterThan(4);
+    expect(getTimings(callId)?.steps.find((s) => s.step === 'acoustic')?.ok).toBe(true);
+  });
+
+  it('a re-run without audio keeps the earlier pitch values', async () => {
+    const wav = toneWav(15, (t) => 120 + 4 * t);
+    const { callId } = setupCall({ audioPath: wav });
+    setLlmTransportForTests(async () => JSON.stringify(extraction()));
+    setEmbeddingsTransportForTests(async (texts) => texts.map(() => [1, 0]));
+    await processCall(callId);
+    const before = pitchRow(callId, 'pitch_var').value;
+    await processCall(callId); // WAV is gone now
+    expect(pitchRow(callId, 'pitch_var')).toMatchObject({ value: before, confidence: 'high' });
+  });
+
+  it('an unreadable WAV is a soft failure: the call still finishes', async () => {
+    const dir = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'remi-')), 'tmp', 'calls');
+    fs.mkdirSync(dir, { recursive: true });
+    const wav = path.join(dir, 'bad.wav');
+    fs.writeFileSync(wav, 'not a wav');
+    const { callId } = setupCall({ audioPath: wav });
+    setLlmTransportForTests(async () => JSON.stringify(extraction()));
+    setEmbeddingsTransportForTests(async (texts) => texts.map(() => [1, 0]));
+    await processCall(callId);
+    expect(row<{ status: string }>('SELECT status FROM calls WHERE id = ?', callId).status).toBe('done');
+    expect(fs.existsSync(wav)).toBe(false);
   });
 });
 
