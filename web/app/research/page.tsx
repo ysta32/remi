@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { Metadata } from 'next';
 import { SiteNav } from '@/components/SiteNav';
 import { SimulatedBadge } from '@/components/SimulatedBadge';
@@ -82,6 +83,7 @@ export default function ResearchPage() {
       <SiteNav variant="app" />
       <main className="mx-auto max-w-[1200px] space-y-12 px-4 pb-16 md:px-8">
         <header className="space-y-4">
+          <Link href="/evaluation" className="inline-block rounded-full border border-ink/20 bg-card px-5 py-2 font-bold hover:bg-sky-soft">Repeat detector: view the human-reviewed evaluation →</Link>
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-[34px] font-black leading-[1.05] tracking-tight [text-wrap:balance] md:text-[44px]">Noticing the speech changes linked to early cognitive decline</h1>
             <SimulatedBadge />
