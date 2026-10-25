@@ -100,5 +100,6 @@ The page applies the Mac's rules: it ends the call if the agent is silent 10 s a
 ready, or if a second participant publishes audio, and shows video only from the
 participant that speaks. The side panel logs the same records `chert dev` prints,
 live voice levels for both sides, and the agent's reply time after you stop talking.
-Set "FaceTime ready after" to "never" to check that the agent does not greet without
+If the page says your microphone is sending pure silence, the browser lacks macOS
+microphone access (System Settings, Privacy & Security, Microphone). Set "FaceTime ready after" to "never" to check that the agent does not greet without
 the signal. Don't run `chert dev` at the same time: both would dispatch the same agent.

@@ -16,6 +16,7 @@ const CALLER_VOICE = 0.025;       // RMS above this is the caller talking
 const REMI_VOICE = 0.012;         // RMS above this is Remi talking
 const CALLER_PAUSE_MS = 350;      // this much quiet ends the caller's turn
 const REMI_PAUSE_MS = 500;
+const MIC_DEAD = 0.0003;          // RMS below this, the whole time, is a muted-by-the-OS microphone
 
 let waiting = null;   // { room, callId, agentName, openedAt, warm }
 let call = null;      // per-call state, see startCall
@@ -126,6 +127,18 @@ function tick() {
   ui.meterYou.style.width = `${Math.min(100, you * 500)}%`;
   ui.meterRemi.style.width = `${Math.min(100, remi * 500)}%`;
 
+  // A working microphone always picks up some room noise (around -60 dBFS). A level
+  // under MIC_DEAD for 4 s means the OS is handing the browser zeros, which macOS does
+  // when the browser lacks microphone access (measured: 0.0001 after Chrome's processing).
+  call.youMax = Math.max(call.youMax ?? 0, you);
+  if (you > MIC_DEAD) call.youEverHeard = true;
+  if (!call.youEverHeard && !call.muted && !call.silentMicWarned && call.micSince && now - call.micSince > 4000) {
+    call.silentMicWarned = true;
+    log('Your microphone is sending pure silence, so Remi can’t hear you. On a Mac: System Settings, Privacy & Security, Microphone, turn on your browser, then quit and reopen it.',
+      'caller_mic_silent', 'bad');
+    ui.status.textContent = 'Remi can’t hear you';
+  }
+
   if (you > CALLER_VOICE && !call.muted) { call.youSpeaking = true; call.youVoicedAt = now; }
   else if (call.youSpeaking && now - call.youVoicedAt > CALLER_PAUSE_MS) {
     call.youSpeaking = false;
@@ -190,7 +203,10 @@ async function startCall() {
     const pub = await lk.localParticipant.setMicrophoneEnabled(true, {
       echoCancellation: true, noiseSuppression: true, autoGainControl: true,
     });
-    if (pub?.track) call.youMeter = meterFor(pub.track.mediaStreamTrack);
+    if (pub?.track) {
+      call.youMeter = meterFor(pub.track.mediaStreamTrack);
+      call.micSince = performance.now();
+    }
     call.ticker = setInterval(tick, 40);
     lk.remoteParticipants.forEach(p => p.trackPublications.forEach(pub => {
       if (pub.track) onTrack(pub.track, pub, p);
@@ -238,6 +254,7 @@ function goLive(readyAt) {
   const startedAt = readyAt ?? performance.now();
   setState('live', '0:00');
   call.clock = setInterval(() => {
+    if (call.silentMicWarned) return;
     const s = Math.floor((performance.now() - startedAt) / 1000);
     ui.status.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
   }, 250);
@@ -368,4 +385,5 @@ window.addEventListener('pagehide', () => {
   call?.lk?.disconnect();
 });
 
+window.mockFaceTime = { get call() { return call; } }; // for debugging from the console
 openWaitingRoom();
