@@ -84,13 +84,18 @@ Each agent edits **only its own section** plus appends to "Requests" and "Contra
   - REPEAT_COSINE 0.56 was tuned on hand-written pairs, and its margin over the closest different-story pair (0.51) is thin.
 
 ## D — Family app + demo
-- Status (Sat ~11:20 PM): redesign built on `ws/d-family-app` (merged with `ws/bc-backend`). Brighter Sky design; spec `docs/superpowers/specs/2026-10-24-remi-family-frontend-design.md`, plan `docs/superpowers/plans/2026-10-24-remi-family-frontend.md`.
+- Status (Sat ~11:20 PM): redesign **merged to `main`** (PR #2, `70c4c3a`), including `ws/bc-backend`. Tests 147/147, Ryan's detector 245/245, production build passes. Brighter Sky design; spec `docs/superpowers/specs/2026-10-24-remi-family-frontend-design.md`, plan `docs/superpowers/plans/2026-10-24-remi-family-frontend.md`.
 - Pages done: `/` judge-facing home (hero, live "Today on Remi" row, how it works, signals, privacy, closing CTA); `/elders/[id]` with **Chats** (newest snapshot + develop/NEW moment, gentle note below it, earlier chats, waiting questions, fun facts) and **How he's doing** (`?tab=doing`: four signals — pauses & hesitation, speaking pace, vague words, retold stories — with plain status words).
 - How to run: `cd web && npm install && npm run dev` → http://localhost:3000 and http://localhost:3000/elders/elder-hal-demo. Sample-data bar on Hal's page: `?fixture=drift|stable|unconfirmed|processing|after-call`.
 - Fixture vs live: fixtures by default; `NEXT_PUBLIC_USE_FIXTURES=0` reads B's API. The API is empty until the seed exists.
 - Seed results: **not yet** — `web/scripts/seed.ts` is still B's stub (owned by D). Next D task: implement it from `web/scripts/demo-data.ts` (demo elder id `elder-hal-demo`).
 - Screenshots: `web/.impeccable/review/` (git-ignored).
 - Known issues: no licensed family photos yet (cards show an honest photo-icon panel); setup/manage pages (incl. Kevin's memory moments + emergency contact) not built yet.
+- **Still to do (D), in order:**
+  1. Seed script `web/scripts/seed.ts` (`npm run seed -- --scenario drift|stable`) so a real call shows on Hal's page during the demo. Blocks the definition of done.
+  2. Three family photos (from ChatGPT, owned by Jimmy) into `fixtures/demo/` to replace the photo-icon panels.
+  3. Voice chart (pitch variation / range) on the "How he's doing" tab once Siyuan's `c5247e6` lands on `main`. Sound only, never mood.
+  4. Setup/manage pages for Kevin's memory moments + emergency contact, only if humans approve that contract change (see Requests).
 
 ## Requests (from → to: what, by when)
 - D → B: `web/` is scaffolded (Next 16.4.3, Tailwind 4, Recharts, vitest; `web/lib/types.ts` mirrors contracts §3, `web/lib/config.ts` has `APP_NAME`). Please build `web/db`, `web/app/api` on top of this branch rather than a second scaffold.
@@ -110,6 +115,8 @@ Each agent edits **only its own section** plus appends to "Requests" and "Contra
 - B → humans: branch `ws/A-call-flow` has a `[contract]` commit (memory prompts, more safety categories, emergency fields) that B has not implemented.
   - The current API rejects those events with 400.
   - It needs a human decision. It also conflicts with "never quiz/test memory" and with "family alerting is roadmap".
+- D → B/C (Siyuan), Sat 11:30 PM: `ws/bc-backend` has `c5247e6` (voice markers `pitch_var`, `pitch_range`) that isn't on `main`. Please merge it to `main`; D will add the chart after.
+- D → A (Kevin) + humans, Sat 11:30 PM: `ws/A-call-flow` (3 commits) is still not on `main`. Decide on its `[contract]` commit, then merge so the demo path runs end to end.
 
 ## Contract changes (date time — change — affected workstreams)
 -
