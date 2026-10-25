@@ -10,7 +10,9 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "db:migrate": "tsx db/migrate-cli.ts",
-    "seed": "tsx scripts/seed.ts"
+    "seed": "tsx scripts/seed.ts",
+    "tune:repeat": "tsx scripts/tune-repeat.ts",
+    "try:extract": "tsx scripts/try-extract.ts"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",

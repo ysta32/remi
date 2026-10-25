@@ -36,4 +36,7 @@ export const NUDGE_REFIRE_DAYS = 14;
 
 // Repetition (markers.md §6)
 export const REPEAT_WINDOW_DAYS = 7;
-export const REPEAT_COSINE = 0.85;
+// Tuned on fixtures/transcripts/repeat-pairs.json with text-embedding-3-small (2026-10-25):
+// same-story pairs 0.62–0.77, different stories 0.39–0.51 → midpoint 0.56 (10/10). The spec's
+// starting value 0.85 matched none of the same-story pairs.
+export const REPEAT_COSINE = 0.56;
