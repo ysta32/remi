@@ -66,3 +66,18 @@ Both **Chats** and **How he's doing** show “Repeated stories and questions” 
 
 The entire fictional demo corpus is used for this integration, not a held-out evaluation. Detection counts can differ from planted annotations and make no clinical or accuracy claim. Summary generation and audio/STT are unchanged; timing remains authored even after repeat analysis.
 - `npm run pitch:check` — voice markers: TTS flat vs expressive (needs `OPENAI_API_KEY`), or `-- --file x.wav` for any recording
+
+### Family Drift Index
+
+“How he’s doing” now computes a consent-filtered Drift Index view from stored high-confidence
+markers and available validated standalone repeat detector results. Only unprompted repeated
+stories contribute to its repeat rule; unknown detector coverage is shown separately from zero.
+The card displays familiarization/baseline progress, monitored calls and completed monitoring
+weeks. The twelve-call synthetic profile has two familiarization calls, eight baseline calls,
+two subsequent calls and no completed monitoring week: all four week buckets overlap the
+baseline. Its authored timing is not measured audio. The separate audio-analysis output does
+not replace these stored markers. Computed nudge flags never mean a notification was sent.
+
+`/research` remains a longer **static simulation** of possible trajectories, distinct from the
+family view’s actual stored evidence and detector coverage. Research chart defaults are preserved;
+the family card overrides all notification-related chart labels with computed-state wording.
