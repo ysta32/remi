@@ -59,14 +59,14 @@ Consecutive words are taken across the caller's whole word stream sorted by `sta
 
 Added Oct 25 (see HANDOFF "Contract changes"). Computed from the caller's call audio (`audioPath`, from agent capture A6), **not** from the transcript. No trained model: classic YIN pitch tracking (de Cheveigné & Kawahara 2002, *JASA* 111(4)), pure TypeScript in `web/lib/markers/pitch.ts`. **Never** described or used as mood, emotion or mental-health information (claims policy).
 
-- **Pitch track:** downsample to 8 kHz; 40 ms frames, 10 ms hop; voicing gate = frame RMS > 3 × 20th-percentile RMS; YIN cumulative-mean-normalised difference, absolute threshold 0.15, parabolic interpolation, search band 60–400 Hz; 5-frame median filter; drop frames more than 12 semitones from the call median (octave errors). Only caller speech is analysed: STT word spans ± 100 ms when present, else the whole file.
+- **Pitch track:** downsample to 8 kHz; 40 ms frames, 20 ms hop; voicing gate = frame RMS ≥ max(0.1 × the 95th-percentile frame RMS, 1e-3 ≈ −60 dBFS); YIN cumulative-mean-normalised difference, absolute threshold 0.15, parabolic interpolation, search band 60–400 Hz; 5-frame median filter; drop frames more than 10 semitones from the call median (octave errors). Only caller speech is analysed: STT word spans ± 100 ms when present, else the whole file. Cost: ≤ ~3.5 s for 10 minutes of continuous voiced speech (worst case).
 - **`pitch_var`** (unit `st`; concern: down; group: voice) — standard deviation of voiced-frame F0 in semitones, `12·log2(f / median f)`.
 - **`pitch_range`** (unit `st`; concern: down; group: voice) — 90th minus 10th percentile of voiced-frame F0 in semitones.
-- **Confidence:** `high` if ≥ 1000 voiced frames (~10 s voiced speech) and the call is adequate by §5; `low` if fewer voiced frames or an inadequate call; `na` when there is no audio.
+- **Confidence:** `high` if ≥ 500 voiced frames (~10 s voiced speech) and the call is adequate by §5; `low` if fewer voiced frames or an inadequate call (value null below 25 frames); `na` when there is no audio.
 - Baselines and z follow §7 (absolute spread floor 0.3 st). **Chart only:** the voice group is excluded from drift and nudges (`NUDGE_GROUPS` in `web/lib/analysis/config.ts`) because phone microphones, the FaceTime codec, a cold or room noise all shift pitch. Revisit after real calls.
 - Adequacy (§5) is decided by the transcript markers only; voice markers never make a call adequate.
 
-**Test vectors (synthetic):** a steady 150 Hz tone → F0 150 ± 1 Hz, `pitch_var` ≈ 0. A linear 120 → 180 Hz glide → `pitch_range` ≈ 7.0 st (± 0.3). A harmonic-rich 220 Hz tone → no octave halving or doubling. White noise or silence → no voiced frames.
+**Test vectors (synthetic):** a steady 150 Hz tone → F0 150 ± 1 Hz, `pitch_var` ≈ 0. A linear 120 → 180 Hz glide → `pitch_range` = 12·log2(174/126) ≈ 5.6 st (p90 − p10 of a linear glide; the full span is 7.0 st). A harmonic-rich 220 Hz tone → no octave halving or doubling. White noise or silence → no voiced frames.
 
 ## 5. Confidence
 

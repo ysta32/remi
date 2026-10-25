@@ -34,7 +34,26 @@ export const ABS_SPREAD_FLOOR: Partial<Record<MarkerKey, number>> = {
   filler_rate: 0.3,
   vague_rate: 0.3,
   mattr: 0.005,
+  pitch_var: 0.3,
+  pitch_range: 0.3,
 };
+
+// Pitch / voice markers (markers.md §4b). YIN pitch tracking on the caller's call audio.
+export const PITCH_ANALYSIS_RATE = 8000; // Hz; plenty for F0 <= 400 Hz, keeps YIN cheap
+export const PITCH_FRAME_MS = 40;
+export const PITCH_HOP_MS = 20; // 50 F0 samples/s is plenty for variability stats; halves YIN cost
+export const PITCH_MIN_HZ = 60;
+export const PITCH_MAX_HZ = 400;
+export const YIN_THRESHOLD = 0.15;
+// Voicing gate: frame RMS must reach this fraction of the loud-speech level (95th-percentile
+// frame RMS) and an absolute floor (~ -60 dBFS), so silence and line hiss are skipped.
+export const PITCH_GATE_REL = 0.1;
+export const PITCH_GATE_ABS = 1e-3;
+export const PITCH_MEDIAN_FILTER = 5; // frames
+export const PITCH_OUTLIER_ST = 10; // drop frames further than this from the call median (octave errors)
+export const PITCH_SPAN_PAD_MS = 100; // padding around STT word spans
+export const PITCH_MIN_VOICED_FRAMES = 500; // ~10 s of voiced speech at a 20 ms hop → 'high'
+export const PITCH_MIN_FRAMES_ANY = 25; // ~0.5 s; below this, no value at all
 
 // Drift and nudges (markers.md §8)
 export const DRIFT_Z = 1.5;
