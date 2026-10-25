@@ -13,7 +13,7 @@ export function FunFacts({ facts, newIds }: { facts: Timeline['funFacts']; newId
           {f.quote.trim() && <blockquote className="mt-2 italic text-ink-2">“{f.quote}”</blockquote>}
           <div className="mt-2 flex flex-wrap items-center gap-2 text-base text-ink-2">
             {f.askedBy && (
-              <span className="rounded-full bg-family px-3 py-0.5 font-bold text-family-ink">Answer to {f.askedBy}’s question</span>
+              <span className="rounded-full bg-family px-3 py-0.5 font-bold text-family-ink">{f.askedBy} asked</span>
             )}
             <span>{formatShortDate(f.at)}</span>
             {f.isSimulated && <SimulatedBadge className="ml-auto" />}

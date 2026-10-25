@@ -88,7 +88,7 @@ export function TodayRow({ elderId }: { elderId: string }) {
       )}
       <section aria-labelledby="notes" className="flex flex-col">
         <h2 id="notes" className={heading}>Gentle notes</h2>
-        <div className="flex items-start gap-3 rounded-[20px] border border-line bg-card p-4">
+        <div className="flex items-center gap-3 rounded-[20px] border border-line bg-card p-4">
           <SunGlyph size={40} />
           {hasNote ? (
             <p>

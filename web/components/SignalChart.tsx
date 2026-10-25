@@ -53,7 +53,8 @@ export function SignalChart({ signal, height }: { signal: Signal; height: number
   const pad = (hi - lo || 1) * 0.15;
   const domain: [number, number] = [signal.unit === 'z' ? lo - pad : Math.max(0, lo - pad), hi + pad];
   const xAxis = (
-    <XAxis dataKey="t" type="number" scale="time" domain={['dataMin', 'dataMax']} minTickGap={36}
+    // Padding keeps the first and last dots whole instead of cut in half at the edges.
+    <XAxis dataKey="t" type="number" scale="time" domain={['dataMin', 'dataMax']} minTickGap={36} padding={{ left: 8, right: 8 }}
       tickFormatter={(t: number) => formatShortDate(t)} axisLine={{ stroke: C.line }} {...axis} />
   );
 
@@ -64,7 +65,7 @@ export function SignalChart({ signal, height }: { signal: Signal; height: number
           {signal.key === 'retold' ? (
             <BarChart data={data} margin={{ top: 6, right: 8, bottom: 0, left: 0 }}>
               {xAxis}
-              <YAxis allowDecimals={false} width={28} axisLine={false} tickCount={3} {...axis} />
+              <YAxis allowDecimals={false} width={44} axisLine={false} tickCount={3} {...axis} />
               <Tooltip content={<Tip signal={signal} />} cursor={{ fill: C.line }} />
               <Bar dataKey="v" fill={C.ink} radius={[4, 4, 0, 0]} maxBarSize={16} isAnimationActive={false} />
             </BarChart>
@@ -74,8 +75,11 @@ export function SignalChart({ signal, height }: { signal: Signal; height: number
                 <ReferenceArea y1={signal.band[0]} y2={signal.band[1]} fill={C.band} fillOpacity={1} stroke="none" />
               )}
               {xAxis}
-              <YAxis domain={domain} hide={signal.unit === 'z'} width={44} axisLine={false} tickCount={3}
-                tickFormatter={(v: number) => formatValue(v, signal.unit)} {...axis} />
+              {/* Every chart keeps the same 44px gutter so cards side by side line up; the pauses
+                  score has no meaningful unit, so its gutter stays blank. */}
+              <YAxis domain={domain} width={44} axisLine={false} tickCount={3}
+                tickFormatter={(v: number) => formatValue(v, signal.unit)} {...axis}
+                {...(signal.unit === 'z' ? { tick: false } : {})} />
               <Tooltip content={<Tip signal={signal} />} cursor={{ stroke: C.line }} />
               <Line dataKey="v" type="monotone" stroke={C.ink} strokeWidth={2} connectNulls={false}
                 dot={(p) => <Dot {...(p as Parameters<typeof Dot>[0])} />} activeDot={false} isAnimationActive={false} />
