@@ -40,6 +40,28 @@ The importer rejects lexical `.`/`..` path components, symlink ancestors, existi
 
 Visit `http://127.0.0.1:3100/elders/elder-synthetic-hal-bennett` and `http://127.0.0.1:3100/elders/elder-synthetic-hal-bennett?tab=doing`. The home/nav demo link uses the optional `NEXT_PUBLIC_DEMO_ELDER_ID` override as an encoded path segment. Without it, the existing `elder-hal-demo` ID stays the default. Without `NEXT_PUBLIC_USE_FIXTURES=0`, the app continues to use fixture data. Both public variables must be supplied before dev startup or production build; production bundles embed their build-time values.
 
-The dashboard displays the imported provenance notice only for the matching imported profile and nonempty all-simulated calls. Cards contain labeled transcript excerpts, not model summaries. Seven speech readings per call are computed from source-authored word timing with existing baseline helpers. Repetition is not analyzed: NULL/na repeat rows show **Not analyzed yet**, including when older weeks have real counts; measured zero still means **About his usual**. No model summary, topic extraction, repeat detection, embeddings, facts, mood or nudges are generated. Fictional demo sharing choices enable summaries/speech trends and disable fun facts/mood, without a forged spoken consent event.
+The dashboard displays the imported provenance notice only for the matching imported profile and nonempty all-simulated calls. Cards contain labeled transcript excerpts, not model summaries. Seven speech readings per call are computed from source-authored word timing with existing baseline helpers. The import alone leaves repetition unprocessed: NULL/na legacy repeat rows show **Not analyzed yet**, including when older weeks have real counts; measured zero still means **About his usual**. The importer generates no model summary, topic extraction, repeat detection, embeddings, facts, mood or nudges. The separate optional analysis below adds actual standalone detector results. Fictional demo sharing choices enable summaries/speech trends and disable fun facts/mood, without a forged spoken consent event.
 
 Separate audio files have already been generated ([verification](../docs/superpowers/specs/2026-10-25-openai-audio-verification.md)). The importer attaches no audio and performs no STT: chart timing remains authored source timing, not measured acoustic timing. Full corpus/import limitations are in [synthetic/README.md](../synthetic/README.md#offline-transcript-dashboard-demo).
+
+
+## Optional synthetic repeat analysis
+
+After importing the corpus, validate it against the existing isolated database (no credentials, network, migrations or writes):
+
+```sh
+# From repository root; use canonical absolute paths.
+npm --prefix web run analyze:synthetic -- --input "$PWD/synthetic/output-release" --database "$PWD/web/data/synthetic-demo.db"
+```
+
+For an explicitly authorized paid run, supply `OPENAI_API_KEY` privately through an environment file. The CLI loads no environment file itself. From `web/`:
+
+```sh
+node --env-file=.env.local --import tsx scripts/analyze-synthetic-repeats.ts --input "$(cd .. && pwd -P)/synthetic/output-release" --database "$PWD/data/synthetic-demo.db" --apply
+```
+
+Apply processes all calls chronologically with the standalone detector and actual earlier extracted history. Defaults are the detector's extraction model, `text-embedding-3-small` (1536 dimensions), and provisional threshold **0.85**. Optional environment settings are `OPENAI_EXTRACT_MODEL`, `OPENAI_EMBED_MODEL`, `EMBEDDING_DIMENSIONS`, `REPEAT_THRESHOLD`, `OPENAI_TIMEOUT_MS` and `OPENAI_MAX_RETRIES`; selected model/threshold provenance appears in the dashboard. Changing source or settings requires full replay; a complete unchanged batch is reused. Missing consent or provider failure aborts the batch and preserves previously stored results. The runner never reads planted labels or writes legacy topics, repeat markers or nudges.
+
+Both **Chats** and **How he's doing** show “Repeated stories and questions” when valid consent-filtered analysis exists: total, Unprompted repeat / Prompted retelling / Uncertain counts, stories/questions, analyzed coverage and expandable current/prior evidence. Comparisons span all earlier calls, including beyond seven days. Earlier-call links open Chats and reveal the linked card. Similarity is not a probability; 0.85 is provisional, not a validated accuracy threshold. A complete zero says no repeats were detected at this threshold; partial results identify unanalyzed calls. Sharing choices can hide summaries and quotes. Without standalone results, existing legacy tiles and demo notice remain available.
+
+The entire fictional demo corpus is used for this integration, not a held-out evaluation. Detection counts can differ from planted annotations and make no clinical or accuracy claim. Summary generation and audio/STT are unchanged; timing remains authored even after repeat analysis.

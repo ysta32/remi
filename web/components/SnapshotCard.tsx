@@ -44,6 +44,7 @@ export function SnapshotCard({
 
   return (
     <article
+      id={`call-${call.id}`}
       ref={ref}
       className={`rounded-[10px] border border-line bg-card shadow-[0_16px_30px_-20px_rgba(0,0,0,0.35)] ${
         feature ? 'p-4 pb-7 md:-rotate-1 md:p-5 md:pb-8' : 'p-4 pb-6 md:rotate-[0.6deg]'

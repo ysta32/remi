@@ -11,16 +11,22 @@ import { copy } from '@/lib/copy';
 import { formatRelative } from '@/lib/format';
 import { freshIds, pollDelay, settled } from '@/lib/live';
 import type { Timeline } from '@/lib/types';
-import { isSyntheticTranscriptDemo, SYNTHETIC_TRANSCRIPT_NOTICE } from '@/lib/synthetic-demo';
+import { isSyntheticTranscriptDemo, syntheticTranscriptNotice } from '@/lib/synthetic-demo';
 import { FunFacts } from './FunFacts';
 import { GentleNote } from './GentleNote';
 import { HowHesDoing } from './HowHesDoing';
+import { RepeatDetections } from './RepeatDetections';
 import { QuestionsWaiting } from './QuestionsWaiting';
 import { SiteNav } from './SiteNav';
 import { SnapshotCard } from './SnapshotCard';
 import { TimelineTabs } from './TimelineTabs';
 
 const EARLIER_SHOWN = 4;
+
+export function earlierCallsForTarget<T extends { id: string }>(calls: T[], showAll: boolean, target: unknown): T[] {
+  return showAll || (typeof target === 'string' && calls.some(call => call.id === target))
+    ? calls : calls.slice(0, EARLIER_SHOWN);
+}
 
 function FixtureBar({ elderId, current, tab }: { elderId: string; current: FixtureVariant; tab: 'chats' | 'doing' }) {
   return (
@@ -93,6 +99,13 @@ export function TimelineView({
     };
   }, [id, variant]);
 
+  // A stable dependency avoids moving the reader back to the card on every poll.
+  const targetCallId = typeof query.call === 'string' && timeline?.calls.some(call => call.id === query.call) ? query.call : null;
+  useEffect(() => {
+    if (tab !== 'chats' || !targetCallId) return;
+    document.getElementById(`call-${targetCallId}`)?.scrollIntoView({ block: 'start' });
+  }, [targetCallId, tab]);
+
   if (!timeline) {
     return (
       <>
@@ -108,7 +121,8 @@ export function TimelineView({
   const confirmed = timeline.consent.elderConfirmed;
   const [newest, ...earlier] = timeline.calls;
   const nudges = timeline.nudges.filter((n) => !hiddenNudges.has(n.id));
-  const shownEarlier = showAll ? earlier : earlier.slice(0, EARLIER_SHOWN);
+  const shownEarlier = earlierCallsForTarget(earlier, showAll, query.call);
+  const allEarlierVisible = shownEarlier.length === earlier.length;
   const anySimulated = timeline.calls.some((c) => c.isSimulated);
   const transcriptDemo = elder?.id === timeline.elder.id && isSyntheticTranscriptDemo(elder, timeline.calls);
   const photos = elder?.photos ?? [];
@@ -135,7 +149,7 @@ export function TimelineView({
             <p className="text-base text-ink-2">Chats marked Simulated are demo history created for this presentation.</p>
           )}
           {transcriptDemo && (
-            <p className="rounded-[20px] border border-line bg-card p-5 text-base text-ink-2">{SYNTHETIC_TRANSCRIPT_NOTICE}</p>
+            <p className="rounded-[20px] border border-line bg-card p-5 text-base text-ink-2">{syntheticTranscriptNotice(!!timeline.repeatAnalysis)}</p>
           )}
           {error && <p className="text-base text-ink" role="status">Having trouble refreshing. Showing the last update.</p>}
           <TimelineTabs elderId={id} tab={tab} fixture={USE_FIXTURES ? variant : undefined} />
@@ -145,6 +159,7 @@ export function TimelineView({
           <HowHesDoing timeline={timeline} />
         ) : (
           <>
+            {timeline.repeatAnalysis && <RepeatDetections analysis={timeline.repeatAnalysis} elderId={id} />}
             {!confirmed && <p className="rounded-[20px] border border-line bg-card p-5">{copy.notYetConfirmed(name)}</p>}
 
             {/* Phones: newest, note, stories, then earlier chats. Desktop: stories span the right column. */}
@@ -172,34 +187,20 @@ export function TimelineView({
               {earlier.length > 0 && (
                 <section aria-labelledby="earlier" className="space-y-3 [grid-area:earlier]">
                   <h2 id="earlier" className="text-[30px] font-black tracking-tight">Earlier chats</h2>
-                  {/* Two stacks that alternate cards, so rows read in date order with no half-empty cells.
-                      Phones get one column in date order. */}
-                  {(() => {
-                    const card = (c: (typeof shownEarlier)[number]) => (
+                  <div className="grid items-start gap-4 sm:grid-cols-2">
+                    {shownEarlier.map(c => (
                       <SnapshotCard key={`${c.id}:${c.status}`} call={c} variant="compact" isNew={newIds.has(c.id)}
                         confirmed={confirmed} photos={photos} name={name} />
-                    );
-                    return (
-                      <>
-                        <div className="space-y-4 sm:hidden">{shownEarlier.map(card)}</div>
-                        <div className="hidden items-start gap-4 sm:grid sm:grid-cols-2">
-                          {[0, 1].map((col) => (
-                            <div key={col} className="space-y-4">
-                              {shownEarlier.filter((_, i) => i % 2 === col).map(card)}
-                            </div>
-                          ))}
-                        </div>
-                      </>
-                    );
-                  })()}
-                  {earlier.length > EARLIER_SHOWN && (
+                    ))}
+                  </div>
+                  {earlier.length > EARLIER_SHOWN && !earlier.some(call => call.id === query.call) && (
                     <button
                       type="button"
-                      aria-expanded={showAll}
-                      onClick={() => setShowAll((v) => !v)}
+                      aria-expanded={allEarlierVisible}
+                      onClick={() => setShowAll(v => !v)}
                       className="rounded-full border border-line bg-card px-5 py-2.5 font-bold hover:border-ink-2"
                     >
-                      {showAll ? 'Show fewer' : `Show all ${earlier.length} earlier chats`}
+                      {allEarlierVisible ? 'Show fewer' : `Show all ${earlier.length} earlier chats`}
                     </button>
                   )}
                 </section>

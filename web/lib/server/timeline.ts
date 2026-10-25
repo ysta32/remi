@@ -1,5 +1,5 @@
 // Builds the family Timeline (contracts §3/§5). Consent filtering happens HERE, server-side:
-// unconsented data is never selected into the response. Transcripts are never read.
+// unconsented data is never selected into the response. Repeat evidence is validated internally.
 import { getSqlite } from '@/db/client';
 import { MARKER_KEYS, markerMeta } from '../analysis/timeline-helpers';
 import type { CallCard, Lang, MarkerSeries, NudgeReason, Timeline } from '../types';
@@ -7,6 +7,7 @@ import { consentView } from './consent';
 import { getConsentRow } from './context';
 import { renderNudge } from './nudge-copy';
 import { nowIso } from './ids';
+import { buildRepeatAnalysis } from './detector-results';
 
 interface CallRow {
   id: string;
@@ -157,7 +158,9 @@ export function buildTimeline(elderId: string): Timeline | null {
       return { id: n.id, type: n.type, createdAt: n.created_at, message, link, isSimulated: n.is_simulated === 1 };
     });
 
+  const repeatAnalysis = buildRepeatAnalysis(db, elderId, eff);
   return {
+    ...(repeatAnalysis ? { repeatAnalysis } : {}),
     elder: {
       id: elder.id,
       displayName: elder.display_name,
