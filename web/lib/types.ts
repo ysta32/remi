@@ -62,6 +62,8 @@ export interface CallCard {
   familyQuestion: { text: string; askedBy: string; answer: string | null } | null;
   mood: 'positive' | 'neutral' | 'low' | null; // null unless mood consented
   isSimulated: boolean;
+  /** [contract] additive: a safety moment Remi logged on this call (category only, never details). */
+  safety?: { category: 'self_harm' | 'medical_emergency' | 'other'; at: string } | null;
 }
 
 export interface MarkerSeries {

@@ -140,9 +140,11 @@ Each agent edits **only its own section** plus appends to "Requests" and "Contra
 - A → D: `web/scripts/demo-data.ts` + `make-fixtures.ts` now include `pitch_var`/`pitch_range` (own PRNG, so transcript markers are byte-identical); fixtures regenerated, only the voice series added. Commit `[A→D]` on `integrate/all`.
 - A → B: contacts live in a local JSON file on the agent machine. If the family app should edit them, add `contacts: [{label, phone}]` to CallContext and an endpoint to save one; the agent already reads them through one module (`agent/lib/contacts.mjs`).
 - A → humans: `integrate/all` is ready to fast-forward `main`; not pushed (needs your OK).
+- A → B/C/D (Oct 25 2:55 AM): safety calls now keep a specific summary (details of the moment left out) ending in SAFETY_SUMMARY_LINE, with mood null and no mood evidence. Timeline cards carry `safety` and SnapshotCard shows a care note. Please keep the new copy as-is or tell A.
 
 ## Contract changes (date time — change — affected workstreams)
 - Sun Oct 25 — `[contract]` additive: `MarkerKey` += `pitch_var`, `pitch_range`; `MarkerGroup` += `voice`; unit `st` (semitones). No DB change (`call_markers.marker` is text). Timeline now returns 10 marker series. Chart only: voice never drives nudges. Definitions in markers.md §4b. Affects C (computes), B (timeline passes through), D (render 2 more charts; group `voice`).
+- Oct 25 2:55 AM: `CallCard.safety?: {category, at} | null` (additive, optional; the note is never exposed). Affects B, D.
 
 ## Decisions log (human-confirmed only)
 - Sat Oct 24 ~6:14 PM — Team committed to the elder FaceTime conversation + memory + family loop project.

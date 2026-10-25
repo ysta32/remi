@@ -89,6 +89,20 @@ export function buildTimeline(elderId: string): Timeline | null {
     }
   }
 
+  // Safety moments per call: the most serious category, and when it was logged. Shown to the
+  // family as a check-in prompt; the note (the caller's words) never leaves the server.
+  const RANK = { medical_emergency: 2, self_harm: 2, other: 1 } as const;
+  const safetyByCall = new Map<string, NonNullable<CallCard['safety']>>();
+  for (const r of db
+    .prepare(
+      `SELECT s.call_id, s.category, s.created_at FROM safety_events s JOIN calls c ON c.id = s.call_id
+       WHERE c.elder_id = ? ORDER BY s.created_at`,
+    )
+    .all(elderId) as { call_id: string; category: NonNullable<CallCard['safety']>['category']; created_at: string }[]) {
+    const prev = safetyByCall.get(r.call_id);
+    if (!prev || RANK[r.category] > RANK[prev.category]) safetyByCall.set(r.call_id, { category: r.category, at: r.created_at });
+  }
+
   const calls: CallCard[] = callRows.map((c) => {
     const qid = questionByCall.get(c.id);
     const q = qid ? questions.get(qid) : undefined;
@@ -105,6 +119,7 @@ export function buildTimeline(elderId: string): Timeline | null {
         consent.elderConfirmed && q ? { text: q.text, askedBy: q.asked_by, answer: answers.get(q.id) ?? null } : null,
       mood: eff.mood ? c.mood_label : null,
       isSimulated: c.is_simulated === 1,
+      safety: safetyByCall.get(c.id) ?? null,
     };
   });
 

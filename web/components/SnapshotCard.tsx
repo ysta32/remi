@@ -15,6 +15,32 @@ const MOOD: Record<NonNullable<CallCard['mood']>, string> = {
   low: 'Seemed a bit low',
 };
 
+// A safety moment on this call (category only; the caller's words never reach the page).
+const CARE: Record<NonNullable<CallCard['safety']>['category'], (name: string) => { title: string; body: string }> = {
+  self_harm: (name) => ({
+    title: `Please check in with ${name} today`,
+    body: `${name} said something on this call that sounded like not wanting to live. Remi stayed with ${name}, shared the 988 Suicide & Crisis Lifeline (call or text 988), and encouraged reaching out to family. If ${name} may be in danger, call 911.`,
+  }),
+  medical_emergency: (name) => ({
+    title: `Please check on ${name} now`,
+    body: `${name} described something on this call that may have been a medical emergency. Remi told ${name} to hang up and call 911. If you can't reach ${name}, call 911.`,
+  }),
+  other: (name) => ({
+    title: `Please check in with ${name}`,
+    body: `Something on this call worried Remi about ${name}'s safety. A quick call to ${name} today would help.`,
+  }),
+};
+
+function CareNote({ category, name, compact }: { category: NonNullable<CallCard['safety']>['category']; name: string; compact: boolean }) {
+  const { title, body } = CARE[category](name);
+  return (
+    <div role="alert" className="mt-3 rounded-2xl border-l-4 border-care-edge bg-care px-4 py-3 text-care-ink">
+      <p className="font-extrabold">{title}</p>
+      <p className={`mt-0.5 ${compact ? 'line-clamp-3' : ''}`}>{body}</p>
+    </div>
+  );
+}
+
 const NEW_TAG_MS = 8_000; // stays this long after the card has actually been on screen
 
 export function SnapshotCard({
@@ -59,6 +85,8 @@ export function SnapshotCard({
           {showNew && <span className="rounded-full bg-family-strong px-3 py-0.5 text-base font-extrabold text-ink">New</span>}
         </span>
       </header>
+
+      {call.safety && <CareNote category={call.safety.category} name={name} compact={!feature} />}
 
       {busy ? (
         <div className="mt-4 space-y-2.5" role="status">

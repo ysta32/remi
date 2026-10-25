@@ -8,6 +8,7 @@ import type { Utterance } from '@/lib/types';
 import { freshDb, insertCall, insertElder } from '@/test/helpers';
 import { setEmbeddingsTransportForTests } from '../embeddings';
 import { setLlmTransportForTests, type Extraction } from '../llm';
+import { withSafetyLine } from '../prompts';
 import { attachWords, processCall } from '../pipeline';
 import { setSttTransportForTests } from '../stt';
 import { getTimings } from '../timings';
@@ -184,7 +185,7 @@ describe('processCall review fixes', () => {
     expect(rows('SELECT * FROM fun_facts WHERE call_id = ?', callId)).toHaveLength(1);
   });
 
-  it('after a safety event: summary is only the safety line; no fun facts, answers or topics', async () => {
+  it('after a safety event: specific summary of the rest of the call, ending with the safety line; no mood tag', async () => {
     const { callId, questionId } = setupCall();
     getSqlite()
       .prepare("INSERT INTO call_events (id, call_id, type, payload_json, at_ms) VALUES (?, ?, 'safety', ?, 5000)")
@@ -194,12 +195,20 @@ describe('processCall review fixes', () => {
     );
     setEmbeddingsTransportForTests(async (texts) => texts.map(() => [1, 0]));
     await processCall(callId);
-    const call = row<{ summary: string; mood_evidence_json: string }>('SELECT * FROM calls WHERE id = ?', callId);
-    expect(call.summary).toBe('Part of the call touched on a hard moment; Remi shared support resources.');
+    const call = row<{ summary: string; mood_label: string | null; mood_evidence_json: string }>('SELECT * FROM calls WHERE id = ?', callId);
+    expect(call.summary).toContain('first car');
+    expect(call.summary.endsWith('Part of the call touched on a hard moment; Remi shared support resources.')).toBe(true);
+    expect(call.mood_label).toBeNull();
     expect(JSON.parse(call.mood_evidence_json)).toEqual([]);
-    expect(rows('SELECT * FROM fun_facts WHERE call_id = ?', callId)).toHaveLength(0);
-    expect(rows('SELECT * FROM topics WHERE call_id = ?', callId)).toHaveLength(0);
-    expect(row<{ status: string }>('SELECT status FROM family_questions WHERE id = ?', questionId).status).toBe('asked');
+    expect(rows('SELECT * FROM fun_facts WHERE call_id = ?', callId)).not.toHaveLength(0);
+    expect(row<{ status: string }>('SELECT status FROM family_questions WHERE id = ?', questionId).status).toBe('answered');
+  });
+
+  it('withSafetyLine never doubles the line and stands alone when there is no summary', () => {
+    const line = 'Part of the call touched on a hard moment; Remi shared support resources.';
+    expect(withSafetyLine('Hal talked about his garden.')).toBe(`Hal talked about his garden. ${line}`);
+    expect(withSafetyLine(`Hal talked about his garden. ${line}`)).toBe(`Hal talked about his garden. ${line}`);
+    expect(withSafetyLine('')).toBe(line);
   });
 
   it('re-running an earlier call re-links a later retelling instead of leaving a dangling link', async () => {

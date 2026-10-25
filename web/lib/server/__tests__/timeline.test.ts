@@ -150,3 +150,24 @@ describe('timeline consent filtering', () => {
     expect(res.status).toBe(404);
   });
 });
+
+describe('safety moments on call cards', () => {
+  beforeEach(() => freshDb());
+
+  it('shows the most serious category per call and never the note', () => {
+    const elderId = insertElder();
+    const callId = insertCall(elderId, { started_at: '2026-10-25T06:32:00.000Z', duration_s: 300, summary: 'x' });
+    const quiet = insertCall(elderId, { started_at: '2026-10-24T14:00:00.000Z', duration_s: 300, summary: 'y' });
+    const add = (category: string, note: string, at: string) =>
+      getSqlite()
+        .prepare('INSERT INTO safety_events (id, call_id, category, note, created_at) VALUES (?, ?, ?, ?, ?)')
+        .run(newId(), callId, category, note, at);
+    add('other', 'PRIVATE NOTE ONE', '2026-10-25T06:33:00.000Z');
+    add('self_harm', 'PRIVATE NOTE TWO', '2026-10-25T06:34:00.000Z');
+    const t = buildTimeline(elderId)!;
+    const card = t.calls.find((c) => c.id === callId)!;
+    expect(card.safety).toEqual({ category: 'self_harm', at: '2026-10-25T06:34:00.000Z' });
+    expect(t.calls.find((c) => c.id === quiet)!.safety).toBeNull();
+    expect(JSON.stringify(t)).not.toContain('PRIVATE NOTE');
+  });
+});

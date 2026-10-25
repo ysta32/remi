@@ -13,6 +13,7 @@ export interface ExtractionPromptContext {
 
 const LANGUAGE_NAME: Record<Lang, string> = { en: 'English', zh: 'Mandarin Chinese' };
 
+/** Ends the summary of any call with a safety moment; the moment's details are never included. */
 export const SAFETY_SUMMARY_LINE = `Part of the call touched on a hard moment; ${APP_NAME} shared support resources.`;
 
 /** One line per utterance: "Caller: …" / "Agent: …". */
@@ -69,7 +70,8 @@ safetyMentioned
 - true only if, during this call, the caller raised a present-day risk to themselves (thoughts of self-harm, or a medical emergency happening now) or the agent shared 911, 988 or other crisis resources. Memories of past illnesses, accidents or losses are NOT safety moments; set false for those.
 
 Hard moments${ctx.hadSafetyEvent ? ' (a safety event was logged during this call)' : ''}
-- If safetyMentioned is true${ctx.hadSafetyEvent ? ' (it must be true for this call)' : ''}, the summary must be exactly this sentence and nothing else: "${SAFETY_SUMMARY_LINE}" Return empty funFacts and familyQuestionAnswers, and leave every detail of that moment out of topics and mood evidence.
+- If safetyMentioned is true${ctx.hadSafetyEvent ? ' (it must be true for this call)' : ''}, the summary is still 3 to 5 warm, specific sentences about the REST of the call (the people, places and stories ${name} talked about), and its last sentence is exactly: "${SAFETY_SUMMARY_LINE}"
+- Leave every detail of the hard moment itself out of the summary, funFacts, familyQuestionAnswers, topics and mood evidence: no words ${name} used about it and no paraphrase of it. Fun facts and answers from other parts of the call are fine.
 
 Never use the words diagnose, detect, screen, dementia, Alzheimer's, cognitive, decline or symptom.`;
 }
@@ -91,4 +93,10 @@ export function buildMatchUserPrompt(
   const list = (xs: { id: string; summary: string }[]) =>
     xs.map((s) => `- id "${s.id}": ${s.summary}`).join('\n');
   return `New stories:\n${list(newStories)}\n\nEarlier stories:\n${list(candidates)}`;
+}
+
+/** The family summary for a call with a safety moment: the rest of the call, then the support line. */
+export function withSafetyLine(summary: string | null | undefined): string {
+  const rest = (summary ?? '').replace(SAFETY_SUMMARY_LINE, '').trim();
+  return rest ? `${rest} ${SAFETY_SUMMARY_LINE}` : SAFETY_SUMMARY_LINE;
 }

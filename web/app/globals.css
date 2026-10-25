@@ -16,6 +16,9 @@
   --ok: #a8dcc1;
   --ok-ink: #1d4a34;
   --line: #e3ebf3;
+  --care: #fff0c2;
+  --care-ink: #5a3a00;
+  --care-edge: #f2c94c;
 }
 
 @theme inline {
@@ -33,6 +36,9 @@
   --color-ok: var(--ok);
   --color-ok-ink: var(--ok-ink);
   --color-line: var(--line);
+  --color-care: var(--care);
+  --color-care-ink: var(--care-ink);
+  --color-care-edge: var(--care-edge);
   --font-sans: var(--font-figtree);
   --font-caption: var(--font-patrick);
 }

@@ -14,7 +14,7 @@ import type { Lang, MarkerResult, Utterance, Word } from '@/lib/types';
 import { PAUSE_MAX_MS, PITCH_MAX_SECONDS, REPEAT_COSINE, REPEAT_WINDOW_DAYS } from './config';
 import { embed, EmbeddingsDisabledError } from './embeddings';
 import { extractCall, matchStories, type Extraction } from './llm';
-import { SAFETY_SUMMARY_LINE } from './prompts';
+import { SAFETY_SUMMARY_LINE, withSafetyLine } from './prompts';
 import { recomputeElder } from './recompute';
 import { findRepeats } from './repetition';
 import { transcribeWords } from './stt';
@@ -292,22 +292,22 @@ function writeExtraction(
     db.delete(funFacts).where(eq(funFacts.callId, callId)).run();
     db.delete(topics).where(eq(topics.callId, callId)).run();
 
-    // safety-and-copy §5: after a safety moment the summary is only the safety line, and its
-    // details stay out of fun facts, answers, topics and mood evidence.
+    // safety-and-copy §5: the moment's details stay out of the family notes (the prompt asks for
+    // that), the summary still covers the rest of the call and ends with the support line, and
+    // no cheerful mood tag sits next to it. The timeline shows the safety category itself.
     const safety = opts.hadSafetyEvent || ex.safetyMentioned;
     if (ex.safetyMentioned && !opts.hadSafetyEvent) {
       console.warn(`[SAFETY] call=${callId} extraction flagged a safety moment with no safety event logged`);
     }
     db.update(calls)
       .set({
-        summary: safety ? SAFETY_SUMMARY_LINE : ex.summary,
-        moodLabel: ex.mood.label,
-        moodScore: ex.mood.score,
+        summary: safety ? withSafetyLine(ex.summary) : ex.summary,
+        moodLabel: safety ? null : ex.mood.label,
+        moodScore: safety ? null : ex.mood.score,
         moodEvidenceJson: JSON.stringify(safety ? [] : ex.mood.evidence),
       })
       .where(eq(calls.id, callId))
       .run();
-    if (safety) return;
 
     const validQ = (id: string | null) => (id && opts.askedQuestionIds.has(id) ? id : null);
     const markAnswered = (questionId: string) =>
