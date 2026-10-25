@@ -1,7 +1,7 @@
 // Control panel actions. Calls and texts run the agent's own scripts (agent/scripts/*), so the
 // Chert and LiveKit credentials stay in agent/.env.local and never pass through the web app.
 import { spawn, type ChildProcess } from 'node:child_process';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { config } from '../config';
@@ -100,6 +100,14 @@ export function listContacts(elderId: string): { label: string; last4: string }[
   } catch { return []; }
 }
 
+/** CHERT_DEV_LOG is a chert dev --json log, or a folder of chert-dev-*.jsonl (newest wins). */
+function newestChertLog(p: string): string | null {
+  if (!p || !existsSync(p)) return null;
+  if (!statSync(p).isDirectory()) return p;
+  const logs = readdirSync(p).filter((f) => /^chert-dev-.*\.jsonl$/.test(f)).map((f) => path.join(p, f));
+  return logs.sort((a, b) => statSync(b).mtimeMs - statSync(a).mtimeMs)[0] ?? null;
+}
+
 /** Is the agent worker running, and what did chert dev last say about the line? */
 export async function systemStatus() {
   const running = (pattern: string) => new Promise<boolean>((resolve) => {
@@ -109,8 +117,9 @@ export async function systemStatus() {
   });
   const [agent, chertDev] = await Promise.all([running('agent.mjs start'), running('chert dev')]);
   let line: { code: string; at: string } | null = null;
-  if (config.chertDevLog && existsSync(config.chertDevLog)) {
-    const tail = readFileSync(config.chertDevLog, 'utf8').slice(-20_000).trim().split('\n').reverse();
+  const devLog = newestChertLog(config.chertDevLog);
+  if (devLog) {
+    const tail = readFileSync(devLog, 'utf8').slice(-20_000).trim().split('\n').reverse();
     for (const l of tail) {
       try {
         const r = JSON.parse(l) as { code?: string; at?: string };

@@ -32,7 +32,7 @@ export const config = {
   get agentDir() {
     return process.env.AGENT_DIR || path.join(process.cwd(), '..', 'agent');
   },
-  /** chert dev's --json log, for the line state on the control panel (optional). */
+  /** chert dev's --json log, or a folder of chert-dev-*.jsonl logs, for the panel's line lamp (optional). */
   get chertDevLog() {
     return process.env.CHERT_DEV_LOG || '';
   },
