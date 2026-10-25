@@ -28,6 +28,10 @@ export async function startAvatar({ session, room, env = process.env, timeoutMs 
       ...(unset(env.LEMONSLICE_PROMPT) ? {} : { agentPrompt: env.LEMONSLICE_PROMPT }),
       // Leave if nothing is said for 5 minutes; the room closing ends it sooner.
       idleTimeout: Number.parseInt(env.LEMONSLICE_IDLE_TIMEOUT, 10) || 300,
+      // FaceTime shows the avatar "fit" inside a portrait phone (the shared line's framing
+      // can't be changed), so render it phone-shaped: 9x16 fills the screen; LemonSlice's
+      // default 2x3 leaves her small. LEMONSLICE_ASPECT=2x3|9x16|1x1.
+      extraPayload: { aspectRatio: unset(env.LEMONSLICE_ASPECT) ? '9x16' : env.LEMONSLICE_ASPECT.trim() },
       connOptions: { maxRetry: 0, retryIntervalMs: 500, timeoutMs },
     });
     const sessionId = await avatar.start(session, room);
