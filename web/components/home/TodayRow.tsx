@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getElder, getTimeline, type ElderProfile } from '@/lib/api';
 import { DEMO_ELDER_PATH } from '@/lib/demo';
 import { formatRelative } from '@/lib/format';
+import { pollDelay, settled } from '@/lib/live';
 import { buildSignals } from '@/lib/signals';
 import type { Timeline } from '@/lib/types';
 import { SunGlyph } from '../GentleNote';
@@ -15,23 +16,24 @@ import { SnapshotCard } from '../SnapshotCard';
 export function TodayRow({ elderId }: { elderId: string }) {
   const [timeline, setTimeline] = useState<Timeline | null>(null);
   const [elder, setElder] = useState<ElderProfile | null>(null);
+  const [failed, setFailed] = useState(false);
+  const lastProcessing = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout>;
     async function tick() {
-      let busy = false;
-      try {
-        const [t, e] = await Promise.all([getTimeline(elderId), getElder(elderId)]);
-        if (cancelled) return;
-        busy = t.processing;
-        setTimeline(t);
-        setElder(e);
-      } catch {
-        // keep the last good data
-      } finally {
-        if (!cancelled) timer = setTimeout(tick, busy ? 3_000 : 15_000);
+      const [t, e] = await Promise.allSettled([getTimeline(elderId), getElder(elderId)]);
+      if (cancelled) return;
+      setElder((prev) => settled(e, prev));
+      if (t.status === 'fulfilled') {
+        lastProcessing.current = t.value.processing;
+        setTimeline(t.value);
+        setFailed(false);
+      } else {
+        setFailed(true); // keep the last good data if there is any
       }
+      timer = setTimeout(tick, pollDelay(lastProcessing.current));
     }
     tick();
     return () => {
@@ -40,7 +42,16 @@ export function TodayRow({ elderId }: { elderId: string }) {
     };
   }, [elderId]);
 
-  if (!timeline) return <p className="text-ink-2" role="status">Loading Hal&apos;s latest…</p>;
+  if (!timeline) {
+    return failed ? (
+      <p className="rounded-[20px] border border-line bg-card p-4">
+        Hal&apos;s latest isn&apos;t available right now.{' '}
+        <Link href={DEMO_ELDER_PATH} className="font-bold underline decoration-2 underline-offset-4">Open his page</Link>
+      </p>
+    ) : (
+      <p className="text-ink-2" role="status">Loading Hal&apos;s latest…</p>
+    );
+  }
 
   const name = timeline.elder.preferredName;
   const newest = timeline.calls[0];

@@ -9,6 +9,7 @@ import {
 import { USE_FIXTURES } from '@/lib/config';
 import { copy } from '@/lib/copy';
 import { formatRelative } from '@/lib/format';
+import { freshIds, pollDelay, settled } from '@/lib/live';
 import type { Timeline } from '@/lib/types';
 import { FunFacts } from './FunFacts';
 import { GentleNote } from './GentleNote';
@@ -18,8 +19,6 @@ import { SiteNav } from './SiteNav';
 import { SnapshotCard } from './SnapshotCard';
 import { TimelineTabs } from './TimelineTabs';
 
-const POLL_BUSY_MS = 3_000;
-const POLL_IDLE_MS = 15_000;
 const EARLIER_SHOWN = 4;
 
 function FixtureBar({ elderId, current, tab }: { elderId: string; current: FixtureVariant; tab: 'chats' | 'doing' }) {
@@ -57,37 +56,34 @@ export function TimelineView({
   // Ids seen so far for this elder; anything not in here on a later poll is highlighted as new.
   // Kept across fixture switches so processing → after-call plays the live-update moment.
   const known = useRef<{ elderId: string; ids: Set<string> } | null>(null);
+  const lastProcessing = useRef(false);
 
-  // Poll every 3 s while a call is processing, otherwise every 15 s (SPEC §13).
+  // Poll fast while a call is processing (lib/live.ts pollDelay).
   useEffect(() => {
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout>;
     if (known.current?.elderId !== id) known.current = null;
 
     async function tick() {
-      let busy = false;
-      try {
-        const [t, e] = await Promise.all([getTimeline(id, variant), getElder(id)]);
-        if (cancelled) return;
-        busy = t.processing;
+      const [t, e] = await Promise.allSettled([getTimeline(id, variant), getElder(id)]);
+      if (cancelled) return;
+      setElder((prev) => settled(e, prev));
+      if (t.status === 'fulfilled') {
+        const tl = t.value;
+        lastProcessing.current = tl.processing;
         // A call's key includes its status, so "processing → done" also counts as new.
-        const ids = [...t.calls.map((c) => `${c.id}|${c.status}`), ...t.funFacts.map((f) => f.id)];
-        if (known.current) {
-          const seen = known.current.ids;
-          const fresh = ids.filter((x) => !seen.has(x)).map((x) => x.split('|')[0]);
-          if (fresh.length) setNewIds((prev) => new Set([...prev, ...fresh]));
-        } else {
-          setNewIds(new Set());
-        }
-        known.current = { elderId: id, ids: new Set(ids) };
-        setTimeline(t);
-        setElder(e);
+        const keys = [...tl.calls.map((c) => `${c.id}|${c.status}`), ...tl.funFacts.map((f) => f.id)];
+        const fresh = freshIds(known.current?.ids ?? null, keys);
+        // Replace, don't accumulate: an older card must not show "New" again when it moves down.
+        if (!known.current) setNewIds(new Set());
+        else if (fresh.length) setNewIds(new Set(fresh));
+        known.current = { elderId: id, ids: new Set(keys) };
+        setTimeline(tl);
         setError(null);
-      } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Could not load the timeline.');
-      } finally {
-        if (!cancelled) timer = setTimeout(tick, busy ? POLL_BUSY_MS : POLL_IDLE_MS);
+      } else {
+        setError(t.reason instanceof Error ? t.reason.message : 'Could not load the timeline.');
       }
+      timer = setTimeout(tick, pollDelay(lastProcessing.current));
     }
     tick();
     return () => {
