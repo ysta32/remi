@@ -89,4 +89,4 @@ const specs = createCallFlowTools({ postEvent, elapsedMs, safety });
 
 ## 6. Tests
 
-`node --test agent/test/` — keyword hits and misses, escalation and dedup, `911` mode, missing contact, prompt variants, and tool behavior. No network: senders are injected.
+`node --test 'agent/test/*.test.mjs'` — keyword hits and misses, escalation and dedup, `911` mode, missing contact, prompt variants, and tool behavior. No network: senders are injected.
