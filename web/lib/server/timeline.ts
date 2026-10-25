@@ -9,6 +9,8 @@ import { renderNudge } from './nudge-copy';
 import { nowIso } from './ids';
 import { buildDriftIndexView } from './drift-index-view';
 import { buildRepeatAnalysis } from './detector-results';
+import { REPEAT_WINDOW_DAYS } from '../analysis/config';
+import { buildLiveRepeatAnalysis, liveResults, recentStoryCounts } from './live-repeats';
 
 interface CallRow {
   id: string;
@@ -138,7 +140,7 @@ export function buildTimeline(elderId: string): Timeline | null {
     : [];
 
   const markers: MarkerSeries[] = eff.speechTrends ? buildMarkers(elderId, elder.language) : [];
-  const repeats: Timeline['repeats'] = eff.speechTrends ? buildRepeats(elderId) : [];
+  const repeats: Timeline['repeats'] = eff.speechTrends && eff.summaries ? buildRepeats(elderId) : [];
 
   const nudgeRows = db
     .prepare(
@@ -160,7 +162,7 @@ export function buildTimeline(elderId: string): Timeline | null {
     });
 
   const driftIndex = buildDriftIndexView(db, elderId, elder.language, eff);
-  const repeatAnalysis = buildRepeatAnalysis(db, elderId, eff);
+  const repeatAnalysis = buildLiveRepeatAnalysis(db, elderId, eff) ?? buildRepeatAnalysis(db, elderId, eff);
   return {
     ...(driftIndex ? { driftIndex } : {}),
     ...(repeatAnalysis ? { repeatAnalysis } : {}),
@@ -191,6 +193,7 @@ function buildMarkers(elderId: string, lang: Lang): MarkerSeries[] {
      FROM call_markers m JOIN calls c ON c.id = m.call_id
      WHERE c.elder_id = ? AND m.marker = ? AND c.language = ? AND c.status != 'failed' ORDER BY c.started_at`,
   );
+  const liveCounts = recentStoryCounts(liveResults(db, elderId).results, REPEAT_WINDOW_DAYS);
   return MARKER_KEYS.map((key) => {
     const meta = markerMeta(key, lang);
     const b = baselineStmt.get(elderId, key, lang) as { median: number; mad: number; n: number } | undefined;
@@ -214,9 +217,9 @@ function buildMarkers(elderId: string, lang: Lang): MarkerSeries[] {
       points: pts.map((p) => ({
         callId: p.call_id,
         at: p.started_at,
-        value: p.value,
+        value: key === 'repeat_stories' && p.is_simulated === 0 ? liveCounts.get(p.call_id) ?? null : p.value,
         z: p.z,
-        confidence: p.confidence,
+        confidence: key === 'repeat_stories' && p.is_simulated === 0 && !liveCounts.has(p.call_id) ? 'na' : p.confidence,
         isSimulated: p.is_simulated === 1,
       })),
     };
@@ -227,8 +230,8 @@ function buildMarkers(elderId: string, lang: Lang): MarkerSeries[] {
 function buildRepeats(elderId: string): Timeline['repeats'] {
   const rows = getSqlite()
     .prepare(
-      `SELECT t.id, t.summary, t.repeat_of_topic_id, t.is_simulated, c.started_at
-       FROM topics t JOIN calls c ON c.id = t.call_id WHERE t.elder_id = ? ORDER BY c.started_at`,
+      `SELECT t.id, t.summary, t.repeat_of_topic_id, c.is_simulated, c.started_at
+       FROM topics t JOIN calls c ON c.id = t.call_id WHERE t.elder_id = ? AND c.is_simulated = 1 ORDER BY c.started_at`,
     )
     .all(elderId) as {
     id: string;

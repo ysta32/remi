@@ -76,22 +76,29 @@ export function buildRepeatAnalysis(db: Database.Database, elderId: string, cons
   if (!consent.speechTrends || !hasDetectorResults(db)) return undefined;
   try {
     const corpus = readDetectorCorpus(db, elderId), results = validatedResults(db, corpus);
-    if (!results.length) return undefined;
-    const counts = { total: 0, unprompted: 0, prompted: 0, uncertain: 0, stories: 0, questions: 0 };
-    const items = new Map(results.flatMap(result => result.items).map(item => [item.id,item]));
-    const matches: RepeatAnalysisView['matches'] = [];
-    for (const result of results) for (const match of result.matches) {
-      if (!match.isRepeat) continue;
-      const item = items.get(match.itemId), prior = items.get(match.matchedItemId!);
-      if (!item || !prior || prior.callId !== match.matchedCallId || prior.elderId !== elderId || Date.parse(prior.startedAt) >= Date.parse(item.startedAt) || match.similarity === null) continue;
-      counts.total++; counts[item.elicitation]++; counts[item.kind === 'story' ? 'stories' : 'questions']++;
-      matches.push({ callId: item.callId, startedAt: item.startedAt, priorCallId: prior.callId, priorStartedAt: prior.startedAt, kind: item.kind,
-        label: { unprompted: 'Unprompted repeat', prompted: 'Prompted retelling', uncertain: 'Uncertain' }[item.elicitation] as RepeatAnalysisView['matches'][number]['label'],
-        similarity: match.similarity, summary: consent.summaries ? item.summary : null, quote: consent.summaries ? item.quote : null,
-        priorQuote: consent.summaries ? prior.quote : null, isSimulated: item.isSimulated || prior.isSimulated });
-    }
-    const p = results[0].provenance;
-    return { scope: 'all_prior_calls', status: results.length === corpus.length ? 'complete' : 'partial', analyzedCallCount: results.length, totalCallCount: corpus.length, counts,
-      provenance: { extractionModel: p.extractionModel, embeddingModel: p.embeddingModel, threshold: p.threshold, detectorVersion: p.detectorVersion }, matches };
+    return repeatAnalysisView(corpus, results, consent);
   } catch { return undefined; }
+}
+
+/** Shared public projection for independently validated live and synthetic evidence. */
+export function repeatAnalysisView(corpus: CorpusCall[], results: SuccessfulAnalysis[], consent: { speechTrends: boolean; summaries: boolean }): RepeatAnalysisView | undefined {
+  if (!consent.speechTrends || !corpus.length) return undefined;
+  const elderId = corpus[0].call.elderId;
+  if (!results.length) return undefined;
+  const counts = { total: 0, unprompted: 0, prompted: 0, uncertain: 0, stories: 0, questions: 0 };
+  const items = new Map(results.flatMap(result => result.items).map(item => [item.id,item]));
+  const matches: RepeatAnalysisView['matches'] = [];
+  for (const result of results) for (const match of result.matches) {
+    if (!match.isRepeat) continue;
+    const item = items.get(match.itemId), prior = items.get(match.matchedItemId!);
+    if (!item || !prior || prior.callId !== match.matchedCallId || prior.elderId !== elderId || Date.parse(prior.startedAt) >= Date.parse(item.startedAt) || match.similarity === null) continue;
+    counts.total++; counts[item.elicitation]++; counts[item.kind === 'story' ? 'stories' : 'questions']++;
+    matches.push({ callId: item.callId, startedAt: item.startedAt, priorCallId: prior.callId, priorStartedAt: prior.startedAt, kind: item.kind,
+      label: { unprompted: 'Unprompted repeat', prompted: 'Prompted retelling', uncertain: 'Uncertain' }[item.elicitation] as RepeatAnalysisView['matches'][number]['label'],
+      similarity: match.similarity, summary: consent.summaries ? item.summary : null, quote: consent.summaries ? item.quote : null,
+      priorQuote: consent.summaries ? prior.quote : null, isSimulated: item.isSimulated || prior.isSimulated });
+  }
+  const p = results[0].provenance;
+  return { scope: 'all_prior_calls', status: results.length === corpus.length ? 'complete' : 'partial', analyzedCallCount: results.length, totalCallCount: corpus.length, counts,
+    provenance: { extractionModel: p.extractionModel, embeddingModel: p.embeddingModel, threshold: p.threshold, detectorVersion: p.detectorVersion }, matches };
 }

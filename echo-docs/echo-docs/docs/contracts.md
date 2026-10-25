@@ -134,6 +134,15 @@ CREATE TABLE detector_results (
   analyzed_at TEXT NOT NULL
 );
 
+CREATE TABLE live_detector_results (
+  call_id TEXT PRIMARY KEY REFERENCES calls(id) ON DELETE CASCADE,
+  prefix_hash TEXT NOT NULL,             -- ordered real inputs through this call
+  history_hash TEXT NOT NULL,            -- actual earlier extracted items, including vectors
+  settings_hash TEXT NOT NULL,
+  result_json TEXT NOT NULL,             -- complete successful AnalysisResult; internal only
+  analyzed_at TEXT NOT NULL
+);
+
 CREATE TABLE call_events (
   id TEXT PRIMARY KEY,
   call_id TEXT NOT NULL REFERENCES calls(id) ON DELETE CASCADE,
@@ -386,7 +395,7 @@ Body: one `CallEvent`. → `204`. Side effects: `photo_shown` updates `photos.la
 // web/lib/analysis/pipeline.ts
 export async function processCall(callId: string): Promise<void>; // never throws; writes status/failed_step/error
 
-// Rebuild baselines, z-scores, repeat_stories counts (from topics.repeat_of_topic_id), and nudges
+// Rebuild baselines, z-scores, repeat_stories counts (validated live evidence; simulated calls use topics.repeat_of_topic_id), and nudges
 // for one elder from stored rows. Makes NO model calls (story matching happens in processCall).
 // Used by processCall after each call and by the demo seed. Idempotent.
 export async function recomputeElder(elderId: string): Promise<void>;
@@ -478,3 +487,41 @@ monitoring weeks. Computed rule flags do not assert that notifications were sent
 The DTO contains no transcript, quote, evidence or vector. Canonical imported synthetic
 transcript notice identifies authored timing; unrelated simulated timing is unknown.
 No DB writes or notification actions occur during this computation.
+
+
+## 10. Automatic real-call repeat analysis
+
+The post-call `repetition` step invokes detector 1.0.0 for non-simulated calls using
+`gpt-6.1-sol`, `remi-items-v1`, `text-embedding-3-small`, 1536 dimensions and threshold
+0.85. These evaluated settings are fixed separately from legacy model/threshold environment
+settings. `OPENAI_API_KEY` is supplied server-side. The existing summary extractor remains separate.
+
+Processing requires effective `summaries` AND `speechTrends`; recheck both before each
+provider request and the final write. Exclude simulated calls, unrelated in-progress/failed
+calls, calls with safety events, and calls with the safety-only summary. Same-elder real
+calls are processed chronologically across languages, including earlier historical calls
+without cached results. The current `processing` call is eligible; views use `done` calls only.
+A missing/malformed transcript fails closed. Stored empty transcripts can succeed with zero
+items and null extractionModel, without a provider request.
+
+`live_detector_results` is independent of the frozen synthetic `detector_results` batches.
+Each prefix hash binds the ordered canonical call inputs through that call; each history hash
+binds actual earlier extracted items. Appending later calls preserves earlier caches.
+Corrections, deletions, backdated calls, safety exclusions or missing/corrupt prior results
+invalidate dependent evidence. Revalidate grounding, models, IDs, counts and matches on reads.
+Commit a newly processed batch atomically after rechecking input, consent and cached state.
+No provider work occurs in timeline reads or recompute. A soft analysis failure leaves the
+call completable with unknown repetition, never a fabricated zero.
+
+The existing optional `repeatAnalysis` DTO shows all-history story/question matches and earlier
+call links. It requires speechTrends; summaries/quotes/priorQuotes are null without summaries.
+Vectors and complete transcripts never enter that DTO. A partial prefix is marked partial.
+`repeat_stories` for real calls counts unprompted story matches with any qualifying earlier telling
+within seven days; unavailable evidence is NULL/na, including on reads before recomputation.
+The read-only Drift Index uses all-history unprompted-story counts and excludes simulated
+calls from its baseline/monitoring whenever real completed calls exist in the selected language. Simulated legacy markers
+retain their existing topic matcher. No new medical or held-out evaluation claim follows from
+this integration; the reviewed synthetic detector baseline remains unchanged.
+
+Legacy Timeline.repeats includes only simulated topic chains and requires both summaries and
+speechTrends sharing, since its required summary field cannot be redacted to null.
