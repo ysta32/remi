@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Impeccable runtime state
+.impeccable/hook.cache.json
+.impeccable/questions/
+.impeccable/live/

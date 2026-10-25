@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Remi palettes (sketch)</title>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;800;900&family=Patrick+Hand&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0}
+  body{font-family:Figtree,sans-serif;font-size:18px;line-height:1.5;background:#e9e9e9}
+  .opt{padding:22px 0 56px;background:var(--ground);color:var(--ink)}
+  .wrap{max-width:1240px;margin:0 auto;padding:0 32px}
+  .tag-opt{display:inline-block;font-weight:900;font-size:15px;letter-spacing:.06em;text-transform:uppercase;background:#111;color:#fff;padding:6px 14px;border-radius:99px;margin-bottom:18px}
+  .tag-opt span{opacity:.85;font-weight:600;letter-spacing:0;text-transform:none;margin-left:8px}
+  nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .word{font-weight:900;font-size:28px;letter-spacing:-.03em;color:var(--brand,var(--ink))}
+  .pill{display:inline-flex;align-items:center;gap:10px;font-weight:800;font-size:18px;padding:14px 24px;border-radius:99px;background:var(--cta);color:var(--cta-ink);text-decoration:none}
+  .hero{background:var(--hero);color:var(--hero-ink,var(--ink));border-radius:36px;display:grid;grid-template-columns:1fr 1.05fr;gap:24px;overflow:hidden;min-height:540px}
+  .copy{padding:56px 0 56px 52px;align-self:center}
+  .demo{display:inline-block;font-size:15px;font-weight:700;padding:5px 12px;border-radius:99px;background:var(--demo-bg);color:var(--demo-ink);margin-bottom:16px}
+  h1{font-size:58px;line-height:1.08;font-weight:900;letter-spacing:-.035em}
+  h1 em{font-style:normal;background:var(--joy);color:var(--joy-ink,inherit);padding:0 10px;border-radius:12px}
+  .lede{font-size:20px;color:var(--hero-ink2,var(--ink2));max-width:31ch;margin:18px 0 28px}
+  .art{position:relative}
+  .arch{position:absolute;left:4%;right:5%;top:44px;bottom:0;background:var(--arch);border-radius:999px 999px 0 0}
+  .art img{position:absolute;left:58%;bottom:-90px;transform:translateX(-50%);width:min(450px,86%);
+    -webkit-mask-image:radial-gradient(ellipse 62% 66% at 55% 62%,#000 74%,transparent 100%);mask-image:radial-gradient(ellipse 62% 66% at 55% 62%,#000 74%,transparent 100%)}
+  .snap{position:absolute;left:3%;bottom:28px;width:270px;background:#fff;border-radius:8px;padding:12px 12px 14px;transform:rotate(-3deg);box-shadow:0 18px 30px -16px rgba(0,0,0,.28);z-index:2;color:#1f2d4a}
+  .ph{height:120px;border-radius:3px;background:var(--ph);display:grid;place-items:center;color:var(--ph-ink)}
+  .snap .cap{font-family:'Patrick Hand',cursive;font-size:24px;line-height:1.3;margin:10px 2px 4px}
+  .snap .sum{font-size:16px;line-height:1.45;color:#4a5262}
+  .chips{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+  .chip{font-size:14px;font-weight:700;padding:4px 10px;border-radius:99px}
+  .c-fam{background:var(--fam);color:var(--fam-ink)} .c-ok{background:var(--ok);color:var(--ok-ink)}
+  .new{position:absolute;top:-12px;right:-12px;background:var(--fam-strong);color:var(--fam-strong-ink);font-weight:900;font-size:14px;line-height:1.4;padding:5px 12px;border-radius:99px;transform:rotate(7deg)}
+  .data{margin-top:22px;display:grid;grid-template-columns:1.3fr 1fr;gap:18px}
+  .card{background:var(--data-bg);border-radius:24px;padding:20px 24px;color:var(--ink)}
+  .card .h3{font-size:19px;font-weight:800}
+  .card p{color:var(--ink2);font-size:17px}
+  .row{display:flex;align-items:center;gap:16px;margin-top:8px}
+  .row svg{flex:none}
+  .about{font-weight:800;color:var(--data-line)}
+  .note{background:var(--note-bg);border-radius:24px;padding:20px 24px;color:var(--ink)}
+  .note b{display:block;font-size:19px}
+</style></head><body>
+
+<!-- A · SUNROOM -->
+<section class="opt" style="--ground:#fbf6ec;--ink:#1f2d4a;--ink2:#5a5f6e;--hero:#f4e7cf;--arch:#fff3d6;--cta:#1f2d4a;--cta-ink:#fff;--joy:#f6d77a;--fam:#fde1d4;--fam-ink:#8a3e22;--fam-strong:#e8845c;--fam-strong-ink:#1f2d4a;--ok:#cfe5d6;--ok-ink:#2f5a46;--demo-bg:#fff;--demo-ink:#a9502f;--ph:#f1e3cc;--ph-ink:#a9502f;--data-bg:#e4eef8;--data-line:#3b5583;--note-bg:#e4eef8">
+  <div class="wrap">
+    <p class="tag-opt">A · Sunroom <span>recommended: warm stories, cool data</span></p>
+    <nav><span class="word">Remi</span><a class="pill" href="#">See Hal's chats</a></nav>
+    <div class="hero">
+      <div class="copy">
+        <span class="demo">Live demo · history is simulated</span>
+        <h1>Grandpa calls.<br>Remi listens.<br>You get his <em>stories.</em></h1>
+        <p class="lede">He FaceTimes a warm, patient companion that remembers every story. You get the fun facts, and a gentle note if anything seems to change.</p>
+        <a class="pill" href="#">See Hal's chats</a>
+      </div>
+      <div class="art">
+        <div class="arch"></div>
+        <div class="snap"><span class="new">NEW</span>
+          <div class="ph"><svg width="56" height="32" viewBox="0 0 56 32" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 22h48M8 22l5-9h24l7 9"/><circle cx="16" cy="25" r="4"/><circle cx="40" cy="25" r="4"/></svg></div>
+          <p class="cap">told Sam about his first car!</p>
+          <p class="sum">A '57 Chevy Bel Air he bought for $300, stuck in the mud on the way to Raystown Lake.</p>
+          <div class="chips"><span class="chip c-fam">Sam's question</span><span class="chip c-ok">In good spirits</span></div>
+        </div>
+        <img src="../../public/images/hal-armchair.png" alt="">
+      </div>
+    </div>
+    <div class="data">
+      <div class="card"><h2 class="h3">How he's doing · Speaking pace</h2>
+        <div class="row"><svg width="220" height="56" viewBox="0 0 220 56"><rect x="0" y="18" width="220" height="18" rx="9" fill="#cfe2f3"/><polyline points="6,28 40,26 74,29 108,27 142,30 176,26 210,28" fill="none" stroke="#3b5583" stroke-width="3" stroke-linecap="round"/><circle cx="210" cy="28" r="5" fill="#3b5583"/></svg><p><span class="about">About his usual.</span> Compared only with Hal's own chats.</p></div></div>
+      <div class="note"><b>A gentle note</b><p>No gentle notes right now. If several things shift for a few weeks, you'll see one here.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- B · BRIGHTER SKY -->
+<section class="opt" style="--ground:#e7f0f8;--ink:#1d2b45;--ink2:#4f5b70;--hero-ink2:#26344e;--hero:#a9cdee;--arch:#d6e8f8;--cta:#1d2b45;--cta-ink:#fff;--joy:#ffd668;--fam:#ffd9c7;--fam-ink:#7a3a1f;--fam-strong:#ffb595;--fam-strong-ink:#1d2b45;--ok:#a8dcc1;--ok-ink:#1d4a34;--demo-bg:#ffffffcc;--demo-ink:#1d2b45;--ph:#d6e8f8;--ph-ink:#3a6aa0;--data-bg:#fff;--data-line:#1d2b45;--note-bg:#ffe9a8">
+  <div class="wrap">
+    <p class="tag-opt">B · Brighter Sky <span>today's world, deeper values</span></p>
+    <nav><span class="word">Remi</span><a class="pill" href="#">See Hal's chats</a></nav>
+    <div class="hero">
+      <div class="copy">
+        <span class="demo">Live demo · history is simulated</span>
+        <h1>Grandpa calls.<br>Remi listens.<br>You get his <em>stories.</em></h1>
+        <p class="lede">He FaceTimes a warm, patient companion that remembers every story. You get the fun facts, and a gentle note if anything seems to change.</p>
+        <a class="pill" href="#">See Hal's chats</a>
+      </div>
+      <div class="art">
+        <div class="arch"></div>
+        <div class="snap"><span class="new">NEW</span>
+          <div class="ph"><svg width="56" height="32" viewBox="0 0 56 32" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 22h48M8 22l5-9h24l7 9"/><circle cx="16" cy="25" r="4"/><circle cx="40" cy="25" r="4"/></svg></div>
+          <p class="cap">told Sam about his first car!</p>
+          <p class="sum">A '57 Chevy Bel Air he bought for $300, stuck in the mud on the way to Raystown Lake.</p>
+          <div class="chips"><span class="chip c-fam">Sam's question</span><span class="chip c-ok">In good spirits</span></div>
+        </div>
+        <img src="../../public/images/hal-armchair.png" alt="">
+      </div>
+    </div>
+    <div class="data">
+      <div class="card"><h2 class="h3">How he's doing · Speaking pace</h2>
+        <div class="row"><svg width="220" height="56" viewBox="0 0 220 56"><rect x="0" y="18" width="220" height="18" rx="9" fill="#d6e8f8"/><polyline points="6,28 40,26 74,29 108,27 142,30 176,26 210,28" fill="none" stroke="#1d2b45" stroke-width="3" stroke-linecap="round"/><circle cx="210" cy="28" r="5" fill="#1d2b45"/></svg><p><span class="about">About his usual.</span> Compared only with Hal's own chats.</p></div></div>
+      <div class="note"><b>A gentle note</b><p>No gentle notes right now. If several things shift for a few weeks, you'll see one here.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- C · NAVY & MARIGOLD -->
+<section class="opt" style="--ground:#fffaf2;--ink:#22314a;--ink2:#5a5f6e;--hero:#22314a;--hero-ink:#fff6e6;--hero-ink2:#d9dfea;--arch:#fbe7c4;--cta:#ffc94a;--cta-ink:#22314a;--joy:#ffc94a;--joy-ink:#22314a;--fam:#ffe0d3;--fam-ink:#7a3a1f;--fam-strong:#ffb59a;--fam-strong-ink:#22314a;--ok:#d3eadc;--ok-ink:#2b5a43;--demo-bg:#ffffff1f;--demo-ink:#fff6e6;--ph:#fbe7c4;--ph-ink:#a35f1a;--data-bg:#fff;--data-line:#22314a;--note-bg:#f3ece0">
+  <div class="wrap">
+    <p class="tag-opt">C · Navy &amp; Marigold <span>boldest from across the room</span></p>
+    <nav><span class="word">Remi</span><a class="pill" style="--cta:#22314a;--cta-ink:#fff" href="#">See Hal's chats</a></nav>
+    <div class="hero">
+      <div class="copy">
+        <span class="demo">Live demo · history is simulated</span>
+        <h1>Grandpa calls.<br>Remi listens.<br>You get his <em>stories.</em></h1>
+        <p class="lede">He FaceTimes a warm, patient companion that remembers every story. You get the fun facts, and a gentle note if anything seems to change.</p>
+        <a class="pill" href="#">See Hal's chats</a>
+      </div>
+      <div class="art">
+        <div class="arch"></div>
+        <div class="snap"><span class="new">NEW</span>
+          <div class="ph"><svg width="56" height="32" viewBox="0 0 56 32" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 22h48M8 22l5-9h24l7 9"/><circle cx="16" cy="25" r="4"/><circle cx="40" cy="25" r="4"/></svg></div>
+          <p class="cap">told Sam about his first car!</p>
+          <p class="sum">A '57 Chevy Bel Air he bought for $300, stuck in the mud on the way to Raystown Lake.</p>
+          <div class="chips"><span class="chip c-fam">Sam's question</span><span class="chip c-ok">In good spirits</span></div>
+        </div>
+        <img src="../../public/images/hal-armchair.png" alt="">
+      </div>
+    </div>
+    <div class="data">
+      <div class="card" style="border:1px solid #eadfcd"><h2 class="h3">How he's doing · Speaking pace</h2>
+        <div class="row"><svg width="220" height="56" viewBox="0 0 220 56"><rect x="0" y="18" width="220" height="18" rx="9" fill="#e4e9f2"/><polyline points="6,28 40,26 74,29 108,27 142,30 176,26 210,28" fill="none" stroke="#22314a" stroke-width="3" stroke-linecap="round"/><circle cx="210" cy="28" r="5" fill="#22314a"/></svg><p><span class="about">About his usual.</span> Compared only with Hal's own chats.</p></div></div>
+      <div class="note"><b>A gentle note</b><p>No gentle notes right now. If several things shift for a few weeks, you'll see one here.</p></div>
+    </div>
+  </div>
+</section>
+</body></html>

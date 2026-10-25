@@ -13,3 +13,6 @@ node_modules/
 # Chert
 .env.local
 .chert-agent/
+
+# Impeccable runtime state
+.impeccable/hook.cache.json
