@@ -1,0 +1,1152 @@
+{
+  "isSimulated": true,
+  "seed": null,
+  "rows": [
+    {
+      "i": 0,
+      "callId": "call_bce073deab79a933f9fa572b",
+      "startedAt": "2026-09-28T14:00:00.000Z",
+      "isoWeek": "2026-W40",
+      "day": 0,
+      "plantedPauseCenterMs": 600,
+      "callerWords": 380,
+      "values": {
+        "speech_rate": 127.20658796223974,
+        "pause_rate": 2.1052631578947367,
+        "mean_pause_ms": 619.5,
+        "wfp_rate": 0,
+        "filler_rate": 0,
+        "vague_rate": 0,
+        "mattr": 0.840906344410877
+      },
+      "conf": {
+        "speech_rate": "high",
+        "pause_rate": "high",
+        "mean_pause_ms": "high",
+        "wfp_rate": "high",
+        "filler_rate": "high",
+        "vague_rate": "high",
+        "mattr": "high"
+      },
+      "repeats": 0,
+      "repeatsAll": 0,
+      "adequate": true
+    },
+    {
+      "i": 1,
+      "callId": "call_f17a3b37da96b0ae551d8987",
+      "startedAt": "2026-09-30T14:00:00.000Z",
+      "isoWeek": "2026-W40",
+      "day": 2,
+      "plantedPauseCenterMs": 600,
+      "callerWords": 373,
+      "values": {
+        "speech_rate": 127.31823870747525,
+        "pause_rate": 2.1447721179624666,
+        "mean_pause_ms": 590,
+        "wfp_rate": 0,
+        "filler_rate": 0,
+        "vague_rate": 0.2680965147453083,
+        "mattr": 0.8506172839506169
+      },
+      "conf": {
+        "speech_rate": "high",
+        "pause_rate": "high",
+        "mean_pause_ms": "high",
+        "wfp_rate": "high",
+        "filler_rate": "high",
+        "vague_rate": "high",
+        "mattr": "high"
+      },
+      "repeats": 0,
+      "repeatsAll": 0,
+      "adequate": true
+    },
+    {
+      "i": 2,
+      "callId": "call_7ccee5c39e359efa36d091e5",
+      "startedAt": "2026-10-02T14:00:00.000Z",
+      "isoWeek": "2026-W40",
+      "day": 4,
+      "plantedPauseCenterMs": 600,
+      "callerWords": 365,
+      "values": {
+        "speech_rate": 127.04932298374466,
+        "pause_rate": 2.191780821917808,
+        "mean_pause_ms": 624.25,
+        "wfp_rate": 0,
+        "filler_rate": 0,
+        "vague_rate": 0,
+        "mattr": 0.848670886075949
+      },
+      "conf": {
+        "speech_rate": "high",
+        "pause_rate": "high",
+        "mean_pause_ms": "high",
+        "wfp_rate": "high",
+        "filler_rate": "high",
+        "vague_rate": "high",
+        "mattr": "high"
+      },
+      "repeats": 0,
+      "repeatsAll": 0,
+      "adequate": true
+    },
+    {
+      "i": 3,
+      "callId": "call_edc3330b16975930950403e2",
+      "startedAt": "2026-10-05T14:00:00.000Z",
+      "isoWeek": "2026-W41",
+      "day": 7,
+      "plantedPauseCenterMs": 850,
+      "callerWords": 379,
+      "values": {
+        "speech_rate": 125.91152970880883,
+        "pause_rate": 2.1108179419525066,
+        "mean_pause_ms": 847.875,
+        "wfp_rate": 0,
+        "filler_rate": 0,
+        "vague_rate": 0,
+        "mattr": 0.850727272727274
+      },
+      "conf": {
+        "speech_rate": "high",
+        "pause_rate": "high",
+        "mean_pause_ms": "high",
+        "wfp_rate": "high",
+        "filler_rate": "high",
+        "vague_rate": "high",
+        "mattr": "high"
+      },
+      "repeats": 0,
+      "repeatsAll": 0,
+      "adequate": true
+    },
+    {
+      "i": 4,
+      "callId": "call_caf721e367a11dd737f647b5",
+      "startedAt": "2026-10-07T14:00:00.000Z",
+      "isoWeek": "2026-W41",
+      "day": 9,
+      "plantedPauseCenterMs": 850,
+      "callerWords": 381,
+      "values": {
+        "speech_rate": 125.90879048248514,
+        "pause_rate": 2.099737532808399,
+        "mean_pause_ms": 852.5,
+        "wfp_rate": 0,
+        "filler_rate": 0,
+        "vague_rate": 0,
+        "mattr": 0.8236746987951815
+      },
+      "conf": {
+        "speech_rate": "high",
+        "pause_rate": "high",
+        "mean_pause_ms": "high",
+        "wfp_rate": "high",
+        "filler_rate": "high",
+        "vague_rate": "high",
+        "mattr": "high"
+      },
+      "repeats": 0,
+      "repeatsAll": 0,
+      "adequate": true
+    },
+    {
+      "i": 5,
+      "callId": "call_2b51685d6bec803eda4d13b7",
+      "startedAt": "2026-10-09T14:00:00.000Z",
+      "isoWeek": "2026-W41",
+      "day": 11,
+      "plantedPauseCenterMs": 850,
+      "callerWords": 382,
+      "values": {
+        "speech_rate": 125.87873462214412,
+        "pause_rate": 2.094240837696335,
+        "mean_pause_ms": 860,
+        "wfp_rate": 0,
+        "filler_rate": 0,
+        "vague_rate": 0,
+        "mattr": 0.8712912912912902
+      },
+      "conf": {
+        "speech_rate": "high",
+        "pause_rate": "high",
+        "mean_pause_ms": "high",
+        "wfp_rate": "high",
+        "filler_rate": "high",
+        "vague_rate": "high",
+        "mattr": "high"
+      },
+      "repeats": 0,
+      "repeatsAll": 0,
+      "adequate": true
+    },
+    {
+      "i": 6,
+      "callId": "call_7376f65c011e78231981b8cb",
+      "startedAt": "2026-10-12T14:00:00.000Z",
+      "isoWeek": "2026-W42",
+      "day": 14,
+      "plantedPauseCenterMs": 1100,
+      "callerWords": 381,
+      "values": {
+        "speech_rate": 124.4643839121889,
+        "pause_rate": 2.099737532808399,
+        "mean_pause_ms": 1115.875,
+        "wfp_rate": 0,
+        "filler_rate": 0,
+        "vague_rate": 0,
+        "mattr": 0.8260843373493976
+      },
+      "conf": {
+        "speech_rate": "high",
+        "pause_rate": "high",
+        "mean_pause_ms": "high",
+        "wfp_rate": "high",
+        "filler_rate": "high",
+        "vague_rate": "high",
+        "mattr": "high"
+      },
+      "repeats": 0,
+      "repeatsAll": 2,
+      "adequate": true
+    },
+    {
+      "i": 7,
+      "callId": "call_c996aa7b73e32493d2dabf53",
+      "startedAt": "2026-10-14T14:00:00.000Z",
+      "isoWeek": "2026-W42",
+      "day": 16,
+      "plantedPauseCenterMs": 1100,
+      "callerWords": 377,
+      "values": {
+        "speech_rate": 124.47790269592062,
+        "pause_rate": 2.122015915119363,
+        "mean_pause_ms": 1102.375,
+        "wfp_rate": 0,
+        "filler_rate": 0,
+        "vague_rate": 0.2652519893899204,
+        "mattr": 0.8387804878048791
+      },
+      "conf": {
+        "speech_rate": "high",
+        "pause_rate": "high",
+        "mean_pause_ms": "high",
+        "wfp_rate": "high",
+        "filler_rate": "high",
+        "vague_rate": "high",
+        "mattr": "high"
+      },
+      "repeats": 0,
+      "repeatsAll": 2,
+      "adequate": true
+    },
+    {
+      "i": 8,
+      "callId": "call_28f729dd994b7e57b825d44a",
+      "startedAt": "2026-10-16T14:00:00.000Z",
+      "isoWeek": "2026-W42",
+      "day": 18,
+      "plantedPauseCenterMs": 1100,
+      "callerWords": 365,
+      "values": {
+        "speech_rate": 124.31174433785547,
+        "pause_rate": 2.191780821917808,
+        "mean_pause_ms": 1098.75,
+        "wfp_rate": 0,
+        "filler_rate": 0,
+        "vague_rate": 0,
+        "mattr": 0.8601898734177233
+      },
+      "conf": {
+        "speech_rate": "high",
+        "pause_rate": "high",
+        "mean_pause_ms": "high",
+        "wfp_rate": "high",
+        "filler_rate": "high",
+        "vague_rate": "high",
+        "mattr": "high"
+      },
+      "repeats": 0,
+      "repeatsAll": 1,
+      "adequate": true
+    },
+    {
+      "i": 9,
+      "callId": "call_32418684098eb0cc9bd46374",
+      "startedAt": "2026-10-19T14:00:00.000Z",
+      "isoWeek": "2026-W43",
+      "day": 21,
+      "plantedPauseCenterMs": 1400,
+      "callerWords": 377,
+      "values": {
+        "speech_rate": 122.82730871357127,
+        "pause_rate": 2.122015915119363,
+        "mean_pause_ms": 1407.625,
+        "wfp_rate": 0,
+        "filler_rate": 0,
+        "vague_rate": 0,
+        "mattr": 0.8606707317073172
+      },
+      "conf": {
+        "speech_rate": "high",
+        "pause_rate": "high",
+        "mean_pause_ms": "high",
+        "wfp_rate": "high",
+        "filler_rate": "high",
+        "vague_rate": "high",
+        "mattr": "high"
+      },
+      "repeats": 0,
+      "repeatsAll": 1,
+      "adequate": true
+    },
+    {
+      "i": 10,
+      "callId": "call_0d435b9d8b579caef992af4c",
+      "startedAt": "2026-10-21T14:00:00.000Z",
+      "isoWeek": "2026-W43",
+      "day": 23,
+      "plantedPauseCenterMs": 1400,
+      "callerWords": 384,
+      "values": {
+        "speech_rate": 123.01121195942339,
+        "pause_rate": 2.083333333333333,
+        "mean_pause_ms": 1397.5,
+        "wfp_rate": 0,
+        "filler_rate": 0,
+        "vague_rate": 0,
+        "mattr": 0.8193432835820903
+      },
+      "conf": {
+        "speech_rate": "high",
+        "pause_rate": "high",
+        "mean_pause_ms": "high",
+        "wfp_rate": "high",
+        "filler_rate": "high",
+        "vague_rate": "high",
+        "mattr": "high"
+      },
+      "repeats": 0,
+      "repeatsAll": 1,
+      "adequate": true
+    },
+    {
+      "i": 11,
+      "callId": "call_042bf106875185e32b7954f6",
+      "startedAt": "2026-10-23T14:00:00.000Z",
+      "isoWeek": "2026-W43",
+      "day": 25,
+      "plantedPauseCenterMs": 1400,
+      "callerWords": 383,
+      "values": {
+        "speech_rate": 123.0990095297275,
+        "pause_rate": 2.088772845953003,
+        "mean_pause_ms": 1377.375,
+        "wfp_rate": 0,
+        "filler_rate": 0,
+        "vague_rate": 0.26109660574412535,
+        "mattr": 0.8560479041916155
+      },
+      "conf": {
+        "speech_rate": "high",
+        "pause_rate": "high",
+        "mean_pause_ms": "high",
+        "wfp_rate": "high",
+        "filler_rate": "high",
+        "vague_rate": "high",
+        "mattr": "high"
+      },
+      "repeats": 0,
+      "repeatsAll": 2,
+      "adequate": true
+    }
+  ],
+  "currentRule": {
+    "weeks": [
+      {
+        "isoWeek": "2026-W40",
+        "adequateCalls": 3,
+        "evaluated": true,
+        "weekZ": {
+          "speech_rate": -0.19137654653770073,
+          "pause_rate": 0.12243856012948306,
+          "mean_pause_ms": -0.6748526107424089,
+          "wfp_rate": 0,
+          "filler_rate": 0,
+          "vague_rate": 0,
+          "mattr": 0.038180651345664215
+        },
+        "repeatSum": 0,
+        "driftingGroups": []
+      },
+      {
+        "isoWeek": "2026-W41",
+        "adequateCalls": 3,
+        "evaluated": true,
+        "weekZ": {
+          "speech_rate": 0.15065199686223393,
+          "pause_rate": -0.027676723717409146,
+          "mean_pause_ms": 0.6741289082107816,
+          "wfp_rate": 0,
+          "filler_rate": 0,
+          "vague_rate": 0,
+          "mattr": -0.04249574353533143
+        },
+        "repeatSum": 0,
+        "driftingGroups": []
+      },
+      {
+        "isoWeek": "2026-W42",
+        "adequateCalls": 3,
+        "evaluated": true,
+        "weekZ": {
+          "speech_rate": 0.5313186902581409,
+          "pause_rate": 0.046584550652471655,
+          "mean_pause_ms": 2.1208102689336505,
+          "wfp_rate": 0,
+          "filler_rate": 0,
+          "vague_rate": 0,
+          "mattr": 0.4262018806864666
+        },
+        "repeatSum": 0,
+        "driftingGroups": [
+          "pauses"
+        ]
+      },
+      {
+        "isoWeek": "2026-W43",
+        "adequateCalls": 3,
+        "evaluated": true,
+        "weekZ": {
+          "speech_rate": 0.914295459798492,
+          "pause_rate": -0.06422567990206278,
+          "mean_pause_ms": 3.8294719461055835,
+          "wfp_rate": 0,
+          "filler_rate": 0,
+          "vague_rate": 0,
+          "mattr": -0.2512353620097461
+        },
+        "repeatSum": 0,
+        "driftingGroups": [
+          "pauses"
+        ]
+      }
+    ],
+    "nudge": null
+  },
+  "driftIndexCompressed": {
+    "baseline": {
+      "callIds": [
+        "call_bce073deab79a933f9fa572b",
+        "call_f17a3b37da96b0ae551d8987",
+        "call_7ccee5c39e359efa36d091e5"
+      ],
+      "endDay": 4,
+      "markers": {
+        "speech_rate": {
+          "median": 127.20658796223974,
+          "scale": 5
+        },
+        "mean_pause_ms": {
+          "median": 619.5,
+          "scale": 40
+        },
+        "pause_rate": {
+          "median": 2.1447721179624666,
+          "scale": 1
+        },
+        "filler_rate": {
+          "median": 0,
+          "scale": 0.5
+        },
+        "wfp_rate": {
+          "median": 0,
+          "scale": 0.3
+        },
+        "vague_rate": {
+          "median": 0,
+          "scale": 0.5
+        },
+        "mattr": {
+          "median": 0.848670886075949,
+          "scale": 0.01
+        }
+      },
+      "cMean": -0.00249992493883823,
+      "cSd": 0.2
+    },
+    "calls": [
+      {
+        "callId": "call_bce073deab79a933f9fa572b",
+        "day": 0,
+        "week": 0,
+        "inBaseline": true,
+        "z": {
+          "speech_rate": 0,
+          "mean_pause_ms": 0,
+          "pause_rate": -0.03950896006772986,
+          "filler_rate": 0,
+          "wfp_rate": 0,
+          "vague_rate": 0,
+          "mattr": 0.7764541665072011
+        },
+        "c": 0.06064663011928186,
+        "d": 0.3157327752906004,
+        "ewma": 0,
+        "cusum": 0
+      },
+      {
+        "callId": "call_f17a3b37da96b0ae551d8987",
+        "day": 2,
+        "week": 0,
+        "inBaseline": true,
+        "z": {
+          "speech_rate": -0.0223301490471016,
+          "mean_pause_ms": -0.7375,
+          "pause_rate": 0,
+          "filler_rate": 0,
+          "wfp_rate": 0,
+          "vague_rate": 0.5361930294906166,
+          "mattr": -0.19463978746678823
+        },
+        "c": -0.1024440918322065,
+        "d": -0.49972083446684135,
+        "ewma": 0,
+        "cusum": 0
+      },
+      {
+        "callId": "call_7ccee5c39e359efa36d091e5",
+        "day": 4,
+        "week": 0,
+        "inBaseline": true,
+        "z": {
+          "speech_rate": 0.031452995699015676,
+          "mean_pause_ms": 0.11875,
+          "pause_rate": 0.04700870395534151,
+          "filler_rate": 0,
+          "wfp_rate": 0,
+          "vague_rate": 0,
+          "mattr": 0
+        },
+        "c": 0.03429768689640995,
+        "d": 0.18398805917624086,
+        "ewma": 0,
+        "cusum": 0
+      },
+      {
+        "callId": "call_edc3330b16975930950403e2",
+        "day": 7,
+        "week": 1,
+        "inBaseline": false,
+        "z": {
+          "speech_rate": 0.2590116506861818,
+          "mean_pause_ms": 4,
+          "pause_rate": -0.03395417600995998,
+          "filler_rate": 0,
+          "wfp_rate": 0,
+          "vague_rate": 0,
+          "mattr": -0.2056386651325015
+        },
+        "c": 0.7169109812365168,
+        "d": 3.5970545308767745,
+        "ewma": 0.719410906175355,
+        "cusum": 3.0970545308767745
+      },
+      {
+        "callId": "call_caf721e367a11dd737f647b5",
+        "day": 9,
+        "week": 1,
+        "inBaseline": false,
+        "z": {
+          "speech_rate": 0.25955949595091854,
+          "mean_pause_ms": 4,
+          "pause_rate": -0.04503458515406766,
+          "filler_rate": 0,
+          "wfp_rate": 0,
+          "vague_rate": 0,
+          "mattr": 2.499618728076747
+        },
+        "c": 0.9503190043191695,
+        "d": 4.764094646290038,
+        "ewma": 1.5283476541982917,
+        "cusum": 7.361149177166813
+      },
+      {
+        "callId": "call_2b51685d6bec803eda4d13b7",
+        "day": 11,
+        "week": 1,
+        "inBaseline": false,
+        "z": {
+          "speech_rate": 0.265570668019123,
+          "mean_pause_ms": 4,
+          "pause_rate": -0.05053128026613152,
+          "filler_rate": 0,
+          "wfp_rate": 0,
+          "vague_rate": 0,
+          "mattr": -2.2620405215341255
+        },
+        "c": 0.536351152519292,
+        "d": 2.6942553872906507,
+        "ewma": 1.7615292008167636,
+        "cusum": 9.555404564457463
+      },
+      {
+        "callId": "call_7376f65c011e78231981b8cb",
+        "day": 14,
+        "week": 2,
+        "inBaseline": false,
+        "z": {
+          "speech_rate": 0.5484408100101689,
+          "mean_pause_ms": 4,
+          "pause_rate": -0.04503458515406766,
+          "filler_rate": 0,
+          "wfp_rate": 0,
+          "vague_rate": 0,
+          "mattr": 2.2586548726551414
+        },
+        "c": 0.9796058541188993,
+        "d": 4.910528895288688,
+        "ewma": 2.3913291397111487,
+        "cusum": 13.96593345974615
+      },
+      {
+        "callId": "call_c996aa7b73e32493d2dabf53",
+        "day": 16,
+        "week": 2,
+        "inBaseline": false,
+        "z": {
+          "speech_rate": 0.5457370532638237,
+          "mean_pause_ms": 4,
+          "pause_rate": -0.022756202843103424,
+          "filler_rate": 0,
+          "wfp_rate": 0,
+          "vague_rate": 0.5305039787798408,
+          "mattr": 0.9890398271069856
+        },
+        "c": 0.9187396092807188,
+        "d": 4.606197671097785,
+        "ewma": 2.8343028459884763,
+        "cusum": 18.072131130843935
+      },
+      {
+        "callId": "call_28f729dd994b7e57b825d44a",
+        "day": 18,
+        "week": 2,
+        "inBaseline": false,
+        "z": {
+          "speech_rate": 0.578968724876853,
+          "mean_pause_ms": 4,
+          "pause_rate": 0.04700870395534151,
+          "filler_rate": 0,
+          "wfp_rate": 0,
+          "vague_rate": 0,
+          "mattr": -1.1518987341774367
+        },
+        "c": 0.7043527063901699,
+        "d": 3.53426315664504,
+        "ewma": 2.974294908119789,
+        "cusum": 21.106394287488975
+      },
+      {
+        "callId": "call_32418684098eb0cc9bd46374",
+        "day": 21,
+        "week": 3,
+        "inBaseline": false,
+        "z": {
+          "speech_rate": 0.8758558497336935,
+          "mean_pause_ms": 4,
+          "pause_rate": -0.022756202843103424,
+          "filler_rate": 0,
+          "wfp_rate": 0,
+          "vague_rate": 0,
+          "mattr": -1.1999845631368244
+        },
+        "c": 0.7396708461429874,
+        "d": 3.7108538554091277,
+        "ewma": 3.1216066975776573,
+        "cusum": 24.3172481428981
+      },
+      {
+        "callId": "call_0d435b9d8b579caef992af4c",
+        "day": 23,
+        "week": 3,
+        "inBaseline": false,
+        "z": {
+          "speech_rate": 0.8390752005632691,
+          "mean_pause_ms": 4,
+          "pause_rate": -0.06143878462913355,
+          "filler_rate": 0,
+          "wfp_rate": 0,
+          "vague_rate": 0,
+          "mattr": 2.9327602493858684
+        },
+        "c": 1.0859159201090558,
+        "d": 5.442079225239469,
+        "ewma": 3.5857012031100197,
+        "cusum": 29.25932736813757
+      },
+      {
+        "callId": "call_042bf106875185e32b7954f6",
+        "day": 25,
+        "week": 3,
+        "inBaseline": false,
+        "z": {
+          "speech_rate": 0.8215156865024482,
+          "mean_pause_ms": 4,
+          "pause_rate": -0.05599927200946375,
+          "filler_rate": 0,
+          "wfp_rate": 0,
+          "vague_rate": 0.5221932114882507,
+          "mattr": -0.7377018115666489
+        },
+        "c": 0.8100455851223974,
+        "d": 4.062727550306178,
+        "ewma": 3.6811064725492515,
+        "cusum": 32.82205491844375
+      }
+    ],
+    "weeks": [
+      {
+        "week": 0,
+        "calls": 3,
+        "weeklyD": -2.7755575615628914e-17,
+        "baselineWeek": true,
+        "meets": false,
+        "ewma": 0,
+        "ewmaLimit": 0.9000000000000001,
+        "cusum": 0,
+        "cusumSignal": false,
+        "slopePerWeek": -0.23055325320012918,
+        "mkP": 1,
+        "repeatsSum": 0,
+        "repeatsCard": false,
+        "wellbeingCard": false,
+        "watch": false,
+        "nudge": false,
+        "routedToWellbeing": false,
+        "meetsInWindow": 0
+      },
+      {
+        "week": 1,
+        "calls": 3,
+        "weeklyD": 3.6851348548191543,
+        "baselineWeek": false,
+        "meets": true,
+        "ewma": 1.7615292008167636,
+        "ewmaLimit": 0.9000000000000001,
+        "cusum": 9.555404564457463,
+        "cusumSignal": true,
+        "slopePerWeek": 2.5102673281144097,
+        "mkP": 0.1298282296640001,
+        "repeatsSum": 0,
+        "repeatsCard": false,
+        "wellbeingCard": false,
+        "watch": true,
+        "nudge": false,
+        "routedToWellbeing": false,
+        "meetsInWindow": 1
+      },
+      {
+        "week": 2,
+        "calls": 3,
+        "weeklyD": 4.350329907677171,
+        "baselineWeek": false,
+        "meets": true,
+        "ewma": 2.974294908119789,
+        "ewmaLimit": 0.9000000000000001,
+        "cusum": 21.106394287488975,
+        "cusumSignal": true,
+        "slopePerWeek": 1.8209731940135458,
+        "mkP": 0.05892545818561867,
+        "repeatsSum": 5,
+        "repeatsCard": false,
+        "wellbeingCard": false,
+        "watch": true,
+        "nudge": true,
+        "routedToWellbeing": false,
+        "meetsInWindow": 2
+      },
+      {
+        "week": 3,
+        "calls": 3,
+        "weeklyD": 4.405220210318259,
+        "baselineWeek": false,
+        "meets": true,
+        "ewma": 3.6811064725492515,
+        "ewmaLimit": 0.9000000000000001,
+        "cusum": 32.82205491844375,
+        "cusumSignal": true,
+        "slopePerWeek": 1.191678865283118,
+        "mkP": 0.016762023215361355,
+        "repeatsSum": 4,
+        "repeatsCard": true,
+        "wellbeingCard": false,
+        "watch": true,
+        "nudge": false,
+        "routedToWellbeing": false,
+        "meetsInWindow": 3
+      }
+    ]
+  },
+  "driftIndexStandard": {
+    "baseline": {
+      "callIds": [
+        "call_7ccee5c39e359efa36d091e5",
+        "call_edc3330b16975930950403e2",
+        "call_caf721e367a11dd737f647b5",
+        "call_2b51685d6bec803eda4d13b7",
+        "call_7376f65c011e78231981b8cb",
+        "call_c996aa7b73e32493d2dabf53",
+        "call_28f729dd994b7e57b825d44a",
+        "call_32418684098eb0cc9bd46374"
+      ],
+      "endDay": 21,
+      "markers": {
+        "speech_rate": {
+          "median": 125.17831865903237,
+          "scale": 5
+        },
+        "mean_pause_ms": {
+          "median": 979.375,
+          "scale": 191.5333875
+        },
+        "pause_rate": {
+          "median": 2.116416928535935,
+          "scale": 1
+        },
+        "filler_rate": {
+          "median": 0,
+          "scale": 0.5
+        },
+        "wfp_rate": {
+          "median": 0,
+          "scale": 0.3
+        },
+        "vague_rate": {
+          "median": 0,
+          "scale": 0.5
+        },
+        "mattr": {
+          "median": 0.8496990794016115,
+          "scale": 0.01622723780487736
+        }
+      },
+      "cMean": 0.030703959265269243,
+      "cSd": 0.2744563167841786
+    },
+    "calls": [
+      {
+        "callId": "call_bce073deab79a933f9fa572b",
+        "day": 0,
+        "week": 0,
+        "inBaseline": false,
+        "z": {
+          "speech_rate": -0.40565386064147335,
+          "mean_pause_ms": -1.878915236122997,
+          "pause_rate": -0.011153770641198157,
+          "filler_rate": 0,
+          "wfp_rate": 0,
+          "vague_rate": 0,
+          "mattr": 0.5418503812208704
+        },
+        "c": -0.35213872639917104,
+        "d": -1.3949130052834324,
+        "ewma": 0,
+        "cusum": 0
+      },
+      {
+        "callId": "call_f17a3b37da96b0ae551d8987",
+        "day": 2,
+        "week": 0,
+        "inBaseline": false,
+        "z": {
+          "speech_rate": -0.4279840096885749,
+          "mean_pause_ms": -2.0329353805221033,
+          "pause_rate": 0.0283551894265317,
+          "filler_rate": 0,
+          "wfp_rate": 0,
+          "vague_rate": 0.5361930294906166,
+          "mattr": -0.05658415560591547
+        },
+        "c": -0.3813495241463993,
+        "d": -1.5013445062577693,
+        "ewma": 0,
+        "cusum": 0
+      },
+      {
+        "callId": "call_7ccee5c39e359efa36d091e5",
+        "day": 4,
+        "week": 0,
+        "inBaseline": true,
+        "z": {
+          "speech_rate": -0.37420086494245763,
+          "mean_pause_ms": -1.854115382363819,
+          "pause_rate": 0.07536389338187321,
+          "filler_rate": 0,
+          "wfp_rate": 0,
+          "vague_rate": 0,
+          "mattr": 0.06336219004280982
+        },
+        "c": -0.3689167406787824,
+        "d": -1.4560448257355916,
+        "ewma": 0,
+        "cusum": 0
+      },
+      {
+        "callId": "call_edc3330b16975930950403e2",
+        "day": 7,
+        "week": 1,
+        "inBaseline": true,
+        "z": {
+          "speech_rate": -0.14664220995529148,
+          "mean_pause_ms": -0.6865643724909319,
+          "pause_rate": -0.005598986583428278,
+          "filler_rate": 0,
+          "wfp_rate": 0,
+          "vague_rate": 0,
+          "mattr": -0.06336219004280982
+        },
+        "c": -0.15138898505235768,
+        "d": -0.6634678569297332,
+        "ewma": 0,
+        "cusum": 0
+      },
+      {
+        "callId": "call_caf721e367a11dd737f647b5",
+        "day": 9,
+        "week": 1,
+        "inBaseline": true,
+        "z": {
+          "speech_rate": -0.1460943646905548,
+          "mean_pause_ms": -0.6624171464622585,
+          "pause_rate": -0.01667939572753596,
+          "filler_rate": 0,
+          "wfp_rate": 0,
+          "vague_rate": 0,
+          "mattr": 1.6037467940851846
+        },
+        "c": -0.004055219102218597,
+        "d": -0.12664739793480892,
+        "ewma": 0,
+        "cusum": 0
+      },
+      {
+        "callId": "call_2b51685d6bec803eda4d13b7",
+        "day": 11,
+        "week": 1,
+        "inBaseline": true,
+        "z": {
+          "speech_rate": -0.14008319262235033,
+          "mean_pause_ms": -0.6232594826319772,
+          "pause_rate": -0.022176090839599816,
+          "filler_rate": 0,
+          "wfp_rate": 0,
+          "vague_rate": 0,
+          "mattr": -1.3306153609943927
+        },
+        "c": -0.25231764288541286,
+        "d": -1.0312081917693259,
+        "ewma": 0,
+        "cusum": 0
+      },
+      {
+        "callId": "call_7376f65c011e78231981b8cb",
+        "day": 14,
+        "week": 2,
+        "inBaseline": true,
+        "z": {
+          "speech_rate": 0.14278694936869557,
+          "mean_pause_ms": 0.7126694817111194,
+          "pause_rate": -0.01667939572753596,
+          "filler_rate": 0,
+          "wfp_rate": 0,
+          "vague_rate": 0,
+          "mattr": 1.4552533423227536
+        },
+        "c": 0.2724180359154184,
+        "d": 0.8807014518096277,
+        "ewma": 0,
+        "cusum": 0
+      },
+      {
+        "callId": "call_c996aa7b73e32493d2dabf53",
+        "day": 16,
+        "week": 2,
+        "inBaseline": true,
+        "z": {
+          "speech_rate": 0.14008319262235033,
+          "mean_pause_ms": 0.6421856868166131,
+          "pause_rate": 0.005598986583428278,
+          "filler_rate": 0,
+          "wfp_rate": 0,
+          "vague_rate": 0.5305039787798408,
+          "mattr": 0.672855832152198
+        },
+        "c": 0.24166048199798457,
+        "d": 0.7686342409768729,
+        "ewma": 0,
+        "cusum": 0
+      },
+      {
+        "callId": "call_28f729dd994b7e57b825d44a",
+        "day": 18,
+        "week": 2,
+        "inBaseline": true,
+        "z": {
+          "speech_rate": 0.17331486423537967,
+          "mean_pause_ms": 0.6232594826319772,
+          "pause_rate": 0.07536389338187321,
+          "filler_rate": 0,
+          "wfp_rate": 0,
+          "vague_rate": 0,
+          "mattr": -0.6464928993003776
+        },
+        "c": 0.09542465923461588,
+        "d": 0.23581421163004382,
+        "ewma": 0,
+        "cusum": 0
+      },
+      {
+        "callId": "call_32418684098eb0cc9bd46374",
+        "day": 21,
+        "week": 3,
+        "inBaseline": true,
+        "z": {
+          "speech_rate": 0.47020198909222016,
+          "mean_pause_ms": 2.2359026047090613,
+          "pause_rate": 0.005598986583428278,
+          "filler_rate": 0,
+          "wfp_rate": 0,
+          "vague_rate": 0,
+          "mattr": -0.6761256868009926
+        },
+        "c": 0.41280708469290667,
+        "d": 1.3922183679529152,
+        "ewma": 0,
+        "cusum": 0
+      },
+      {
+        "callId": "call_0d435b9d8b579caef992af4c",
+        "day": 23,
+        "week": 3,
+        "inBaseline": false,
+        "z": {
+          "speech_rate": 0.4334213399217958,
+          "mean_pause_ms": 2.1830397585381816,
+          "pause_rate": -0.033083595202601845,
+          "filler_rate": 0,
+          "wfp_rate": 0,
+          "vague_rate": 0,
+          "mattr": 1.8706693144286861
+        },
+        "c": 0.6119499409516032,
+        "d": 2.1178087227024998,
+        "ewma": 0.4235617445405,
+        "cusum": 1.6178087227024998
+      },
+      {
+        "callId": "call_042bf106875185e32b7954f6",
+        "day": 25,
+        "week": 3,
+        "inBaseline": false,
+        "z": {
+          "speech_rate": 0.4158618258609749,
+          "mean_pause_ms": 2.077966693926927,
+          "pause_rate": -0.02764408258293205,
+          "filler_rate": 0,
+          "wfp_rate": 0,
+          "vague_rate": 0.5221932114882507,
+          "mattr": -0.3912449466967039
+        },
+        "c": 0.4402884468870858,
+        "d": 1.492348554483799,
+        "ewma": 0.6373191065291599,
+        "cusum": 2.610157277186299
+      }
+    ],
+    "weeks": [
+      {
+        "week": 0,
+        "calls": 3,
+        "weeklyD": -1.450767445758931,
+        "baselineWeek": true,
+        "meets": false,
+        "ewma": 0,
+        "ewmaLimit": 0.9000000000000001,
+        "cusum": 0,
+        "cusumSignal": false,
+        "slopePerWeek": -0.10698068579127851,
+        "mkP": 1,
+        "repeatsSum": 0,
+        "repeatsCard": false,
+        "wellbeingCard": false,
+        "watch": false,
+        "nudge": false,
+        "routedToWellbeing": false,
+        "meetsInWindow": 0
+      },
+      {
+        "week": 1,
+        "calls": 3,
+        "weeklyD": -0.6071078155446227,
+        "baselineWeek": true,
+        "meets": false,
+        "ewma": 0,
+        "ewmaLimit": 0.9000000000000001,
+        "cusum": 0,
+        "cusumSignal": false,
+        "slopePerWeek": 0.4248366339662657,
+        "mkP": 0.1298282296640001,
+        "repeatsSum": 0,
+        "repeatsCard": false,
+        "wellbeingCard": false,
+        "watch": false,
+        "nudge": false,
+        "routedToWellbeing": false,
+        "meetsInWindow": 0
+      },
+      {
+        "week": 2,
+        "calls": 3,
+        "weeklyD": 0.6283833014721815,
+        "baselineWeek": true,
+        "meets": false,
+        "ewma": 0,
+        "ewmaLimit": 0.9000000000000001,
+        "cusum": 0,
+        "cusumSignal": false,
+        "slopePerWeek": 0.9209167795752828,
+        "mkP": 0.014283791017106529,
+        "repeatsSum": 5,
+        "repeatsCard": false,
+        "wellbeingCard": false,
+        "watch": false,
+        "nudge": false,
+        "routedToWellbeing": false,
+        "meetsInWindow": 0
+      },
+      {
+        "week": 3,
+        "calls": 3,
+        "weeklyD": 1.667458548379738,
+        "baselineWeek": true,
+        "meets": false,
+        "ewma": 0.6373191065291599,
+        "ewmaLimit": 0.9000000000000001,
+        "cusum": 2.610157277186299,
+        "cusumSignal": false,
+        "slopePerWeek": 0.9846132995610298,
+        "mkP": 0.00038968937681882476,
+        "repeatsSum": 4,
+        "repeatsCard": true,
+        "wellbeingCard": false,
+        "watch": false,
+        "nudge": false,
+        "routedToWellbeing": false,
+        "meetsInWindow": 0
+      }
+    ]
+  }
+}

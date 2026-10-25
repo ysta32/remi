@@ -1,0 +1,11 @@
+{
+  "name": "remi-synthetic-calls",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "check": "node --check cli.mjs && node --check audio-cli.mjs && for file in src/*.mjs catalog/*.mjs tests/*.mjs; do node --check \"$file\" || exit; done"
+  }
+}

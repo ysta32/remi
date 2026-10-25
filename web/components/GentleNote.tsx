@@ -32,7 +32,7 @@ export function GentleNote({ nudge, onDismiss }: { nudge: Timeline['nudges'][num
                 {copy.nudgeLinkLabel}
               </a>
             )}
-            <button type="button" onClick={onDismiss} className="rounded-full px-4 py-2 font-bold text-ink-2 hover:bg-ground hover:text-ink">
+            <button type="button" onClick={onDismiss} className="rounded-full border border-line px-4 py-1.5 font-bold text-ink-2 hover:border-ink-2 hover:text-ink">
               Got it, hide this
             </button>
           </div>

@@ -1,11 +1,13 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import type { ElderProfile } from '@/lib/api';
 import { formatDay, formatDuration, formatTime } from '@/lib/format';
 import { snapshotCaption } from '@/lib/snapshot';
 import type { CallCard } from '@/lib/types';
 import { PhotoWindow } from './PhotoWindow';
+import { LivePill, LiveSoFar } from './recap/LiveSoFar';
 import { SimulatedBadge } from './SimulatedBadge';
 import { useSeen } from './useSeen';
 
@@ -44,7 +46,7 @@ function CareNote({ category, name, compact }: { category: NonNullable<CallCard[
 const NEW_TAG_MS = 8_000; // stays this long after the card has actually been on screen
 
 export function SnapshotCard({
-  call, variant, isNew, confirmed, photos, name,
+  call, variant, isNew, confirmed, photos, name, href,
 }: {
   call: CallCard;
   variant: 'feature' | 'compact';
@@ -52,6 +54,7 @@ export function SnapshotCard({
   confirmed: boolean;
   photos: ElderProfile['photos'];
   name: string;
+  href?: string; // this chat's recap page
 }) {
   const [ref, seen] = useSeen<HTMLElement>();
   const [newExpired, setNewExpired] = useState(false);
@@ -70,6 +73,7 @@ export function SnapshotCard({
 
   return (
     <article
+      id={`call-${call.id}`}
       ref={ref}
       className={`rounded-[10px] border border-line bg-card shadow-[0_16px_30px_-20px_rgba(0,0,0,0.35)] ${
         feature ? 'p-4 pb-7 md:-rotate-1 md:p-5 md:pb-8' : 'p-4 pb-6 md:rotate-[0.6deg]'
@@ -89,13 +93,13 @@ export function SnapshotCard({
       {call.safety && <CareNote category={call.safety.category} name={name} compact={!feature} />}
 
       {busy ? (
-        <div className="mt-4 space-y-2.5" role="status">
-          <p className="font-bold text-ink">
-            {call.status === 'in_progress' ? `${name} is chatting with Remi right now…` : 'Writing up today’s chat…'}
-          </p>
-          <div className="shimmer h-3 w-11/12 rounded-full" />
-          <div className="shimmer h-3 w-4/5 rounded-full" />
-          {feature && <div className="shimmer h-3 w-2/3 rounded-full" />}
+        <div className="mt-4 space-y-3">
+          <LivePill call={call} />
+          {confirmed ? <LiveSoFar call={call} /> : (
+            <p className="font-bold text-ink" role="status">
+              {call.status === 'in_progress' ? `${name} is chatting with Remi right now…` : 'Writing up today’s chat…'}
+            </p>
+          )}
         </div>
       ) : call.status === 'failed' ? (
         <p className="mt-3 text-ink-2">We couldn’t write up this chat. It still counts as a call.</p>
@@ -139,6 +143,11 @@ export function SnapshotCard({
             </div>
           )}
         </>
+      )}
+      {href && (
+        <Link href={href} className="mt-4 block border-t border-line pt-3 text-right text-base font-bold text-ink-2 hover:text-ink">
+          {busy ? 'Follow along →' : 'See the full recap →'}
+        </Link>
       )}
     </article>
   );

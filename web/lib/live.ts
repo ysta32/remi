@@ -1,4 +1,5 @@
 // Decisions shared by the pollers on Hal's page and the home "Today" row.
+import type { CallCard } from './types';
 
 const POLL_BUSY_MS = 3_000;
 const POLL_IDLE_MS = 15_000;
@@ -15,14 +16,15 @@ export function pollDelay(processing: boolean): number {
   return processing ? POLL_BUSY_MS : POLL_IDLE_MS;
 }
 
+// A call that is still going counts too: photos and Sam's question arrive mid-call, and
+// `processing` only covers the write-up after hang-up.
+export function isBusy(t: { processing: boolean; calls: { status: CallCard['status'] }[] }): boolean {
+  return t.processing || t.calls.some((c) => c.status === 'in_progress');
+}
+
 // Keys are call ids suffixed with their status ("c1|done") plus fun-fact ids. Returns the ids
 // that are new since the last poll; the first load (no previous keys) reports nothing.
 export function freshIds(previous: Set<string> | null, keys: string[]): string[] {
   if (!previous) return [];
   return keys.filter((k) => !previous.has(k)).map((k) => k.split('|')[0]);
-}
-
-/** True while any call is in progress or being written up: poll fast. */
-export function busy(t: { processing: boolean; calls: { status: string }[] }): boolean {
-  return t.processing || t.calls.some((c) => c.status === 'in_progress');
 }

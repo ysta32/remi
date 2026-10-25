@@ -15,7 +15,9 @@ function setConsent(elderId: string, fam: Record<string, number>, elder: Record<
 
 function seedRich(elderId: string) {
   const db = getSqlite();
+  // Legacy topic-chain coverage uses simulated calls; real calls use validated detector results.
   const c1 = insertCall(elderId, {
+    is_simulated: 1,
     started_at: '2026-10-01T14:00:00.000Z',
     duration_s: 300,
     summary: 'Talked about the shipyard.',
@@ -118,6 +120,7 @@ describe('timeline consent filtering', () => {
     expect(sr.points.map((p) => p.value)).toEqual([140, 120]);
     expect(sr.points[1].isSimulated).toBe(true);
     expect(t.repeats).toHaveLength(1);
+    expect(t.repeats[0].isSimulated).toBe(true);
     expect(t.repeats[0].summary).toBe('The shipyard fire');
     expect(t.repeats[0].dates).toHaveLength(2);
     expect(t.nudges).toHaveLength(1);
@@ -143,6 +146,15 @@ describe('timeline consent filtering', () => {
     expect(t.funFacts[0].askedBy).toBe('Sam');
     expect(t.nudges.map((n) => n.type).sort()).toEqual(['cognitive_checkup', 'wellbeing']);
     expect(t.nudges.find((n) => n.type === 'wellbeing')!.link).toBeNull();
+  });
+
+  it('redacts simulated legacy story summaries when only speech trends are shared', () => {
+    const elderId = insertElder();
+    seedRich(elderId);
+    setConsent(elderId, { fam_summaries: 1, fam_speech_trends: 1 }, { elder_summaries: 0, elder_speech_trends: 1 });
+    const t = buildTimeline(elderId)!;
+    expect(t.markers).toHaveLength(10);
+    expect(t.repeats).toEqual([]);
   });
 
   it('404 for an unknown elder', async () => {

@@ -1,5 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import { busy, freshIds, pollDelay, settled } from '../live';
+import { freshIds, isBusy, pollDelay, settled } from '../live';
+
+describe('isBusy', () => {
+  it('is busy while a call is in progress, so updates during the call arrive fast', () => {
+    expect(isBusy({ processing: false, calls: [{ status: 'in_progress' }] })).toBe(true);
+  });
+
+  it('is busy while a call is being written up', () => {
+    expect(isBusy({ processing: true, calls: [{ status: 'processing' }] })).toBe(true);
+  });
+
+  it('is idle when every call is done', () => {
+    expect(isBusy({ processing: false, calls: [{ status: 'done' }, { status: 'failed' }] })).toBe(false);
+  });
+});
 
 describe('settled', () => {
   it('uses the new value when the request succeeded', () => {
@@ -25,13 +39,5 @@ describe('freshIds', () => {
 
   it('reports only ids that are new since the last poll, with the status suffix removed', () => {
     expect(freshIds(new Set(['c1|processing', 'ff1']), ['c1|done', 'ff1', 'ff2'])).toEqual(['c1', 'ff2']);
-  });
-});
-
-describe('busy', () => {
-  it('polls fast while a call is live, so a mid-call safety note shows up within seconds', () => {
-    expect(busy({ processing: false, calls: [{ status: 'in_progress' }] })).toBe(true);
-    expect(busy({ processing: true, calls: [] })).toBe(true);
-    expect(busy({ processing: false, calls: [{ status: 'done' }] })).toBe(false);
   });
 });

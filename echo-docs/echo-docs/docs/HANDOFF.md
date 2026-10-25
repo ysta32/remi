@@ -49,6 +49,7 @@ Each agent edits **only its own section** plus appends to "Requests" and "Contra
   - The elder timezone is validated.
 
 ## C — Analysis
+- Integration checkpoint (Oct 25): resolved `ws/ryan-synthetic-data` against main `3cd740b`, preserving current recap/polling/layout, standalone repeat evidence and older-call targets, authored-timing notices, and computed-only Drift Index labels. New regression tests cover six-card pagination and recap-card anchors. Web300 + detector245 + generator150 tests passed (695 total; 1 skipped), typecheck/lint/syntax and production build passed; 78 API smoke checks passed on a disposable database. Build reports four dynamic-filesystem tracing warnings in existing backend paths. Frozen detector settings are in `docs/evaluation/`; human label review remains pending. No new audio generation or provider calls were made.
 - Status: C1–C5 done. `processCall` runs stt → acoustic (voice markers) → extract → markers → repetition → done → recompute. stt, acoustic, extract and repetition are soft steps: a failure is logged and the call still finishes.
   - If extraction fails twice, the summary falls back to "{name} and Remi chatted for N minutes."
   - The WAV is deleted in a `finally`.
@@ -99,9 +100,17 @@ Each agent edits **only its own section** plus appends to "Requests" and "Contra
   - Nudge copy says "his" (verbatim from the spec).
   - REPEAT_COSINE 0.56 was tuned on hand-written pairs, and its margin over the closest different-story pair (0.51) is thin.
 
+### C — Automatic real-call detector integration (2026-10-25)
+- Verified after fresh review: web325 pass/1skip, detector245, synthetic150, typecheck/lint/build, isolated production smoke78. Review fixes search all seven-day candidates, separate real DI baselines from simulated calls, and redact legacy summaries without summary consent. Four existing build tracing warnings remain.
+- The post-call repetition step now invokes the evaluated standalone detector for real calls. Fixed model/prompt/embedding/dimensions/threshold match the frozen baseline. Legacy simulated seed processing remains compatible.
+- Separate live cache reuses valid chronological prefixes and invalidates downstream evidence after corrections, deletions, safety exclusions and backdated calls. Sharing and inputs are checked before provider requests and atomic persistence. Safety calls and simulated history are excluded.
+- Family repeatAnalysis and read-only DI now consume live results. Real repeat_stories marker uses validated seven-day unprompted story matches; absent evidence is NULL/na. Timeline reads revalidate before exposing counts/quotes. Provider failure is soft and uses a safe error code.
+- Run instructions and exact human two-call smoke check: web/README.md, Automatic repeat analysis. Requires private OPENAI_API_KEY and effective summaries + speechTrends; initial historical catch-up can take longer. No audio generation or threshold tuning. Real FaceTime/provider smoke remains unperformed; HTTP-only test doubles exercise the real detector, SQLite and queued /complete path.
+
 ## D — Family app + demo
 - Status (Sat ~11:20 PM): redesign **merged to `main`** (PR #2, `70c4c3a`), including `ws/bc-backend`. Tests 147/147, Ryan's detector 245/245, production build passes. Brighter Sky design; spec `docs/superpowers/specs/2026-10-24-remi-family-frontend-design.md`, plan `docs/superpowers/plans/2026-10-24-remi-family-frontend.md`.
 - Pages done: `/` judge-facing home (hero, live "Today on Remi" row, how it works, signals, privacy, closing CTA); `/elders/[id]` with **Chats** (newest snapshot + develop/NEW moment, gentle note below it, earlier chats, waiting questions, fun facts) and **How he's doing** (`?tab=doing`: four signals — pauses & hesitation, speaking pace, vague words, retold stories — with plain status words).
+- **New (Sun ~4:30 AM, `ws/d-family-app`): chat recap page** `/elders/[id]/chats/[callId]`. Every chat card opens it (Hal's page, home Today row). It shows the summary, family answer, fun fact, photos, a small month calendar to jump between chats, and "How he sounded": one shared-axis chart of pauses, pace, vague words and retold stories with this chat marked. Earlier chats are now roomy clickable cards running full width. **Live calls:** a call `in_progress` shows "Chatting now · m:ss" and what has happened so far (hello, photo shown, question asked) from the agent's events, and both pollers now poll every 3 s while a call is in progress (`isBusy` in `lib/live.ts`; before, only `processing` polled fast). Plan: `docs/superpowers/plans/2026-10-25-remi-chat-recap.md`. Hero: sun removed from the illustration, no highlight on "stories", judge lines removed.
 - How to run: `cd web && npm install && npm run dev` → http://localhost:3000 and http://localhost:3000/elders/elder-hal-demo. Sample-data bar on Hal's page: `?fixture=drift|stable|unconfirmed|processing|after-call`.
 - Fixture vs live: fixtures by default; `NEXT_PUBLIC_USE_FIXTURES=0` reads B's API (run `npm run seed -- --scenario drift` first). In live mode the sample-data bar is hidden.
 - Seed results (branch `integrate/main`): `web/scripts/seed.ts` implemented from `web/scripts/demo-data.ts`; `npm run seed -- --scenario drift|stable` and `POST /api/dev/seed` both work. drift → exactly 1 `cognitive_checkup` nudge (W−2, W−1, all four groups); stable → none (`web/scripts/__tests__/seed.test.ts`). Live check with `NEXT_PUBLIC_USE_FIXTURES=0`: seeded timeline, profile and agent context are correct (Sam's question pending, car photo first), and a simulated agent call lands as the newest card with the nudge kept. Photos are seeded from `fixtures/demo/p-*.jpg` when present; until then their file URLs 404 and the UI shows the photo-icon panel.
@@ -112,6 +121,13 @@ Each agent edits **only its own section** plus appends to "Requests" and "Contra
   2. Three family photos (from ChatGPT, owned by Jimmy) into `fixtures/demo/` as `p-shops.jpg`, `p-lake.jpg`, `p-car.jpg` (JPEG or PNG, ≤ 8 MB); re-seed and they're served to the UI and the agent.
   3. Voice chart (pitch variation / range) on the "How he's doing" tab once Siyuan's `c5247e6` lands on `main`. Sound only, never mood.
   4. Setup/manage pages for Kevin's memory moments + emergency contact, only if humans approve that contract change (see Requests).
+
+## Ryan — synthetic calls and audio (Task 2)
+- Branch: `ws/ryan-synthetic-data`; standalone `synthetic/` package. Seeded transcript generator produces one fictional elder, 12 calls across four weeks, planted repeats/retellings and distinct same-topic incidents. Ground truth and tuning/held-out incident families stay separate from detector inputs. Additive offline importer and dashboard provenance/unavailable-analysis support are now implemented; existing analysis pipelines and call agent are unchanged.
+- Run from repository root: `node synthetic/cli.mjs --output synthetic/output-release` (fresh directory only), then `node synthetic/audio-cli.mjs --input synthetic/output-release` for an offline audio plan. See `synthetic/README.md` for paid generation commands.
+- Audio now uses OpenAI `gpt-4o-mini-tts-2025-12-15`, default voices cedar/marin, with `OPENAI_API_KEY` supplied privately. It writes explicitly simulated full-conversation and caller-only 24 kHz WAVs with exact inserted silence and sample-derived timing. Cached PCM reproduces assembly; fresh TTS is not deterministic. Live generation completed: `synthetic/audio-openai-all/` contains 12 conversations and 12 caller-only WAVs (about 35 minutes); all 96 inserted silences and cache-only byte-identical replay verified. Files are local/ignored. Subjective listening, STT and acoustic analysis remain unverified.
+- Verified offline: 150 synthetic tests, 245 detector tests, 199 web tests, both syntax checks, web typecheck and lint. Dry run: 12 calls, 252 speech segments, 30,271 text characters and 96 planted pauses. No semantic accuracy or medical claim.
+- Siyuan handoff: use a copy of caller-only WAV with its audio-derived utterance times; the pipeline deletes input audio. Authored transcript word times are not audio measurements. Imported 12 calls into fresh local `web/data/synthetic-transcripts-demo.db`: 96 marker rows, 7 baselines, no topics/facts/nudges. Legacy repeat values remain NULL/na. The separate standalone detector now has a consent-filtered timeline panel and actual persisted results: 12 calls analyzed with OpenAI, 24 matches (14 unprompted, 8 prompted, 2 uncertain; 16 stories, 8 questions) at provisional0.85. Cached rerun reuses all results. Run import, analyze:synthetic and live dashboard using `web/README.md`; no reset/seed is needed. This combined demo is not held-out accuracy evaluation. Elder ID is `elder-synthetic-hal-bennett`, distinct from the existing demo elder.
 
 ## Requests (from → to: what, by when)
 - D → B: `web/` is scaffolded (Next 16.4.3, Tailwind 4, Recharts, vitest; `web/lib/types.ts` mirrors contracts §3, `web/lib/config.ts` has `APP_NAME`). Please build `web/db`, `web/app/api` on top of this branch rather than a second scaffold.
@@ -143,9 +159,17 @@ Each agent edits **only its own section** plus appends to "Requests" and "Contra
 - A → B/C/D (Oct 25 2:55 AM): safety calls now keep a specific summary (details of the moment left out) ending in SAFETY_SUMMARY_LINE, with mood null and no mood evidence. Timeline cards carry `safety` and SnapshotCard shows a care note. Please keep the new copy as-is or tell A.
 
 ## Contract changes (date time — change — affected workstreams)
+- 2026-10-25 — Review correction: seven-day live markers search all qualifying in-window candidates; real Drift Index excludes fictional baseline calls; legacy simulated story summaries require summaries consent. Affected B/C/D.
+- 2026-10-25 — Automatic real-call detector cache `live_detector_results`, unchanged optional repeatAnalysis DTO, and validated live repeat_stories marker source. Frozen settings 0.85; simulation and real history separated. Affected B/C/D; see contracts §10.
+- 2026-10-25 — Add standalone `detector_results` table and optional consent-filtered `Timeline.repeatAnalysis` (counts, three labels, same-elder earlier links, quote evidence, provenance). Legacy topics/repeat markers unchanged; affected B/C/D.
 - Sun Oct 25 — `[contract]` additive: `MarkerKey` += `pitch_var`, `pitch_range`; `MarkerGroup` += `voice`; unit `st` (semitones). No DB change (`call_markers.marker` is text). Timeline now returns 10 marker series. Chart only: voice never drives nudges. Definitions in markers.md §4b. Affects C (computes), B (timeline passes through), D (render 2 more charts; group `voice`).
 - Oct 25 2:55 AM: `CallCard.safety?: {category, at} | null` (additive, optional; the note is never exposed). Affects B, D.
 
 ## Decisions log (human-confirmed only)
 - Sat Oct 24 ~6:14 PM — Team committed to the elder FaceTime conversation + memory + family loop project.
 - Sat Oct 24 ~8:25 PM — FaceTime-first flow replaces iMessage voice notes as the primary channel.
+
+- 2026-10-25 [contract] B/D: additive optional Timeline.driftIndex and DriftIndexView
+  implemented as a consent-filtered read-only adapter using unchanged production defaults;
+  full interface documented in contracts.md and web/lib/types.ts. No notification delivery.
+  Synthetic importer now iterates seven TEXT_MARKER_KEYS independently of ten chart keys.

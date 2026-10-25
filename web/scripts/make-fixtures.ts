@@ -16,7 +16,8 @@ const OUT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'fixtures'
 const NOW = new Date();
 
 // docs/markers.md §5 labels and explainers; SPEC.md §10 concern + group.
-const META: Record<MarkerKey, { label: string; explainer: string; concern: 'up' | 'down'; group: MarkerGroup }> = {
+type DemoMarkerKey = MarkerKey;
+const META: Record<DemoMarkerKey, { label: string; explainer: string; concern: 'up' | 'down'; group: MarkerGroup }> = {
   speech_rate: { label: 'Speaking pace', explainer: 'How quickly he talks while speaking, compared with his usual.', concern: 'down', group: 'pace' },
   pause_rate: { label: 'Pauses', explainer: 'How often he pauses mid-thought.', concern: 'up', group: 'pauses' },
   mean_pause_ms: { label: 'Pause length', explainer: 'How long those pauses usually last.', concern: 'up', group: 'pauses' },
@@ -53,13 +54,13 @@ function build(scenario: Scenario, opts: { confirmed: boolean; live?: LiveCall }
     const m = markersFor(c.n, scenario, rand);
     const stories = storiesFor(c, scenario);
     const repeats = scenario === 'drift' && c.n >= 10 ? 1 : 0;
-    return { c, id: `call-${String(c.n).padStart(2, '0')}`, at: dates[i], m: { ...m, repeat_stories: repeats } as Record<MarkerKey, number>, stories };
+    return { c, id: `call-${String(c.n).padStart(2, '0')}`, at: dates[i], m: { ...m, repeat_stories: repeats } as Record<DemoMarkerKey, number>, stories };
   });
 
   const proposed: ConsentMap = { summaries: true, funFacts: true, speechTrends: true, mood: true };
   const effective: ConsentMap = opts.confirmed ? proposed : { summaries: false, funFacts: false, speechTrends: false, mood: false };
 
-  const markers: MarkerSeries[] = (Object.keys(META) as MarkerKey[]).map((key) => {
+  const markers: MarkerSeries[] = (Object.keys(META) as DemoMarkerKey[]).map((key) => {
     const meta = META[key];
     const base = key === 'repeat_stories' ? null : (() => {
       const xs = rows.slice(0, 6).map((r) => r.m[key]);
@@ -135,7 +136,7 @@ function build(scenario: Scenario, opts: { confirmed: boolean; live?: LiveCall }
     : [];
 
   const groups: MarkerGroup[] = ['pace', 'pauses', 'words', 'repetition'];
-  const list = groups.map((g) => PLAIN[g]).join('; ');
+  const list = groups.map((g) => PLAIN[g as keyof typeof PLAIN]).join('; ');
   const nudges: Timeline['nudges'] = scenario === 'drift' && effective.speechTrends
     ? [{
         id: 'nudge-checkup', type: 'cognitive_checkup', createdAt: rows[11].at.toISOString(),

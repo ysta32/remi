@@ -126,6 +126,23 @@ CREATE TABLE calls (
   created_at TEXT NOT NULL
 );
 
+CREATE TABLE detector_results (
+  call_id TEXT PRIMARY KEY REFERENCES calls(id) ON DELETE CASCADE,
+  corpus_hash TEXT NOT NULL,
+  settings_hash TEXT NOT NULL,
+  result_json TEXT NOT NULL,             -- complete successful standalone AnalysisResult; internal only
+  analyzed_at TEXT NOT NULL
+);
+
+CREATE TABLE live_detector_results (
+  call_id TEXT PRIMARY KEY REFERENCES calls(id) ON DELETE CASCADE,
+  prefix_hash TEXT NOT NULL,             -- ordered real inputs through this call
+  history_hash TEXT NOT NULL,            -- actual earlier extracted items, including vectors
+  settings_hash TEXT NOT NULL,
+  result_json TEXT NOT NULL,             -- complete successful AnalysisResult; internal only
+  analyzed_at TEXT NOT NULL
+);
+
 CREATE TABLE call_events (
   id TEXT PRIMARY KEY,
   call_id TEXT NOT NULL REFERENCES calls(id) ON DELETE CASCADE,
@@ -281,6 +298,16 @@ export interface MarkerSeries {
   points: { callId: string; at: string; value: number | null; z: number | null; confidence: 'high' | 'low' | 'na'; isSimulated: boolean }[];
 }
 
+export interface RepeatAnalysisView {
+  scope: 'all_prior_calls';
+  status: 'complete' | 'partial';
+  analyzedCallCount: number;
+  totalCallCount: number;
+  counts: { total: number; unprompted: number; prompted: number; uncertain: number; stories: number; questions: number };
+  provenance: { extractionModel: string | null; embeddingModel: string; threshold: number; detectorVersion: string };
+  matches: { callId: string; startedAt: string; priorCallId: string; priorStartedAt: string; kind: 'story' | 'question'; label: 'Unprompted repeat' | 'Prompted retelling' | 'Uncertain'; similarity: number; summary: string | null; quote: string | null; priorQuote: string | null; isSimulated: boolean }[];
+}
+
 export interface Timeline {
   elder: { id: string; displayName: string; preferredName: string; language: Lang };
   consent: { proposed: ConsentMap; elderConfirmed: boolean; effective: ConsentMap };
@@ -289,6 +316,7 @@ export interface Timeline {
   markers: MarkerSeries[];            // [] unless speechTrends consented
   repeats: { summary: string; dates: string[]; isSimulated: boolean }[]; // [] unless speechTrends consented
   nudges: { id: string; type: 'cognitive_checkup' | 'wellbeing'; createdAt: string; message: string; link: string | null; isSimulated: boolean }[];
+  repeatAnalysis?: RepeatAnalysisView; // omitted without effective speechTrends consent or valid results
   processing: boolean;
   generatedAt: string;
 }
@@ -367,7 +395,7 @@ Body: one `CallEvent`. → `204`. Side effects: `photo_shown` updates `photos.la
 // web/lib/analysis/pipeline.ts
 export async function processCall(callId: string): Promise<void>; // never throws; writes status/failed_step/error
 
-// Rebuild baselines, z-scores, repeat_stories counts (from topics.repeat_of_topic_id), and nudges
+// Rebuild baselines, z-scores, repeat_stories counts (validated live evidence; simulated calls use topics.repeat_of_topic_id), and nudges
 // for one elder from stored rows. Makes NO model calls (story matching happens in processCall).
 // Used by processCall after each call and by the demo seed. Idempotent.
 export async function recomputeElder(elderId: string): Promise<void>;
@@ -382,3 +410,118 @@ export function markerMeta(key: MarkerKey): { label: string; explainer: string; 
 ## 8. Agent fixture (`agent/fixtures/context.json`)
 
 A valid `CallContext` for Hal (see `docs/demo.md`), with `imageUrl`s pointing at `agent/fixtures/photos/*.jpg` via `file://` paths for `MOCK_CONTEXT=1`.
+
+
+## 9. Explicit synthetic standalone repeat analysis (2026-10-25)
+
+`web/lib/server/synthetic-repeats.ts` exports:
+
+```ts
+analyzeSyntheticRepeats(
+  input: { inputDir: string; databasePath: string; apply?: boolean },
+  options?: OpenAIOptions & {
+    threshold?: number;
+    onProgress?: (event: { completed: number; total: number; callId: string; repeatCount: number }) => void;
+  },
+)
+```
+
+Both paths must be absolute and canonical, with no symlinked ancestors. The database must already exist.
+Default dry run validates canonical allowlisted transcript source, exact imported simulated corpus, and effective
+`speechTrends` plus `summaries` consent without credentials, network, migration, or writes. Explicit `apply`
+uses the actual standalone detector chronologically, passing only actual returned items as earlier history.
+It reads no ground-truth, split or detector-input files. The entire successful batch is saved in one transaction;
+any unavailable result aborts the batch and preserves prior successful results. Consent and source/corpus are
+rechecked before each provider request (including retries) and before final persistence.
+
+`detector_results.corpus_hash` binds all chronologically ordered call inputs, canonical utterances (including
+authored word timing), IDs, dates and language. `settings_hash` binds detector/prompt versions, extraction
+model, embedding model/dimensions and threshold, never credentials. A cache hit requires every call to have a
+validated successful result for the same current corpus/settings. Missing or changed prior results require a
+full chronological replay. The separate storage never changes legacy `topics`, `repeat_stories`, other
+markers, baselines or nudges. The table cascades on call deletion.
+
+The timeline optional `repeatAnalysis` is an allowlist from successful validated results. It is omitted when
+there are no valid results or effective `speechTrends` consent is absent. Both quote fields and the summary
+are null without effective `summaries` consent. Only `isRepeat` matches count. Prior evidence must be an
+existing same-elder strictly earlier call in the current corpus. Stale corpus/settings mixtures are ignored;
+partial views count only analyzed calls and explicitly state their analyzed count. Complete zero detections
+is a valid result. Embeddings, full result JSON, transcripts and planted metadata never enter the response.
+
+CLI: `npm run analyze:synthetic -- --input /absolute/corpus --database /absolute/demo.sqlite [--apply]`.
+The CLI alone reads environment variables: `OPENAI_API_KEY`, `OPENAI_EXTRACT_MODEL` (default existing
+`DEFAULT_EXTRACT_MODEL`, currently `gpt-6.1-sol`), `OPENAI_EMBED_MODEL` (default
+`text-embedding-3-small`), `EMBEDDING_DIMENSIONS` (default 1536), `OPENAI_TIMEOUT_MS` (default
+120000, permitted 1–120000), `OPENAI_MAX_RETRIES` (default 1, permitted 0–1), and `REPEAT_THRESHOLD`
+(default provisional 0.85). Use Node `--env-file` explicitly if loading an environment file. Progress/errors
+are sanitized and never print transcript content or credentials. Similarity is not probability. The full
+12-call demonstration is not a held-out evaluation and makes no accuracy or clinical claim.
+
+Environment precedence preserves the standalone detector/team convention: `OPENAI_EXTRACT_MODEL` over
+`OPENAI_EXTRACTION_MODEL`; `OPENAI_EMBED_MODEL` over `EMBEDDING_MODEL` over
+`OPENAI_EMBEDDING_MODEL`; `EMBEDDING_DIMENSIONS` over `OPENAI_EMBEDDING_DIMENSIONS`.
+
+
+### Additive Timeline Drift Index view (2026-10-25)
+`Timeline.driftIndex?: DriftIndexView` is omitted without effective speechTrends consent.
+It is computed on read with unchanged `runDriftIndex` production defaults from same-elder,
+current-language done calls. Only finite high-confidence text markers are input; a
+high-confidence speech_rate makes the call eligible. Stored z/baselines, legacy repeat
+markers and planted labels are not inputs. Mood remains null unless separately consented
+and known. Validated standalone detector successes provide only unprompted repeated-story
+counts; a successful zero is known and unavailable/stale evidence remains unknown.
+
+`DriftIndexView` fields mirror `web/lib/types.ts`: language; baselineProgress
+(familiarizationCalls, familiarizationRequired, baselineCalls, baselineRequired, ready);
+eligibleCallCount; monitoredCallCount; completedMonitoringWeeks; repeatCoverage
+(knownCallCount, unknownCallCount, unpromptedStoryCount); provenance (isSimulated,
+timing: synthetic_authored/stored_call_timing/unknown, computation: read_only,
+notificationDelivery: not_performed); rules (DriftIndexOptions defaults); result
+(DriftIndexResult: baseline, calls, weeks). Counts in repeatCoverage refer to eligible
+calls. Completed monitoring weeks exclude baselineWeek and require a non-null weeklyD.
+Monitoring calls must have day strictly greater than baseline.endDay. The first two
+eligible calls familiarize; eight further calls establish baseline. Twelve calls at three
+per week leave two monitored calls in the final baseline week and zero completed
+monitoring weeks. Computed rule flags do not assert that notifications were sent.
+
+The DTO contains no transcript, quote, evidence or vector. Canonical imported synthetic
+transcript notice identifies authored timing; unrelated simulated timing is unknown.
+No DB writes or notification actions occur during this computation.
+
+
+## 10. Automatic real-call repeat analysis
+
+The post-call `repetition` step invokes detector 1.0.0 for non-simulated calls using
+`gpt-6.1-sol`, `remi-items-v1`, `text-embedding-3-small`, 1536 dimensions and threshold
+0.85. These evaluated settings are fixed separately from legacy model/threshold environment
+settings. `OPENAI_API_KEY` is supplied server-side. The existing summary extractor remains separate.
+
+Processing requires effective `summaries` AND `speechTrends`; recheck both before each
+provider request and the final write. Exclude simulated calls, unrelated in-progress/failed
+calls, calls with safety events, and calls with the safety-only summary. Same-elder real
+calls are processed chronologically across languages, including earlier historical calls
+without cached results. The current `processing` call is eligible; views use `done` calls only.
+A missing/malformed transcript fails closed. Stored empty transcripts can succeed with zero
+items and null extractionModel, without a provider request.
+
+`live_detector_results` is independent of the frozen synthetic `detector_results` batches.
+Each prefix hash binds the ordered canonical call inputs through that call; each history hash
+binds actual earlier extracted items. Appending later calls preserves earlier caches.
+Corrections, deletions, backdated calls, safety exclusions or missing/corrupt prior results
+invalidate dependent evidence. Revalidate grounding, models, IDs, counts and matches on reads.
+Commit a newly processed batch atomically after rechecking input, consent and cached state.
+No provider work occurs in timeline reads or recompute. A soft analysis failure leaves the
+call completable with unknown repetition, never a fabricated zero.
+
+The existing optional `repeatAnalysis` DTO shows all-history story/question matches and earlier
+call links. It requires speechTrends; summaries/quotes/priorQuotes are null without summaries.
+Vectors and complete transcripts never enter that DTO. A partial prefix is marked partial.
+`repeat_stories` for real calls counts unprompted story matches with any qualifying earlier telling
+within seven days; unavailable evidence is NULL/na, including on reads before recomputation.
+The read-only Drift Index uses all-history unprompted-story counts and excludes simulated
+calls from its baseline/monitoring whenever real completed calls exist in the selected language. Simulated legacy markers
+retain their existing topic matcher. No new medical or held-out evaluation claim follows from
+this integration; the reviewed synthetic detector baseline remains unchanged.
+
+Legacy Timeline.repeats includes only simulated topic chains and requires both summaries and
+speechTrends sharing, since its required summary field cannot be redacted to null.

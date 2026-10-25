@@ -14,7 +14,10 @@
     "tune:repeat": "tsx scripts/tune-repeat.ts",
     "try:extract": "tsx scripts/try-extract.ts",
     "fixtures": "tsx scripts/make-fixtures.ts",
-    "pitch:check": "tsx scripts/pitch-check.mts"
+    "import:synthetic": "tsx scripts/import-synthetic.ts",
+    "analyze:synthetic": "tsx scripts/analyze-synthetic-repeats.ts",
+    "pitch:check": "tsx scripts/pitch-check.mts",
+    "analyze:synthetic-audio": "tsx scripts/analyze-synthetic-audio.ts"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",

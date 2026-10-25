@@ -14,9 +14,9 @@ export default function Home() {
           <TodayRow elderId={DEMO_ELDER_ID} />
         </div>
         <HomeSections />
-        <footer className="flex flex-wrap justify-between gap-4 border-t border-line pt-6 text-base text-ink-2">
+        <footer className="flex flex-wrap justify-between gap-x-8 gap-y-2 border-t border-line pt-6 text-base text-ink-2">
           <span>Remi · built at HackPSU Fall 2026</span>
-          <span>Inspired by the I-CONECT research on regular video conversations with older adults.</span>
+          <span>Made by Stanley, Siyuan, Kevin, Ryan and Jimmy</span>
         </footer>
       </main>
     </>

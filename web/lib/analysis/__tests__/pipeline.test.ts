@@ -34,7 +34,7 @@ function extraction(overrides: Partial<Extraction> = {}): Extraction {
   };
 }
 
-function setupCall(opts: { audioPath?: string; startedAt?: string } = {}) {
+function setupCall(opts: { audioPath?: string; startedAt?: string; simulated?: boolean } = {}) {
   const elderId = insertElder();
   const questionId = newId();
   getSqlite()
@@ -42,6 +42,7 @@ function setupCall(opts: { audioPath?: string; startedAt?: string } = {}) {
     .run(questionId, elderId, nowIso());
   const callId = insertCall(elderId, {
     status: 'processing',
+    is_simulated: opts.simulated ? 1 : 0,
     started_at: opts.startedAt ?? '2026-10-25T14:00:00.000Z',
     duration_s: 300,
     utterances_json: JSON.stringify(fixture.utterances),
@@ -104,9 +105,9 @@ describe('processCall', () => {
     expect(rows('SELECT * FROM call_markers WHERE call_id = ?', callId)).toHaveLength(10);
   });
 
-  it('links a retold story to an earlier telling within 7 days', async () => {
-    const { callId, elderId } = setupCall();
-    const priorCall = insertCall(elderId, { started_at: '2026-10-22T14:00:00.000Z' });
+  it('links a simulated retold story to an earlier telling within 7 days', async () => {
+    const { callId, elderId } = setupCall({ simulated: true });
+    const priorCall = insertCall(elderId, { is_simulated: 1, started_at: '2026-10-22T14:00:00.000Z' });
     const priorTopic = newId();
     getSqlite()
       .prepare("INSERT INTO topics (id, elder_id, call_id, kind, summary, initiated_by, created_at) VALUES (?, ?, ?, 'story', 'Blizzard of 1977 at the roundhouse', 'caller', ?)")
@@ -212,11 +213,12 @@ describe('processCall review fixes', () => {
   });
 
   it('re-running an earlier call re-links a later retelling instead of leaving a dangling link', async () => {
-    const { elderId, callId: earlier } = setupCall({ startedAt: '2026-10-20T14:00:00.000Z' });
+    const { elderId, callId: earlier } = setupCall({ startedAt: '2026-10-20T14:00:00.000Z', simulated: true });
     setLlmTransportForTests(async () => JSON.stringify(extraction()));
     setEmbeddingsTransportForTests(async (texts) => texts.map(() => [1, 0]));
     await processCall(earlier);
     const later = insertCall(elderId, {
+      is_simulated: 1,
       status: 'processing',
       started_at: '2026-10-22T14:00:00.000Z',
       utterances_json: JSON.stringify(fixture.utterances),

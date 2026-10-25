@@ -77,14 +77,51 @@ export interface MarkerSeries {
   points: { callId: string; at: string; value: number | null; z: number | null; confidence: 'high' | 'low' | 'na'; isSimulated: boolean }[];
 }
 
+export interface RepeatAnalysisView {
+  scope: 'all_prior_calls';
+  status: 'complete' | 'partial';
+  analyzedCallCount: number;
+  totalCallCount: number;
+  counts: { total: number; unprompted: number; prompted: number; uncertain: number; stories: number; questions: number };
+  provenance: { extractionModel: string | null; embeddingModel: string; threshold: number; detectorVersion: string };
+  matches: { callId: string; startedAt: string; priorCallId: string; priorStartedAt: string; kind: 'story' | 'question'; label: 'Unprompted repeat' | 'Prompted retelling' | 'Uncertain'; similarity: number; summary: string | null; quote: string | null; priorQuote: string | null; isSimulated: boolean }[];
+}
+
+/** Read-only computation; rule flags describe computed state, never notification delivery. */
+export interface DriftIndexView {
+  language: Lang;
+  baselineProgress: { familiarizationCalls: number; familiarizationRequired: number; baselineCalls: number; baselineRequired: number; ready: boolean };
+  eligibleCallCount: number;
+  monitoredCallCount: number;
+  completedMonitoringWeeks: number;
+  repeatCoverage: { knownCallCount: number; unknownCallCount: number; unpromptedStoryCount: number };
+  provenance: { isSimulated: boolean; timing: 'synthetic_authored' | 'stored_call_timing' | 'unknown'; computation: 'read_only'; notificationDelivery: 'not_performed' };
+  rules: import('./analysis/drift-index').DriftIndexOptions;
+  result: import('./analysis/drift-index').DriftIndexResult;
+}
+
 export interface Timeline {
   elder: { id: string; displayName: string; preferredName: string; language: Lang };
   consent: { proposed: ConsentMap; elderConfirmed: boolean; effective: ConsentMap };
   calls: CallCard[];                  // newest first
   funFacts: { id: string; text: string; quote: string; askedBy: string | null; at: string; isSimulated: boolean }[]; // [] unless consented
   markers: MarkerSeries[];            // [] unless speechTrends consented
-  repeats: { summary: string; dates: string[]; isSimulated: boolean }[]; // [] unless speechTrends consented
+  // Legacy simulated topic summaries require both summaries and speechTrends consent.
+  repeats: { summary: string; dates: string[]; isSimulated: boolean }[]; // [] unless summaries AND speechTrends consented
   nudges: { id: string; type: 'cognitive_checkup' | 'wellbeing'; createdAt: string; message: string; link: string | null; isSimulated: boolean }[];
+  // Real calls use a real-call baseline; pure simulated demos remain supported.
+  driftIndex?: DriftIndexView; // omitted without effective speechTrends consent
+  repeatAnalysis?: RepeatAnalysisView; // omitted without effective speechTrends consent or valid results
   processing: boolean;
   generatedAt: string;
+}
+
+// Internal persistence contract (§10), never part of a family-facing DTO.
+export interface LiveDetectorCacheRow {
+  call_id: string;
+  prefix_hash: string;
+  history_hash: string;
+  settings_hash: string;
+  result_json: string;
+  analyzed_at: string;
 }

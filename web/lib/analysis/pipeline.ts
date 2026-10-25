@@ -10,6 +10,7 @@ import { computeMarkers } from '@/lib/markers';
 import { pitchMarkersAsync, pitchNotAvailable } from '@/lib/markers/pitch';
 import { parseWav } from '@/lib/markers/wav';
 import { newId, nowIso } from '@/lib/server/ids';
+import { analyzeLiveRepeats } from '@/lib/server/live-repeats';
 import type { Lang, MarkerResult, Utterance, Word } from '@/lib/types';
 import { PAUSE_MAX_MS, PITCH_MAX_SECONDS, REPEAT_COSINE, REPEAT_WINDOW_DAYS } from './config';
 import { embed, EmbeddingsDisabledError } from './embeddings';
@@ -117,6 +118,10 @@ export async function processCall(callId: string): Promise<void> {
     // 4. Repetition (soft): link this call's caller-initiated stories to earlier tellings, then
     //    re-link later calls whose links pointed at this call's (now replaced) topics.
     await step(callId, 'repetition', async () => {
+      if (call.isSimulated !== 1) {
+        await analyzeLiveRepeats(getSqlite(), callId, { apiKey: process.env.OPENAI_API_KEY });
+        return;
+      }
       await linkRepeats(callId, elder.id, call.startedAt);
       for (const other of relinkCallIds ?? []) {
         const o = db.select({ startedAt: calls.startedAt }).from(calls).where(eq(calls.id, other)).get();
@@ -354,7 +359,7 @@ async function linkRepeats(callId: string, elderId: string, startedAt: string): 
   const priorCallIds = db
     .select({ id: calls.id })
     .from(calls)
-    .where(and(eq(calls.elderId, elderId), ne(calls.id, callId), gte(calls.startedAt, windowStart), lt(calls.startedAt, startedAt)))
+    .where(and(eq(calls.elderId, elderId), eq(calls.isSimulated, 1), ne(calls.id, callId), gte(calls.startedAt, windowStart), lt(calls.startedAt, startedAt)))
     .all()
     .map((c) => c.id);
   const candidates = priorCallIds.length
