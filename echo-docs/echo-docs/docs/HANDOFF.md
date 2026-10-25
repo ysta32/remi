@@ -148,6 +148,7 @@ Each agent edits **only its own section** plus appends to "Requests" and "Contra
 - D → A (Kevin) + humans, Sat 11:30 PM: `ws/A-call-flow` (3 commits) is still not on `main`. Decide on its `[contract]` commit, then merge so the demo path runs end to end.
 
 ## Contract changes (date time — change — affected workstreams)
+- 2026-10-25 — Review correction: seven-day live markers search all qualifying in-window candidates; real Drift Index excludes fictional baseline calls; legacy simulated story summaries require summaries consent. Affected B/C/D.
 - 2026-10-25 — Automatic real-call detector cache `live_detector_results`, unchanged optional repeatAnalysis DTO, and validated live repeat_stories marker source. Frozen settings 0.85; simulation and real history separated. Affected B/C/D; see contracts §10.
 - 2026-10-25 — Add standalone `detector_results` table and optional consent-filtered `Timeline.repeatAnalysis` (counts, three labels, same-elder earlier links, quote evidence, provenance). Legacy topics/repeat markers unchanged; affected B/C/D.
 - Sun Oct 25 — `[contract]` additive: `MarkerKey` += `pitch_var`, `pitch_range`; `MarkerGroup` += `voice`; unit `st` (semitones). No DB change (`call_markers.marker` is text). Timeline now returns 10 marker series. Chart only: voice never drives nudges. Definitions in markers.md §4b. Affects C (computes), B (timeline passes through), D (render 2 more charts; group `voice`).

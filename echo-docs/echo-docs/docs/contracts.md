@@ -516,8 +516,12 @@ call completable with unknown repetition, never a fabricated zero.
 The existing optional `repeatAnalysis` DTO shows all-history story/question matches and earlier
 call links. It requires speechTrends; summaries/quotes/priorQuotes are null without summaries.
 Vectors and complete transcripts never enter that DTO. A partial prefix is marked partial.
-`repeat_stories` for real calls counts unprompted story matches whose selected earlier telling
-is within seven days; unavailable evidence is NULL/na, including on reads before recomputation.
-The read-only Drift Index uses all-history unprompted-story counts. Simulated legacy markers
+`repeat_stories` for real calls counts unprompted story matches with any qualifying earlier telling
+within seven days; unavailable evidence is NULL/na, including on reads before recomputation.
+The read-only Drift Index uses all-history unprompted-story counts and excludes simulated
+calls from its baseline/monitoring whenever real completed calls exist in the selected language. Simulated legacy markers
 retain their existing topic matcher. No new medical or held-out evaluation claim follows from
 this integration; the reviewed synthetic detector baseline remains unchanged.
+
+Legacy Timeline.repeats includes only simulated topic chains and requires both summaries and
+speechTrends sharing, since its required summary field cannot be redacted to null.

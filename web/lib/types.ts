@@ -104,8 +104,10 @@ export interface Timeline {
   calls: CallCard[];                  // newest first
   funFacts: { id: string; text: string; quote: string; askedBy: string | null; at: string; isSimulated: boolean }[]; // [] unless consented
   markers: MarkerSeries[];            // [] unless speechTrends consented
-  repeats: { summary: string; dates: string[]; isSimulated: boolean }[]; // [] unless speechTrends consented
+  // Legacy simulated topic summaries require both summaries and speechTrends consent.
+  repeats: { summary: string; dates: string[]; isSimulated: boolean }[]; // [] unless summaries AND speechTrends consented
   nudges: { id: string; type: 'cognitive_checkup' | 'wellbeing'; createdAt: string; message: string; link: string | null; isSimulated: boolean }[];
+  // Real calls use a real-call baseline; pure simulated demos remain supported.
   driftIndex?: DriftIndexView; // omitted without effective speechTrends consent
   repeatAnalysis?: RepeatAnalysisView; // omitted without effective speechTrends consent or valid results
   processing: boolean;
