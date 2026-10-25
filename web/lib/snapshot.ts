@@ -6,7 +6,7 @@ export function snapshotCaption(call: CallCard): { caption: string | null; body:
   const summary = call.summary?.trim() || null;
   if (call.photosShown.length > 0) return { caption: call.photosShown[0].caption, body: summary };
   if (!summary) return { caption: null, body: null };
-  const first = summary.match(/^(.+?[.!?])(\s+|$)/s);
+  const first = summary.match(/^([\s\S]+?[.!?])(\s+|$)/);
   if (!first) return { caption: summary, body: null };
   return { caption: first[1], body: summary.slice(first[0].length).trim() || null };
 }
