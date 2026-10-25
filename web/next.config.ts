@@ -2,6 +2,8 @@ import path from "node:path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // No dev-tools badge: it sits on the page during the live demo and in review screenshots.
+  devIndicators: false,
   // Cache Components is off: every API route reads SQLite at request time, and the
   // contract requires `export const runtime = 'nodejs'`, which Cache Components forbids.
   serverExternalPackages: ["better-sqlite3"],
