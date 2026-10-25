@@ -4,7 +4,7 @@ import { getSqlite } from '@/db/client';
 import { newId, nowIso } from '@/lib/server/ids';
 import { markerMeta, MARKER_KEYS } from '../markers/meta';
 import type { MarkerKey, NudgeReason } from '../types';
-import { BASELINE_N, NUDGE_REFIRE_DAYS } from './config';
+import { ABS_SPREAD_FLOOR, BASELINE_N, MIN_SCALE, NUDGE_REFIRE_DAYS } from './config';
 import { checkupNudge, wellbeingNudge, weeklyDrift, type DriftCall } from './drift';
 import { buildBaseline, signedZ, type Baseline } from './stats';
 import { isoWeekKey } from './weeks';
@@ -139,7 +139,7 @@ export async function recomputeElder(elderId: string): Promise<void> {
       for (const r of rows.values()) {
         const k = r.marker as MarkerKey;
         const b = Z_MARKERS.includes(k) ? baselines.get(`${k}|${c.language}`) : undefined;
-        const z = b && r.confidence === 'high' && r.value !== null ? signedZ(r.value, b, markerMeta(k).concern) : null;
+        const z = b && r.confidence === 'high' && r.value !== null ? signedZ(r.value, b, markerMeta(k).concern, ABS_SPREAD_FLOOR[k] ?? MIN_SCALE) : null;
         if (Z_MARKERS.includes(k)) zs[k] = z;
         setZ.run(z, c.id, r.marker);
       }

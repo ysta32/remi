@@ -1,6 +1,6 @@
 // Every analysis threshold in one place (markers.md §4–8, SPEC §11). [HEURISTIC] engineering
 // values, not clinical cut-offs. Pure constants only: lib/markers imports this file too.
-import type { Lang } from '../types';
+import type { Lang, MarkerKey } from '../types';
 
 // Pauses (markers.md §4)
 export const PAUSE_MIN_MS = 400;
@@ -22,6 +22,19 @@ export const BASELINE_N = 6;
 export const MIN_SPREAD_FRAC = 0.03;
 export const MAD_SCALE = 1.4826;
 export const MIN_SCALE = 1e-6;
+// [HEURISTIC] extension of markers.md §7: a per-marker absolute floor on the z scale. Markers that
+// are usually 0 (word-finding pauses, fillers) give MAD 0 and median 0, so with only the 1e-6 floor
+// a single "um" scored z ≈ 400,000 and could fire a nudge on noise. Units: per-100 rates (en words
+// / zh characters), ms, wpm/cpm, ratio.
+export const ABS_SPREAD_FLOOR: Partial<Record<MarkerKey, number>> = {
+  speech_rate: 2,
+  pause_rate: 0.3,
+  mean_pause_ms: 30,
+  wfp_rate: 0.3,
+  filler_rate: 0.3,
+  vague_rate: 0.3,
+  mattr: 0.005,
+};
 
 // Drift and nudges (markers.md §8)
 export const DRIFT_Z = 1.5;

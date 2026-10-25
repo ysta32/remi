@@ -66,10 +66,10 @@ ${questions}
 - Include an entry only for a question the caller actually answered. answer: a short English answer in your words, at most 300 characters.
 
 safetyMentioned
-- true if anything in the call touched on self-harm, a medical emergency, or the agent sharing 911 or 988 or other crisis resources; otherwise false.
+- true only if, during this call, the caller raised a present-day risk to themselves (thoughts of self-harm, or a medical emergency happening now) or the agent shared 911, 988 or other crisis resources. Memories of past illnesses, accidents or losses are NOT safety moments; set false for those.
 
 Hard moments${ctx.hadSafetyEvent ? ' (a safety event was logged during this call)' : ''}
-- If the call touched on such a moment, include this exact sentence in the summary: "${SAFETY_SUMMARY_LINE}" Leave out every detail of that moment from the summary, funFacts, topics and mood evidence. The rest of the call may still be summarised normally.
+- If safetyMentioned is true${ctx.hadSafetyEvent ? ' (it must be true for this call)' : ''}, the summary must be exactly this sentence and nothing else: "${SAFETY_SUMMARY_LINE}" Return empty funFacts and familyQuestionAnswers, and leave every detail of that moment out of topics and mood evidence.
 
 Never use the words diagnose, detect, screen, dementia, Alzheimer's, cognitive, decline or symptom.`;
 }

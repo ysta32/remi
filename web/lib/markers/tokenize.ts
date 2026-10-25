@@ -101,7 +101,8 @@ export function zhWordIsFillerOrVague(token: string): boolean {
 /** True if English word `i` (normalised) is a filler/vague word, or part of a filler phrase with its neighbours. */
 export function enWordIsFillerOrVague(words: string[], i: number): boolean {
   const w = words[i];
-  if (EN_FILLER_TOKENS.has(w) || EN_VAGUE_TOKENS.has(w)) return true;
+  // An STT word can normalise to several tokens ("mm-hmm" → "mm hmm"); check each part.
+  if (w.split(' ').some((t) => EN_FILLER_TOKENS.has(t) || EN_VAGUE_TOKENS.has(t))) return true;
   return EN_FILLER_PHRASES.some((p) => {
     for (let k = 0; k < p.length; k++) {
       const start = i - k;

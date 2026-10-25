@@ -25,13 +25,21 @@ export function buildBaseline(values: number[]): Baseline {
   return { median: median(values), mad: mad(values), n: values.length };
 }
 
-/** scale = max(1.4826 × MAD, 0.03 × |median|, 1e-6). */
-export function baselineScale(b: Pick<Baseline, 'median' | 'mad'>): number {
-  return Math.max(MAD_SCALE * b.mad, MIN_SPREAD_FRAC * Math.abs(b.median), MIN_SCALE);
+/**
+ * scale = max(1.4826 × MAD, 0.03 × |median|, floor). markers.md §7 uses floor = 1e-6; recompute
+ * passes a per-marker ABS_SPREAD_FLOOR so markers that are usually 0 can't produce huge z.
+ */
+export function baselineScale(b: Pick<Baseline, 'median' | 'mad'>, floor: number = MIN_SCALE): number {
+  return Math.max(MAD_SCALE * b.mad, MIN_SPREAD_FRAC * Math.abs(b.median), floor, MIN_SCALE);
 }
 
 /** Robust z versus the person's own baseline, signed so positive = the direction of concern. */
-export function signedZ(value: number, baseline: Pick<Baseline, 'median' | 'mad'>, concern: 'up' | 'down'): number {
-  const z = (value - baseline.median) / baselineScale(baseline);
+export function signedZ(
+  value: number,
+  baseline: Pick<Baseline, 'median' | 'mad'>,
+  concern: 'up' | 'down',
+  floor: number = MIN_SCALE,
+): number {
+  const z = (value - baseline.median) / baselineScale(baseline, floor);
   return concern === 'up' ? z : -z;
 }

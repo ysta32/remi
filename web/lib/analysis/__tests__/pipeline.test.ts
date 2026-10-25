@@ -148,7 +148,89 @@ describe('processCall', () => {
   });
 });
 
+describe('processCall review fixes', () => {
+  beforeEach(() => freshDb());
+  afterEach(() => {
+    setLlmTransportForTests(null);
+    setEmbeddingsTransportForTests(null);
+  });
+
+  it('deletes the WAV even when a hard step fails before STT', async () => {
+    const wav = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'remi-wav-')), 'call.wav');
+    fs.writeFileSync(wav, 'RIFF');
+    const { callId } = setupCall({ audioPath: wav });
+    getSqlite().prepare("UPDATE calls SET utterances_json = 'not json' WHERE id = ?").run(callId);
+    await processCall(callId);
+    expect(fs.existsSync(wav)).toBe(false);
+    expect(row<{ status: string; audio_path: string | null }>('SELECT * FROM calls WHERE id = ?', callId)).toMatchObject({
+      status: 'failed',
+      audio_path: null,
+    });
+  });
+
+  it('a failed re-run keeps the earlier extraction', async () => {
+    const { callId } = setupCall();
+    setLlmTransportForTests(async () => JSON.stringify(extraction()));
+    setEmbeddingsTransportForTests(async (texts) => texts.map(() => [1, 0]));
+    await processCall(callId);
+    setLlmTransportForTests(async () => 'not json');
+    await processCall(callId);
+    const call = row<{ summary: string; mood_label: string }>('SELECT * FROM calls WHERE id = ?', callId);
+    expect(call.summary).toContain('first car');
+    expect(call.mood_label).toBe('positive');
+    expect(rows('SELECT * FROM fun_facts WHERE call_id = ?', callId)).toHaveLength(1);
+  });
+
+  it('after a safety event: summary is only the safety line; no fun facts, answers or topics', async () => {
+    const { callId, questionId } = setupCall();
+    getSqlite()
+      .prepare("INSERT INTO call_events (id, call_id, type, payload_json, at_ms) VALUES (?, ?, 'safety', ?, 5000)")
+      .run(newId(), callId, JSON.stringify({ category: 'other', note: 'x' }));
+    setLlmTransportForTests(async () =>
+      JSON.stringify(extraction({ familyQuestionAnswers: [{ questionId, answer: 'A Bel Air.' }] })),
+    );
+    setEmbeddingsTransportForTests(async (texts) => texts.map(() => [1, 0]));
+    await processCall(callId);
+    const call = row<{ summary: string; mood_evidence_json: string }>('SELECT * FROM calls WHERE id = ?', callId);
+    expect(call.summary).toBe('Part of the call touched on a hard moment; Remi shared support resources.');
+    expect(JSON.parse(call.mood_evidence_json)).toEqual([]);
+    expect(rows('SELECT * FROM fun_facts WHERE call_id = ?', callId)).toHaveLength(0);
+    expect(rows('SELECT * FROM topics WHERE call_id = ?', callId)).toHaveLength(0);
+    expect(row<{ status: string }>('SELECT status FROM family_questions WHERE id = ?', questionId).status).toBe('asked');
+  });
+
+  it('re-running an earlier call re-links a later retelling instead of leaving a dangling link', async () => {
+    const { elderId, callId: earlier } = setupCall({ startedAt: '2026-10-20T14:00:00.000Z' });
+    setLlmTransportForTests(async () => JSON.stringify(extraction()));
+    setEmbeddingsTransportForTests(async (texts) => texts.map(() => [1, 0]));
+    await processCall(earlier);
+    const later = insertCall(elderId, {
+      status: 'processing',
+      started_at: '2026-10-22T14:00:00.000Z',
+      utterances_json: JSON.stringify(fixture.utterances),
+    });
+    await processCall(later);
+
+    await processCall(earlier); // replaces the earlier call's topics with new ids
+    const link = row<{ repeat_of_topic_id: string | null }>('SELECT repeat_of_topic_id FROM topics WHERE call_id = ?', later);
+    const earlierTopic = row<{ id: string }>('SELECT id FROM topics WHERE call_id = ?', earlier);
+    expect(link.repeat_of_topic_id).toBe(earlierTopic.id);
+  });
+});
+
 describe('attachWords', () => {
+  it('drops words spoken during an agent turn and splits a caller-less stream at agent turns', () => {
+    const utts: Utterance[] = [{ speaker: 'agent', text: 'Tell me more', startMs: 1100, endMs: 20_000 }];
+    const out = attachWords(utts, [
+      { w: 'so', startMs: 0, endMs: 300 },
+      { w: 'yes', startMs: 500, endMs: 900 },
+      { w: 'mm-hmm', startMs: 9000, endMs: 9300 }, // during the agent turn: dropped
+      { w: 'well', startMs: 21_000, endMs: 21_300 },
+    ]);
+    const caller = out.filter((u) => u.speaker === 'caller');
+    expect(caller.map((u) => u.words?.map((w) => w.w))).toEqual([['so', 'yes'], ['well']]);
+  });
+
   it('assigns STT words to the nearest caller utterance and keeps live text', () => {
     const utts: Utterance[] = [
       { speaker: 'caller', text: 'Hello there', startMs: 0, endMs: 1000 },

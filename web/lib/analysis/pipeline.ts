@@ -9,7 +9,7 @@ import { APP_NAME, config } from '@/lib/config';
 import { computeMarkers } from '@/lib/markers';
 import { newId, nowIso } from '@/lib/server/ids';
 import type { Lang, Utterance, Word } from '@/lib/types';
-import { REPEAT_COSINE, REPEAT_WINDOW_DAYS } from './config';
+import { PAUSE_MAX_MS, REPEAT_COSINE, REPEAT_WINDOW_DAYS } from './config';
 import { embed, EmbeddingsDisabledError } from './embeddings';
 import { extractCall, matchStories, type Extraction } from './llm';
 import { SAFETY_SUMMARY_LINE } from './prompts';
@@ -49,32 +49,29 @@ async function step<T>(callId: string, name: string, fn: () => Promise<T> | T, s
 export async function processCall(callId: string): Promise<void> {
   startTimings(callId);
   const db = getDb();
+  let audioPath: string | null = null;
   try {
     const call = db.select().from(calls).where(eq(calls.id, callId)).get();
     if (!call) return;
+    audioPath = call.audioPath;
     const elder = db.select().from(elders).where(eq(elders.id, call.elderId)).get();
-    if (!elder) return;
+    if (!elder) throw new StepError('pipeline', new Error('elder not found'));
     const lang = call.language as Lang;
     let utterances: Utterance[] = call.utterancesJson ? JSON.parse(call.utterancesJson) : [];
 
-    // 1. STT (soft): word timestamps for pause markers. The WAV is always deleted.
-    if (call.audioPath) {
-      const audioPath = call.audioPath;
-      const words = await step(callId, 'stt', async () => {
-        try {
-          return await transcribeWords(audioPath, lang);
-        } finally {
-          await fs.rm(audioPath, { force: true });
-          db.update(calls).set({ audioPath: null }).where(eq(calls.id, callId)).run();
-        }
-      }, true);
+    // 1. STT (soft): word timestamps for pause markers. The WAV is deleted in the outer finally.
+    if (audioPath) {
+      const wav = audioPath;
+      const words = await step(callId, 'stt', () => transcribeWords(wav, lang), true);
+      await deleteAudio(callId, wav);
+      audioPath = null;
       if (words && words.length) {
         utterances = attachWords(utterances, words);
         db.update(calls).set({ utterancesJson: JSON.stringify(utterances) }).where(eq(calls.id, callId)).run();
       }
     }
 
-    // 2. Extraction (soft): on failure write a neutral fallback summary and keep going.
+    // 2. Extraction (soft): on failure keep any earlier extraction, else a neutral fallback summary.
     const events = db.select().from(callEvents).where(eq(callEvents.callId, callId)).all();
     const askedIds = events
       .filter((e) => e.type === 'question_asked')
@@ -91,11 +88,14 @@ export async function processCall(callId: string): Promise<void> {
         askedQuestions: askedQuestions.map((q) => ({ id: q.id, text: q.text, askedBy: q.askedBy })),
         hadSafetyEvent,
       }), true);
-    writeExtraction(callId, elder.id, call.isSimulated, extraction, {
-      hadSafetyEvent,
-      askedQuestionIds: new Set(askedQuestions.map((q) => q.id)),
-      fallbackSummary: `${elder.preferredName} and ${APP_NAME} chatted for ${Math.max(1, Math.round((call.durationS ?? 0) / 60))} minutes.`,
-    });
+    const minutes = Math.max(1, Math.round((call.durationS ?? 0) / 60));
+    const relinkCallIds = await step(callId, 'extract_write', () =>
+      writeExtraction(callId, elder.id, call.isSimulated, extraction, {
+        hadSafetyEvent,
+        hadSummary: call.summary !== null,
+        askedQuestionIds: new Set(askedQuestions.map((q) => q.id)),
+        fallbackSummary: `${elder.preferredName} and ${APP_NAME} chatted for ${minutes} ${minutes === 1 ? 'minute' : 'minutes'}.`,
+      }), true);
 
     // 3. Markers (hard).
     await step(callId, 'markers', () => {
@@ -109,8 +109,15 @@ export async function processCall(callId: string): Promise<void> {
       })();
     });
 
-    // 4. Repetition (soft): link this call's caller-initiated stories to earlier tellings.
-    await step(callId, 'repetition', () => linkRepeats(callId, elder.id, call.startedAt), true);
+    // 4. Repetition (soft): link this call's caller-initiated stories to earlier tellings, then
+    //    re-link later calls whose links pointed at this call's (now replaced) topics.
+    await step(callId, 'repetition', async () => {
+      await linkRepeats(callId, elder.id, call.startedAt);
+      for (const other of relinkCallIds ?? []) {
+        const o = db.select({ startedAt: calls.startedAt }).from(calls).where(eq(calls.id, other)).get();
+        if (o) await linkRepeats(other, elder.id, o.startedAt);
+      }
+    }, true);
 
     // 5. Mark done first: recomputeElder only counts done calls. If it fails, the catch
     //    below flips the call to failed with failed_step='recompute'.
@@ -124,22 +131,65 @@ export async function processCall(callId: string): Promise<void> {
     } catch {
       /* DB unavailable; nothing more we can do */
     }
+  } finally {
+    // Raw audio never outlives processing, whatever happened above (SPEC §12).
+    if (audioPath) await deleteAudio(callId, audioPath);
   }
 }
 
+async function deleteAudio(callId: string, wav: string): Promise<void> {
+  try {
+    await fs.rm(wav, { force: true });
+  } catch (err) {
+    console.error(`[pipeline] call=${callId} could not delete audio: ${errMsg(err)}`);
+  }
+  try {
+    getDb().update(calls).set({ audioPath: null }).where(eq(calls.id, callId)).run();
+  } catch {
+    /* best effort */
+  }
+}
+
+const overlapsAgent = (agent: Utterance[], ms: number) => agent.some((a) => ms >= a.startMs && ms <= a.endMs);
+
 /**
- * Attach post-call STT words to the live caller utterances by time (word midpoint inside the
- * utterance, else the nearest caller utterance). Live text is kept for display.
+ * Attach post-call STT words to the live caller utterances by time. Live text is kept for display.
+ * Words spoken during an agent turn (backchannels like "mm-hmm") are dropped so they can't stretch
+ * a caller utterance's speaking span; other words go to the caller utterance they fall in, else
+ * the nearest one. With no live caller text, the stream is split into utterances at agent turns
+ * and at gaps longer than PAUSE_MAX_MS (markers.md §4 speaking time is per utterance).
  */
 export function attachWords(utterances: Utterance[], words: Word[]): Utterance[] {
+  const agent = utterances.filter((u) => u.speaker === 'agent');
+  const kept = [...words]
+    .sort((a, b) => a.startMs - b.startMs)
+    .filter((w) => !overlapsAgent(agent, (w.startMs + w.endMs) / 2));
+  if (!kept.length) return utterances;
+
   const callerIdx = utterances.flatMap((u, i) => (u.speaker === 'caller' ? [i] : []));
   if (!callerIdx.length) {
-    // No live caller text at all: keep the STT stream as one caller utterance.
-    const text = words.map((w) => w.w).join(' ');
-    return [...utterances, { speaker: 'caller', text, startMs: words[0].startMs, endMs: words[words.length - 1].endMs, words }];
+    const groups: Word[][] = [];
+    for (const w of kept) {
+      const cur = groups[groups.length - 1];
+      const prev = cur?.[cur.length - 1];
+      const split =
+        !prev || w.startMs - prev.endMs > PAUSE_MAX_MS || agent.some((a) => a.startMs >= prev.endMs && a.startMs <= w.startMs);
+      if (split) groups.push([w]);
+      else cur.push(w);
+    }
+    const sep = /\p{Script=Han}/u.test(kept[0].w) ? '' : ' ';
+    const added: Utterance[] = groups.map((g) => ({
+      speaker: 'caller',
+      text: g.map((w) => w.w).join(sep),
+      startMs: g[0].startMs,
+      endMs: g[g.length - 1].endMs,
+      words: g,
+    }));
+    return [...utterances, ...added].sort((a, b) => a.startMs - b.startMs);
   }
+
   const buckets = new Map<number, Word[]>(callerIdx.map((i) => [i, []]));
-  for (const w of words) {
+  for (const w of kept) {
     const mid = (w.startMs + w.endMs) / 2;
     let best = callerIdx[0];
     let bestDist = Infinity;
@@ -155,44 +205,79 @@ export function attachWords(utterances: Utterance[], words: Word[]): Utterance[]
   }
   return utterances.map((u, i) => {
     const ws = buckets.get(i);
-    return ws && ws.length ? { ...u, words: ws.sort((a, b) => a.startMs - b.startMs) } : u;
+    return ws && ws.length ? { ...u, words: ws } : u;
   });
 }
 
+/**
+ * Writes the extraction for one call. Returns ids of OTHER calls whose repeat links pointed at
+ * this call's previous topics (they must be re-linked after the topics are replaced).
+ */
 function writeExtraction(
   callId: string,
   elderId: string,
   isSimulated: number,
   ex: Extraction | null,
-  opts: { hadSafetyEvent: boolean; askedQuestionIds: Set<string>; fallbackSummary: string },
-): void {
+  opts: { hadSafetyEvent: boolean; hadSummary: boolean; askedQuestionIds: Set<string>; fallbackSummary: string },
+): string[] {
   const db = getDb();
+  const sqlite = getSqlite();
   const now = nowIso();
-  getSqlite().transaction(() => {
-    // Idempotent re-run: this call's extracted rows are rebuilt from scratch.
+  let relink: string[] = [];
+  sqlite.transaction(() => {
+    if (!ex) {
+      // Extraction failed: keep whatever an earlier run wrote. Only a call with no summary yet
+      // gets the neutral fallback (or the safety line if a safety event was logged).
+      if (!opts.hadSummary) {
+        const summary = opts.hadSafetyEvent ? SAFETY_SUMMARY_LINE : opts.fallbackSummary;
+        db.update(calls).set({ summary }).where(eq(calls.id, callId)).run();
+      }
+      return;
+    }
+
+    // Idempotent re-run: this call's extracted rows are rebuilt. Detach links from other calls'
+    // topics to the rows being replaced, and remember those calls for re-linking.
+    relink = (
+      sqlite
+        .prepare(
+          `SELECT DISTINCT t.call_id FROM topics t JOIN topics old ON old.id = t.repeat_of_topic_id
+           WHERE old.call_id = ? AND t.call_id != ?`,
+        )
+        .all(callId, callId) as { call_id: string }[]
+    ).map((r) => r.call_id);
+    sqlite
+      .prepare('UPDATE topics SET repeat_of_topic_id = NULL WHERE repeat_of_topic_id IN (SELECT id FROM topics WHERE call_id = ?)')
+      .run(callId);
     db.delete(funFacts).where(eq(funFacts.callId, callId)).run();
     db.delete(topics).where(eq(topics.callId, callId)).run();
 
-    if (!ex) {
-      db.update(calls).set({ summary: opts.fallbackSummary }).where(eq(calls.id, callId)).run();
-      return;
-    }
+    // safety-and-copy §5: after a safety moment the summary is only the safety line, and its
+    // details stay out of fun facts, answers, topics and mood evidence.
     const safety = opts.hadSafetyEvent || ex.safetyMentioned;
+    if (ex.safetyMentioned && !opts.hadSafetyEvent) {
+      console.warn(`[SAFETY] call=${callId} extraction flagged a safety moment with no safety event logged`);
+    }
     db.update(calls)
       .set({
         summary: safety ? SAFETY_SUMMARY_LINE : ex.summary,
         moodLabel: ex.mood.label,
         moodScore: ex.mood.score,
-        moodEvidenceJson: JSON.stringify(ex.mood.evidence),
+        moodEvidenceJson: JSON.stringify(safety ? [] : ex.mood.evidence),
       })
       .where(eq(calls.id, callId))
       .run();
+    if (safety) return;
 
     const validQ = (id: string | null) => (id && opts.askedQuestionIds.has(id) ? id : null);
+    const markAnswered = (questionId: string) =>
+      db.update(familyQuestions).set({ status: 'answered' }).where(eq(familyQuestions.id, questionId)).run();
     const factQuestionIds = new Set<string>();
     for (const f of ex.funFacts) {
       const questionId = validQ(f.questionId);
-      if (questionId) factQuestionIds.add(questionId);
+      if (questionId) {
+        factQuestionIds.add(questionId);
+        markAnswered(questionId);
+      }
       db.insert(funFacts)
         .values({ id: newId(), elderId, callId, questionId, text: f.text, quote: f.quote, isSimulated, createdAt: now })
         .run();
@@ -201,7 +286,7 @@ function writeExtraction(
     for (const a of ex.familyQuestionAnswers) {
       const questionId = validQ(a.questionId);
       if (!questionId) continue;
-      db.update(familyQuestions).set({ status: 'answered' }).where(eq(familyQuestions.id, questionId)).run();
+      markAnswered(questionId);
       if (!factQuestionIds.has(questionId)) {
         db.insert(funFacts)
           .values({ id: newId(), elderId, callId, questionId, text: a.answer.slice(0, 200), quote: '', isSimulated, createdAt: now })
@@ -215,6 +300,7 @@ function writeExtraction(
         .run();
     }
   })();
+  return relink;
 }
 
 async function linkRepeats(callId: string, elderId: string, startedAt: string): Promise<void> {
@@ -241,15 +327,26 @@ async function linkRepeats(callId: string, elderId: string, startedAt: string): 
     matches = await matchStories(mine, candidates);
   } else {
     try {
-      // Embed this call's stories and any candidate without a stored embedding (e.g. seeded rows).
-      const missing = candidates.filter((c) => !c.embeddingJson);
-      const vectors = await embed([...mine.map((t) => t.summary), ...missing.map((c) => c.summary)]);
+      const mineVecs = await embed(mine.map((t) => t.summary));
+      const dim = mineVecs[0]?.length ?? 0;
       const vecById = new Map<string, number[]>();
-      [...mine, ...missing].forEach((t, i) => vecById.set(t.id, vectors[i]));
-      for (const t of [...mine, ...missing]) {
-        db.update(topics).set({ embeddingJson: JSON.stringify(vecById.get(t.id)) }).where(eq(topics.id, t.id)).run();
+      mine.forEach((t, i) => vecById.set(t.id, mineVecs[i]));
+      // Embed candidates lazily (seeded rows have none) or again if stored with another model's dimension.
+      const stale: typeof candidates = [];
+      for (const c of candidates) {
+        const v = c.embeddingJson ? (JSON.parse(c.embeddingJson) as number[]) : null;
+        if (v && v.length === dim) vecById.set(c.id, v);
+        else stale.push(c);
       }
-      for (const c of candidates) if (c.embeddingJson) vecById.set(c.id, JSON.parse(c.embeddingJson));
+      if (stale.length) {
+        const vs = await embed(stale.map((c) => c.summary));
+        stale.forEach((c, i) => vecById.set(c.id, vs[i]));
+      }
+      getSqlite().transaction(() => {
+        for (const t of [...mine, ...stale]) {
+          db.update(topics).set({ embeddingJson: JSON.stringify(vecById.get(t.id)) }).where(eq(topics.id, t.id)).run();
+        }
+      })();
       matches = findRepeats(
         mine.map((t) => ({ id: t.id, embedding: vecById.get(t.id)! })),
         candidates.map((c) => ({ id: c.id, embedding: vecById.get(c.id)! })),

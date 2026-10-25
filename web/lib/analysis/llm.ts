@@ -166,7 +166,7 @@ export async function extractCall(utterances: Utterance[], ctx: ExtractContext):
 }
 
 /**
- * LLM fallback for repetition matching (EMBEDDINGS_PROVIDER=none), docs/markers.md §6.4.
+ * LLM fallback for repetition matching (EMBEDDINGS_PROVIDER=none), echo-docs/echo-docs/docs/markers.md §6.4.
  * Returns, for each new story id, the id of a matching candidate or null.
  */
 export async function matchStories(

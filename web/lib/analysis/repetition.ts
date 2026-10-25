@@ -1,4 +1,4 @@
-// Pure repetition matcher (docs/markers.md §6.3). Callers pass the threshold
+// Pure repetition matcher (echo-docs/echo-docs/docs/markers.md §6.3). Callers pass the threshold
 // (normally REPEAT_COSINE from ./config).
 import { cosine } from './embeddings';
 

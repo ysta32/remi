@@ -1,4 +1,4 @@
-// Embeddings adapter for story repetition (docs/markers.md §6).
+// Embeddings adapter for story repetition (echo-docs/echo-docs/docs/markers.md §6).
 // EMBEDDINGS_PROVIDER=openai uses the embeddings endpoint; `none` throws EmbeddingsDisabledError
 // so the caller falls back to matchStories() in llm.ts; gemini is not configured.
 import { config } from '@/lib/config';

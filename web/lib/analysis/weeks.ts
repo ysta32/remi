@@ -3,10 +3,24 @@
 const MS_PER_DAY = 86_400_000;
 const formatters = new Map<string, Intl.DateTimeFormat>();
 
+export const FALLBACK_TIME_ZONE = 'America/New_York';
+
+/** True if `timeZone` is an IANA zone this runtime understands. */
+export function isValidTimeZone(timeZone: string): boolean {
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function formatter(timeZone: string): Intl.DateTimeFormat {
   let f = formatters.get(timeZone);
   if (!f) {
-    f = new Intl.DateTimeFormat('en-US', { timeZone, year: 'numeric', month: 'numeric', day: 'numeric' });
+    // An unknown zone (e.g. "Eastern") would throw and fail every recompute; fall back instead.
+    const zone = isValidTimeZone(timeZone) ? timeZone : FALLBACK_TIME_ZONE;
+    f = new Intl.DateTimeFormat('en-US', { timeZone: zone, year: 'numeric', month: 'numeric', day: 'numeric' });
     formatters.set(timeZone, f);
   }
   return f;

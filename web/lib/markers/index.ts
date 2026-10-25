@@ -98,7 +98,8 @@ function pauseStats(words: Word[], agent: Utterance[], lang: Lang): PauseStats {
     const to = sorted[i].startMs;
     const gap = to - from;
     if (gap < PAUSE_MIN_MS || gap > PAUSE_MAX_MS) continue;
-    if (agent.some((a) => a.startMs < to && a.endMs > from)) continue; // the agent's turn, not a hesitation
+    // Closed interval [from, to] (markers.md §4): any agent speech touching the gap makes it a turn, not a hesitation.
+    if (agent.some((a) => a.startMs <= to && a.endMs >= from)) continue;
     pauses.push(gap);
     if (gap >= WFP_MIN_MS && (isFV(i - 1) || isFV(i))) wfpCount++;
   }
@@ -109,8 +110,13 @@ function pauseStats(words: Word[], agent: Utterance[], lang: Lang): PauseStats {
 export function computeMarkers(utterances: Utterance[], lang: Lang): MarkerResult[] {
   const caller = utterances.filter((u) => u.speaker === 'caller');
   const agent = utterances.filter((u) => u.speaker === 'agent');
+  // Post-call STT words (when present) are the source of truth for counting: they keep the
+  // disfluencies the live transcript tends to drop, and pause/WFP counts come from the same words,
+  // so every rate shares one U. The live text is only used for utterances without words.
   const ts = textStats(
-    caller.map((u) => u.text ?? ''),
+    caller.map((u) =>
+      u.words && u.words.length > 0 ? u.words.map((w) => w.w).join(lang === 'zh' ? '' : ' ') : (u.text ?? ''),
+    ),
     lang,
   );
   const U = ts.units;
@@ -124,7 +130,7 @@ export function computeMarkers(utterances: Utterance[], lang: Lang): MarkerResul
     if (u.words && u.words.length > 0) {
       speakingMs += Math.max(...u.words.map((w) => w.endMs)) - Math.min(...u.words.map((w) => w.startMs));
     } else {
-      speakingMs += u.endMs - u.startMs;
+      speakingMs += Math.max(0, u.endMs - u.startMs); // live timestamps are approximate
     }
   }
   const speechRate: Computed =
