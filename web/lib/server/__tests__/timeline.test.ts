@@ -15,7 +15,9 @@ function setConsent(elderId: string, fam: Record<string, number>, elder: Record<
 
 function seedRich(elderId: string) {
   const db = getSqlite();
+  // Legacy topic-chain coverage uses simulated calls; real calls use validated detector results.
   const c1 = insertCall(elderId, {
+    is_simulated: 1,
     started_at: '2026-10-01T14:00:00.000Z',
     duration_s: 300,
     summary: 'Talked about the shipyard.',
