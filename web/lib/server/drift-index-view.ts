@@ -4,6 +4,7 @@ import { DEFAULT_DRIFT_INDEX_OPTIONS, runDriftIndex, type IndexCall } from '../a
 import { TEXT_MARKER_KEYS } from '../markers/meta';
 import type { DriftIndexView, Lang, MarkerKey } from '../types';
 import { isSyntheticTranscriptDemo } from '../synthetic-demo';
+import { liveResults } from './live-repeats';
 import { hasDetectorResults, readDetectorCorpus, validatedResults } from './detector-results';
 
 export function buildDriftIndexView(db: Database.Database, elderId: string, language: Lang, consent: { speechTrends: boolean; mood: boolean }): DriftIndexView | undefined {
@@ -17,9 +18,11 @@ export function buildDriftIndexView(db: Database.Database, elderId: string, lang
     const values = byCall.get(marker.call_id) ?? {}; values[marker.marker] = marker.value; byCall.set(marker.call_id, values);
   }
   const repeats = new Map<string, number>();
-  if (hasDetectorResults(db)) {
+  {
+    const real = liveResults(db, elderId).results;
     try {
-      for (const result of validatedResults(db, readDetectorCorpus(db, elderId))) {
+      const results = real.length ? real : hasDetectorResults(db) ? validatedResults(db, readDetectorCorpus(db, elderId)) : [];
+      for (const result of results) {
         const items = new Map(result.items.map(item => [item.id,item]));
         repeats.set(result.callId, result.matches.filter(match => {
           const item = items.get(match.itemId);

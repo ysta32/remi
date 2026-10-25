@@ -96,6 +96,12 @@ Each agent edits **only its own section** plus appends to "Requests" and "Contra
   - Nudge copy says "his" (verbatim from the spec).
   - REPEAT_COSINE 0.56 was tuned on hand-written pairs, and its margin over the closest different-story pair (0.51) is thin.
 
+### C — Automatic real-call detector integration (2026-10-25)
+- The post-call repetition step now invokes the evaluated standalone detector for real calls. Fixed model/prompt/embedding/dimensions/threshold match the frozen baseline. Legacy simulated seed processing remains compatible.
+- Separate live cache reuses valid chronological prefixes and invalidates downstream evidence after corrections, deletions, safety exclusions and backdated calls. Sharing and inputs are checked before provider requests and atomic persistence. Safety calls and simulated history are excluded.
+- Family repeatAnalysis and read-only DI now consume live results. Real repeat_stories marker uses validated seven-day unprompted story matches; absent evidence is NULL/na. Timeline reads revalidate before exposing counts/quotes. Provider failure is soft and uses a safe error code.
+- Run instructions and exact human two-call smoke check: web/README.md, Automatic repeat analysis. Requires private OPENAI_API_KEY and effective summaries + speechTrends; initial historical catch-up can take longer. No audio generation or threshold tuning. Real FaceTime/provider smoke remains unperformed; HTTP-only test doubles exercise the real detector, SQLite and queued /complete path.
+
 ## D — Family app + demo
 - Status (Sat ~11:20 PM): redesign **merged to `main`** (PR #2, `70c4c3a`), including `ws/bc-backend`. Tests 147/147, Ryan's detector 245/245, production build passes. Brighter Sky design; spec `docs/superpowers/specs/2026-10-24-remi-family-frontend-design.md`, plan `docs/superpowers/plans/2026-10-24-remi-family-frontend.md`.
 - Pages done: `/` judge-facing home (hero, live "Today on Remi" row, how it works, signals, privacy, closing CTA); `/elders/[id]` with **Chats** (newest snapshot + develop/NEW moment, gentle note below it, earlier chats, waiting questions, fun facts) and **How he's doing** (`?tab=doing`: four signals — pauses & hesitation, speaking pace, vague words, retold stories — with plain status words).

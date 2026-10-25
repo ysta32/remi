@@ -81,3 +81,32 @@ not replace these stored markers. Computed nudge flags never mean a notification
 `/research` remains a longer **static simulation** of possible trajectories, distinct from the
 family view’s actual stored evidence and detector coverage. Research chart defaults are preserved;
 the family card overrides all notification-related chart labels with computed-state wording.
+
+## Automatic repeat analysis on real calls
+
+Real calls now run the evaluated standalone detector automatically during post-call processing.
+Set `OPENAI_API_KEY` privately in `web/.env.local`, use `NEXT_PUBLIC_USE_FIXTURES=0`, and restart
+web after pulling this change (the new cache migration runs when SQLite opens). Both family
+and elder must enable summaries and speech trends. No separate synthetic-import command is
+needed for real calls. This path uses the frozen extraction model `gpt-6.1-sol`, embedding
+model `text-embedding-3-small` (1536 dimensions), and threshold 0.85; the synthetic CLI's model
+and threshold overrides do not change live analysis.
+
+After hangup, the queued pipeline saves the result and the timeline's **Repeated stories and
+questions** panel shows actual earlier-call links and quotes. A first call has no earlier
+match. Cached prior calls are reused; the first run may also analyze older completed real
+calls, so initial catch-up can take longer. Simulated calls are excluded from real-call history.
+Provider failure leaves repeats unavailable while other call processing finishes; use the
+existing dev process endpoint to retry a completed call after fixing the provider configuration.
+No provider requests run merely from opening the family page.
+
+The panel compares all earlier calls. The existing retold-story marker counts only unprompted
+story matches whose selected earlier telling is within seven days. The read-only Drift Index
+uses all-history unprompted stories. Questions, prompted retellings and unclear prompting stay
+visible in the evidence panel without being added to that marker. “Uncertain” describes the
+prompting classification, not whether a match passed the repeat threshold.
+
+Human smoke check: complete two consented calls with the same story, wait for processing,
+then open the elder's timeline and inspect the earlier-call link. Retrying the second call
+should reuse its result. This integration was tested using mocked provider HTTP; real calls
+and fresh model accuracy still need human validation. The reviewed synthetic baseline is unchanged.

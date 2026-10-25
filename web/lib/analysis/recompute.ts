@@ -2,9 +2,10 @@
 // from stored rows. One SQLite transaction, no model calls, idempotent.
 import { getSqlite } from '@/db/client';
 import { newId, nowIso } from '@/lib/server/ids';
+import { liveResults, recentStoryCounts } from '@/lib/server/live-repeats';
 import { markerMeta, MARKER_KEYS, TEXT_MARKER_KEYS } from '../markers/meta';
 import type { MarkerKey, NudgeReason } from '../types';
-import { ABS_SPREAD_FLOOR, BASELINE_N, MIN_SCALE, NUDGE_REFIRE_DAYS } from './config';
+import { ABS_SPREAD_FLOOR, BASELINE_N, MIN_SCALE, NUDGE_REFIRE_DAYS, REPEAT_WINDOW_DAYS } from './config';
 import { checkupNudge, wellbeingNudge, weeklyDrift, type DriftCall } from './drift';
 import { buildBaseline, signedZ, type Baseline } from './stats';
 import { isoWeekKey } from './weeks';
@@ -18,6 +19,7 @@ interface ElderRow {
   is_simulated: number;
 }
 interface CallRow {
+  is_simulated: number;
   id: string;
   started_at: string;
   language: 'en' | 'zh';
@@ -46,7 +48,7 @@ export async function recomputeElder(elderId: string): Promise<void> {
 
     const calls = db
       .prepare(
-        `SELECT id, started_at, language, mood_label FROM calls
+        `SELECT id, started_at, language, mood_label, is_simulated FROM calls
          WHERE elder_id = ? AND status = 'done' ORDER BY started_at, id`,
       )
       .all(elderId) as CallRow[];
@@ -79,7 +81,8 @@ export async function recomputeElder(elderId: string): Promise<void> {
         .map((c) => c.id),
     );
 
-    // 1. repeat_stories from topics.repeat_of_topic_id (caller-initiated stories only).
+    // Real calls use validated detector evidence; seeded calls retain legacy topic links.
+    const liveCounts = recentStoryCounts(liveResults(db, elderId).results, REPEAT_WINDOW_DAYS);
     const countRepeats = db.prepare(
       `SELECT COUNT(*) AS n FROM topics WHERE call_id = ? AND kind = 'story'
        AND initiated_by = 'caller' AND repeat_of_topic_id IS NOT NULL`,
@@ -92,13 +95,13 @@ export async function recomputeElder(elderId: string): Promise<void> {
     );
     for (const c of calls) {
       if (!markersByCall.has(c.id)) continue;
-      const n = (countRepeats.get(c.id) as { n: number }).n;
+      const n = c.is_simulated === 1 ? (countRepeats.get(c.id) as { n: number }).n : liveCounts.get(c.id) ?? null;
       upsertMarker.run({
         call_id: c.id,
         marker: 'repeat_stories',
         value: n,
         unit: markerMeta('repeat_stories', c.language).unit,
-        confidence: adequate.has(c.id) ? 'high' : 'low',
+        confidence: n === null ? 'na' : adequate.has(c.id) ? 'high' : 'low',
       });
     }
     markersByCall = loadMarkers();

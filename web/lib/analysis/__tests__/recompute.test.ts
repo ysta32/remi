@@ -209,14 +209,14 @@ describe('recomputeElder', () => {
     expect(callIds).toHaveLength(12);
   });
 
-  it('only done calls count; inadequate calls get low repeat_stories and no baseline contribution', async () => {
+  it('only done calls count; inadequate simulated calls get low repeat_stories and no baseline contribution', async () => {
     const elderId = insertElder();
     setAllConsent(elderId);
     for (let i = 0; i < 5; i++) {
       const id = insertCall(elderId, { started_at: new Date(W_MINUS_4 + i * DAY).toISOString() });
       insertMarkers(id, { speech_rate: 130 + i });
     }
-    const low = insertCall(elderId, { started_at: new Date(W_MINUS_4 + 5 * DAY).toISOString() });
+    const low = insertCall(elderId, { is_simulated: 1, started_at: new Date(W_MINUS_4 + 5 * DAY).toISOString() });
     insertMarkers(low, { speech_rate: 90 }, 'low');
     const processing = insertCall(elderId, { started_at: new Date(W_MINUS_4 + 6 * DAY).toISOString(), status: 'processing' });
     insertMarkers(processing, { speech_rate: 140 });

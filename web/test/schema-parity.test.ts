@@ -10,10 +10,10 @@ const tables = Object.values(schema).filter((t) => typeof t === 'object' && t &&
 describe('schema parity (SQL migration vs drizzle schema)', () => {
   beforeAll(() => freshDb());
 
-  it('creates all 15 contract tables', () => {
+  it('creates all 16 contract tables', () => {
     const names = (getSqlite().prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE '\\_%' ESCAPE '\\' AND name NOT LIKE 'sqlite_%'").all() as { name: string }[]).map((r) => r.name);
     expect(names.sort()).toEqual(tables.map((t) => getTableName(t as never)).sort());
-    expect(names).toHaveLength(15);
+    expect(names).toHaveLength(16);
   });
 
   it.each(tables.map((t) => [getTableName(t as never), t]))('%s columns match', (name, table) => {
