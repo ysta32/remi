@@ -7,11 +7,11 @@ import { driftDomain, type WeekPoint } from './drift-domain';
 
 export type { WeekPoint };
 
-// Hex mirrors of the CSS tokens (SVG attributes don't reliably resolve var()). Series colours
-// validated with the dataviz palette checker against the white card (light mode).
+// Hex mirrors of the CSS tokens (SVG attributes don't reliably resolve var()). Keep the
+// research and family charts aligned with the recap palette.
 export const R = {
   ink: '#1d2b45', ink2: '#4f5b70', band: '#d6e8f8', line: '#e3ebf3', card: '#ffffff',
-  weekly: '#5b8bd0', ewma: '#c2571f', faded: '#b9cbe6',
+  weekly: '#7d9cc0', hero: '#a9cdee', ewma: '#7a3a1f', faded: '#c9d8ea',
 };
 
 const fmt = (v: number | null | undefined) => (v == null ? 'not enough chats' : `${v >= 0 ? '+' : ''}${v.toFixed(1)}`);
@@ -54,7 +54,7 @@ export function DriftIndexChart({
           <ComposedChart data={data} margin={{ top: TOP_MARGIN, right: 12, bottom: 0, left: 0 }} barCategoryGap="25%">
             <ReferenceArea y1={-1} y2={1} fill={R.band} fillOpacity={1} stroke="none" />
             <XAxis dataKey="week" tickFormatter={(w: number) => `wk ${w}`} axisLine={{ stroke: R.line }} {...axis} />
-            <YAxis domain={[lo, hi]} ticks={ticks} width={34} axisLine={false}
+            <YAxis domain={[lo, hi]} ticks={ticks} width={44} axisLine={false}
               tickFormatter={(v: number) => (v === threshold ? '' : String(v))} {...axis} />
             <ReferenceLine y={threshold} stroke={R.ink} strokeDasharray="5 4" strokeWidth={1.5}
               label={{ value: `${threshold}`, position: 'left', fill: R.ink, fontSize: 16, fontWeight: 700 }} />

@@ -1,31 +1,30 @@
 'use client';
 
 import Link from 'next/link';
-import { use, useEffect, useRef, useState } from 'react';
-import {
-  dismissNudge, FIXTURE_VARIANTS, getElder, getTimeline, isFixtureVariant,
-  type ElderProfile, type FixtureVariant,
-} from '@/lib/api';
+import { use, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { dismissNudge, FIXTURE_VARIANTS, isFixtureVariant, type FixtureVariant } from '@/lib/api';
 import { USE_FIXTURES } from '@/lib/config';
 import { copy } from '@/lib/copy';
 import { formatRelative } from '@/lib/format';
-import { freshIds, pollDelay, settled } from '@/lib/live';
-import type { Timeline } from '@/lib/types';
+import { hasHighlight, recapHighlights } from '@/lib/recap';
 import { isSyntheticTranscriptDemo, syntheticTranscriptNotice } from '@/lib/synthetic-demo';
+import { RepeatDetections } from './RepeatDetections';
+import { ChatCard, recapHref } from './ChatCard';
 import { FunFacts } from './FunFacts';
 import { GentleNote } from './GentleNote';
 import { HowHesDoing } from './HowHesDoing';
-import { RepeatDetections } from './RepeatDetections';
-import { QuestionsWaiting } from './QuestionsWaiting';
+import { NextChatPanel } from './NextChatPanel';
 import { SiteNav } from './SiteNav';
 import { SnapshotCard } from './SnapshotCard';
 import { TimelineTabs } from './TimelineTabs';
+import { useTimelinePoll } from './useTimelinePoll';
 
-const EARLIER_SHOWN = 4;
+const FACTS_SHOWN = 3;
+const EARLIER_STEP = 6; // two rows of three; older chats are a click away (and on each recap's calendar)
 
-export function earlierCallsForTarget<T extends { id: string }>(calls: T[], showAll: boolean, target: unknown): T[] {
+export function earlierCallsForTarget<T extends { id: string }>(calls: T[], showAll: boolean, target: unknown, limit = 4): T[] {
   return showAll || (typeof target === 'string' && calls.some(call => call.id === target))
-    ? calls : calls.slice(0, EARLIER_SHOWN);
+    ? calls : calls.slice(0, limit);
 }
 
 function FixtureBar({ elderId, current, tab }: { elderId: string; current: FixtureVariant; tab: 'chats' | 'doing' }) {
@@ -54,50 +53,45 @@ export function TimelineView({
   const variant: FixtureVariant = isFixtureVariant(query.fixture) ? query.fixture : 'drift';
   const tab = query.tab === 'doing' ? 'doing' : 'chats';
 
-  const [timeline, setTimeline] = useState<Timeline | null>(null);
-  const [elder, setElder] = useState<ElderProfile | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [newIds, setNewIds] = useState<Set<string>>(new Set());
+  const { timeline, elder, error, newIds, refresh } = useTimelinePoll(id, variant);
+  const [earlierShown, setEarlierShown] = useState(EARLIER_STEP);
   const [hiddenNudges, setHiddenNudges] = useState<Set<string>>(new Set());
-  const [showAll, setShowAll] = useState(false);
-  // Ids seen so far for this elder; anything not in here on a later poll is highlighted as new.
-  // Kept across fixture switches so processing → after-call plays the live-update moment.
-  const known = useRef<{ elderId: string; ids: Set<string> } | null>(null);
-  const lastProcessing = useRef(false);
+  const [allFacts, setAllFacts] = useState(false);
 
-  // Poll fast while a call is processing (lib/live.ts pollDelay).
-  useEffect(() => {
-    let cancelled = false;
-    let timer: ReturnType<typeof setTimeout>;
-    if (known.current?.elderId !== id) known.current = null;
-
-    async function tick() {
-      const [t, e] = await Promise.allSettled([getTimeline(id, variant), getElder(id, variant)]);
-      if (cancelled) return;
-      setElder((prev) => settled(e, prev));
-      if (t.status === 'fulfilled') {
-        const tl = t.value;
-        lastProcessing.current = tl.processing;
-        // A call's key includes its status, so "processing → done" also counts as new.
-        const keys = [...tl.calls.map((c) => `${c.id}|${c.status}`), ...tl.funFacts.map((f) => f.id)];
-        const fresh = freshIds(known.current?.ids ?? null, keys);
-        // Replace, don't accumulate: an older card must not show "New" again when it moves down.
-        if (!known.current) setNewIds(new Set());
-        else if (fresh.length) setNewIds(new Set(fresh));
-        known.current = { elderId: id, ids: new Set(keys) };
-        setTimeline(tl);
-        setError(null);
-      } else {
-        setError(t.reason instanceof Error ? t.reason.message : 'Could not load the timeline.');
-      }
-      timer = setTimeout(tick, pollDelay(lastProcessing.current));
+  // Beside a gentle note, the right column (panel + facts) should end level with the left (newest +
+  // note). Start with three facts and drop one at a time while the right side runs longer; when the
+  // left side or the panel changes size, start again from three.
+  const leftRef = useRef<HTMLDivElement>(null);
+  const rightRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [factsFit, setFactsFit] = useState(FACTS_SHOWN);
+  const [layoutTick, setLayoutTick] = useState(0); // forces a re-check even when factsFit is already 3
+  useLayoutEffect(() => {
+    const left = leftRef.current, right = rightRef.current;
+    if (!left || !right || allFacts || !window.matchMedia('(min-width: 1024px)').matches) return;
+    if (right.getBoundingClientRect().bottom - left.getBoundingClientRect().bottom > 24 && factsFit > 1) {
+      setFactsFit((n) => n - 1);
     }
-    tick();
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-    };
-  }, [id, variant]);
+  }, [allFacts, factsFit, timeline, elder, hiddenNudges, layoutTick]);
+  const loaded = timeline !== null;
+  useEffect(() => {
+    const watched = [leftRef.current, panelRef.current].filter((e): e is HTMLDivElement => !!e);
+    if (!watched.length) return;
+    const sizes = new Map<Element, number>();
+    const ro = new ResizeObserver((entries) => {
+      const changed = entries.some((e) => {
+        const h = Math.round(e.contentRect.height);
+        const was = sizes.get(e.target);
+        sizes.set(e.target, h);
+        return was !== undefined && was !== h;
+      });
+      if (changed) restart();
+    });
+    const restart = () => { setFactsFit(FACTS_SHOWN); setLayoutTick((t) => t + 1); };
+    watched.forEach((e) => ro.observe(e));
+    window.addEventListener('resize', restart);
+    return () => { ro.disconnect(); window.removeEventListener('resize', restart); };
+  }, [loaded]);
 
   // A stable dependency avoids moving the reader back to the card on every poll.
   const targetCallId = typeof query.call === 'string' && timeline?.calls.some(call => call.id === query.call) ? query.call : null;
@@ -120,12 +114,35 @@ export function TimelineView({
   const name = timeline.elder.preferredName;
   const confirmed = timeline.consent.elderConfirmed;
   const [newest, ...earlier] = timeline.calls;
+  const shownEarlier = earlierCallsForTarget(earlier, earlierShown >= earlier.length, query.call, earlierShown);
   const nudges = timeline.nudges.filter((n) => !hiddenNudges.has(n.id));
-  const shownEarlier = earlierCallsForTarget(earlier, showAll, query.call);
-  const allEarlierVisible = shownEarlier.length === earlier.length;
+  // Beside a gentle note, facts stack under the panel and fill to fit; with no note, three run in a row.
+  const factsBeside = nudges.length > 0;
+  const factsShown = factsBeside ? factsFit : FACTS_SHOWN;
+  const fixture = USE_FIXTURES ? variant : undefined;
   const anySimulated = timeline.calls.some((c) => c.isSimulated);
   const transcriptDemo = elder?.id === timeline.elder.id && isSyntheticTranscriptDemo(elder, timeline.calls);
   const photos = elder?.photos ?? [];
+
+  // Facts pile up with every call, so only the newest few show; each chat's recap keeps its own.
+  const facts = (
+    <section aria-labelledby="facts" className="order-4 space-y-3">
+      <h2 id="facts" className="text-[30px] font-black tracking-tight">Fun facts</h2>
+      <FunFacts facts={allFacts ? timeline.funFacts : timeline.funFacts.slice(0, factsShown)} newIds={newIds} columns={!factsBeside} />
+      {timeline.funFacts.length > factsShown && (
+        <div className="-mt-1 text-right">
+          <button
+            type="button"
+            aria-expanded={allFacts}
+            onClick={() => setAllFacts((v) => !v)}
+            className="text-base font-semibold text-[#7b879a] transition-colors hover:text-ink"
+          >
+            {allFacts ? 'Show fewer' : `See all ${timeline.funFacts.length} fun facts`}
+          </button>
+        </div>
+      )}
+    </section>
+  );
 
   const hide = (nudgeId: string) => {
     setHiddenNudges((prev) => new Set(prev).add(nudgeId));
@@ -148,9 +165,7 @@ export function TimelineView({
           {anySimulated && (
             <p className="text-base text-ink-2">Chats marked Simulated are demo history created for this presentation.</p>
           )}
-          {transcriptDemo && (
-            <p className="rounded-[20px] border border-line bg-card p-5 text-base text-ink-2">{syntheticTranscriptNotice(!!timeline.repeatAnalysis)}</p>
-          )}
+          {transcriptDemo && <p className="text-base text-ink-2">{syntheticTranscriptNotice(Boolean(timeline.repeatAnalysis))}</p>}
           {error && <p className="text-base text-ink" role="status">Having trouble refreshing. Showing the last update.</p>}
           <TimelineTabs elderId={id} tab={tab} fixture={USE_FIXTURES ? variant : undefined} />
         </header>
@@ -162,14 +177,19 @@ export function TimelineView({
             {timeline.repeatAnalysis && <RepeatDetections analysis={timeline.repeatAnalysis} elderId={id} />}
             {!confirmed && <p className="rounded-[20px] border border-line bg-card p-5">{copy.notYetConfirmed(name)}</p>}
 
-            {/* Phones: newest, note, stories, then earlier chats. Desktop: stories span the right column. */}
-            <div className="grid items-start gap-8 [grid-template-areas:'newest'_'note'_'side'_'earlier'] lg:grid-cols-[1.4fr_1fr] lg:grid-rows-[auto_auto_1fr] lg:[grid-template-areas:'newest_side'_'note_side'_'earlier_side']">
-              <div className="[grid-area:newest]">
+            {/* Desktop: two independent columns (newest + note | panel + facts), so one side growing never
+                opens a gap in the other; earlier chats run full width below. Phones: one column in the
+                order newest, panel, note, facts, earlier (the column wrappers become `contents`). */}
+            <div className="flex flex-col gap-8 lg:grid lg:grid-cols-[1.4fr_1fr] lg:items-start">
+              <div ref={leftRef} className="contents lg:flex lg:flex-col lg:gap-8">
+              <div className="order-1">
+
                 {newest ? (
                   <SnapshotCard
                     key={`${newest.id}:${newest.status}`}
                     call={newest} variant="feature" isNew={newIds.has(newest.id)}
                     confirmed={confirmed} photos={photos} name={name}
+                    href={recapHref(id, newest.id, fixture)}
                   />
                 ) : (
                   <p className="rounded-[20px] border border-line bg-card p-5">
@@ -179,42 +199,46 @@ export function TimelineView({
               </div>
 
               {nudges.length > 0 && (
-                <div className="space-y-4 [grid-area:note]">
+                <div className="order-3 space-y-4">
                   {nudges.map((n) => <GentleNote key={n.id} nudge={n} onDismiss={() => hide(n.id)} />)}
                 </div>
               )}
+              </div>
+
+              <div ref={rightRef} className="contents lg:flex lg:flex-col lg:gap-8">
+                <div ref={panelRef} className="order-2">
+                  {elder && <NextChatPanel elderId={id} elder={elder} name={name} onChanged={refresh} />}
+                </div>
+                {confirmed && factsBeside && facts}
+              </div>
+
+              {confirmed && !factsBeside && <div className="order-4 lg:col-span-2">{facts}</div>}
 
               {earlier.length > 0 && (
-                <section aria-labelledby="earlier" className="space-y-3 [grid-area:earlier]">
+                <section aria-labelledby="earlier" className="order-5 space-y-4 lg:col-span-2">
                   <h2 id="earlier" className="text-[30px] font-black tracking-tight">Earlier chats</h2>
-                  <div className="grid items-start gap-4 sm:grid-cols-2">
-                    {shownEarlier.map(c => (
-                      <SnapshotCard key={`${c.id}:${c.status}`} call={c} variant="compact" isNew={newIds.has(c.id)}
-                        confirmed={confirmed} photos={photos} name={name} />
+                  <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    {shownEarlier.map((c) => (
+                      <ChatCard key={`${c.id}:${c.status}`} call={c} href={recapHref(id, c.id, fixture)}
+                        highlight={confirmed && hasHighlight(timeline, c)}
+                        factCount={confirmed ? recapHighlights(timeline, c).facts.length : 0} />
                     ))}
                   </div>
-                  {earlier.length > EARLIER_SHOWN && !earlier.some(call => call.id === query.call) && (
-                    <button
-                      type="button"
-                      aria-expanded={allEarlierVisible}
-                      onClick={() => setShowAll(v => !v)}
-                      className="rounded-full border border-line bg-card px-5 py-2.5 font-bold hover:border-ink-2"
-                    >
-                      {allEarlierVisible ? 'Show fewer' : `Show all ${earlier.length} earlier chats`}
-                    </button>
+                  {earlier.length > EARLIER_STEP && !earlier.some(call => call.id === query.call) && (
+                    <div className="text-right">
+                      <button
+                        type="button"
+                        onClick={() => setEarlierShown((n) => (n >= earlier.length ? EARLIER_STEP : n + EARLIER_STEP))}
+                        className="text-base font-semibold text-[#7b879a] transition-colors hover:text-ink"
+                      >
+                        {earlierShown >= earlier.length
+                          ? 'Show fewer'
+                          : `Show ${Math.min(EARLIER_STEP, earlier.length - earlierShown)} more of ${earlier.length}`}
+                      </button>
+                    </div>
                   )}
                 </section>
               )}
-
-              <div className="space-y-6 [grid-area:side]">
-                {elder && <QuestionsWaiting questions={elder.questions} name={name} />}
-                {confirmed && (
-                  <section aria-labelledby="facts" className="space-y-3">
-                    <h2 id="facts" className="text-[30px] font-black tracking-tight">Fun facts</h2>
-                    <FunFacts facts={timeline.funFacts} newIds={newIds} />
-                  </section>
-                )}
-              </div>
             </div>
           </>
         )}

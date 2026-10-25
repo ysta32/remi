@@ -36,15 +36,15 @@ function Panel({ title, children, height = 170 }: { title: string; children: Rea
 
 /** Small multiples for the 12 generated chats: pause length, Drift Index, and retold stories by window. */
 export function CorpusCharts({ rows }: { rows: CorpusRow[] }) {
-  const xAxis = <XAxis dataKey="call" tickFormatter={(c: number) => `${c}`} axisLine={{ stroke: R.line }} {...axis} />;
+  const xAxis = <XAxis dataKey="call" padding={{ left: 8, right: 8 }} tickFormatter={(c: number) => `${c}`} axisLine={{ stroke: R.line }} {...axis} />;
   return (
     <div className="grid gap-6 lg:grid-cols-3">
       <Panel title="Average pause length (ms)">
         <LineChart data={rows} margin={{ top: 8, right: 10, bottom: 0, left: 0 }}>
           {xAxis}
-          <YAxis domain={[400, 1500]} ticks={[600, 1000, 1400]} width={46} axisLine={false} {...axis} />
+          <YAxis domain={[400, 1500]} ticks={[600, 1000, 1400]} width={44} axisLine={false} {...axis} />
           <Tooltip content={<Tip show={(r) => `${Math.round(r.meanPauseMs ?? 0)} ms measured (planted ≈ ${r.plantedPauseMs} ms)`} />} cursor={{ stroke: R.line }} />
-          <Line dataKey="meanPauseMs" stroke={R.weekly} strokeWidth={2} isAnimationActive={false}
+          <Line dataKey="meanPauseMs" stroke={R.hero} strokeWidth={2.5} isAnimationActive={false}
             dot={{ r: 4, fill: R.weekly, stroke: R.card, strokeWidth: 2 }} activeDot={false} />
         </LineChart>
       </Panel>
@@ -52,17 +52,17 @@ export function CorpusCharts({ rows }: { rows: CorpusRow[] }) {
         <LineChart data={rows} margin={{ top: 8, right: 10, bottom: 0, left: 0 }}>
           <ReferenceArea y1={-1} y2={1} fill={R.band} fillOpacity={1} stroke="none" />
           {xAxis}
-          <YAxis domain={[-1.5, 6]} ticks={[-1, 0, 1, 3, 5]} width={34} axisLine={false} {...axis} />
+          <YAxis domain={[-1.5, 6]} ticks={[-1, 0, 1, 3, 5]} width={44} axisLine={false} {...axis} />
           <ReferenceLine y={1.5} stroke={R.ink} strokeDasharray="5 4" strokeWidth={1.5} />
           <Tooltip content={<Tip show={(r) => `Drift Index ${r.d == null ? '—' : r.d.toFixed(1)}`} />} cursor={{ stroke: R.line }} />
-          <Line dataKey="d" stroke={R.weekly} strokeWidth={2} isAnimationActive={false}
+          <Line dataKey="d" stroke={R.hero} strokeWidth={2.5} isAnimationActive={false}
             dot={{ r: 4, fill: R.weekly, stroke: R.card, strokeWidth: 2 }} activeDot={false} />
         </LineChart>
       </Panel>
       <Panel title="Retold stories counted">
         <BarChart data={rows} margin={{ top: 8, right: 10, bottom: 0, left: 0 }} barGap={2}>
           {xAxis}
-          <YAxis allowDecimals={false} domain={[0, 3]} ticks={[0, 1, 2, 3]} width={28} axisLine={false} {...axis} />
+          <YAxis allowDecimals={false} domain={[0, 3]} ticks={[0, 1, 2, 3]} width={44} axisLine={false} {...axis} />
           <Tooltip content={<Tip show={(r) => `${r.repeats7d} within 7 days · ${r.repeatsAll} against any earlier chat`} />} cursor={{ fill: R.line }} />
           <Bar dataKey="repeats7d" fill={R.weekly} radius={[3, 3, 0, 0]} maxBarSize={10} isAnimationActive={false} />
           <Bar dataKey="repeatsAll" fill={R.ewma} radius={[3, 3, 0, 0]} maxBarSize={10} isAnimationActive={false} />

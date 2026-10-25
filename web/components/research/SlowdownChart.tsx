@@ -51,14 +51,14 @@ export function SlowdownChart({
           <LineChart data={calls} margin={{ top: TOP_MARGIN, right: 40, bottom: 0, left: 0 }}>
             <CartesianGrid stroke={R.line} vertical={false} />
             <ReferenceArea y1={usual.median - usual.scale} y2={usual.median + usual.scale} fill={R.band} fillOpacity={1} stroke="none" />
-            <XAxis dataKey="day" type="number" domain={[0, 'dataMax']} ticks={[0, 14, 28, 42, 56, 70, 84]}
+            <XAxis dataKey="day" type="number" domain={[0, 'dataMax']} padding={{ left: 8, right: 8 }} ticks={[0, 14, 28, 42, 56, 70, 84]}
               tickFormatter={(d: number) => `wk ${d / 7 + 1}`} axisLine={{ stroke: R.line }} {...axis} />
             <YAxis domain={[lo, hi]} width={44} axisLine={false} {...axis} />
             <ReferenceLine y={flagLine} stroke={R.ink} strokeDasharray="5 4" strokeWidth={1.5} />
             <ReferenceLine x={onsetDay} stroke={R.ink2} strokeWidth={1.5}
               label={{ value: 'Slowdown starts', position: 'insideBottomRight', fill: R.ink2, fontSize: 15, offset: 8 }} />
             <Tooltip content={<Tip />} cursor={{ stroke: R.line }} />
-            <Line dataKey="wpm" stroke={R.weekly} strokeWidth={2} strokeOpacity={0.45} isAnimationActive={false}
+            <Line dataKey="wpm" stroke={R.hero} strokeWidth={2.5} isAnimationActive={false}
               dot={(p) => <Dot {...(p as Parameters<typeof Dot>[0])} />} activeDot={false} />
           </LineChart>
         </ResponsiveContainer>

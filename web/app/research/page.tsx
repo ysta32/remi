@@ -34,22 +34,13 @@ const slowdown = evalData.slowdown as {
   example: { usual: { median: number; scale: number }; calls: SlowCall[] };
 };
 
-const card = 'rounded-[28px] border border-line bg-card p-5 md:p-6';
+// Same card as the chat recap.
+const card = 'rounded-3xl border border-line bg-card p-[22px] shadow-[0_2px_6px_rgba(29,43,69,0.04)]';
 const h2 = 'text-[30px] font-black tracking-tight';
 const lede = 'max-w-[75ch] text-ink-2';
 const small = 'max-w-[75ch] text-base text-ink-2';
 const pc = (v: number) => `${Number.isInteger(v) ? v : v.toFixed(1)}%`;
 const n1 = (v: number) => v.toFixed(v < 1 ? 2 : 1).replace(/\.0+$/, '');
-
-function Step({ n, title, children }: { n: number; title: string; children?: React.ReactNode }) {
-  return (
-    <div className="flex flex-wrap items-center gap-3">
-      <span aria-hidden className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink text-base font-black text-white">{n}</span>
-      <h2 id={`s${n}`} className={h2}>{title}</h2>
-      {children}
-    </div>
-  );
-}
 
 function Stat({ value, label }: { value: string; label: string }) {
   return (
@@ -89,10 +80,10 @@ export default function ResearchPage() {
   return (
     <>
       <SiteNav variant="app" />
-      <main className="mx-auto max-w-[1200px] space-y-14 px-4 pb-16 md:px-8">
+      <main className="mx-auto max-w-[1200px] space-y-12 px-4 pb-16 md:px-8">
         <header className="space-y-4">
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-[40px] font-black leading-tight tracking-tight">Noticing the speech changes linked to early cognitive decline</h1>
+            <h1 className="text-[34px] font-black leading-[1.05] tracking-tight [text-wrap:balance] md:text-[44px]">Noticing the speech changes linked to early cognitive decline</h1>
             <SimulatedBadge />
           </div>
           <p className={lede}>
@@ -109,12 +100,12 @@ export default function ResearchPage() {
           <Stat value={`${pc(di.moodCognitiveAlertPct)}`} label={`of low-mood weeks were mistaken for a change in talking (first rule: ${pc(cur.moodCognitiveAlertPct)})`} />
         </section>
 
-        <section aria-labelledby="s1" className="space-y-4">
-          <Step n={1} title="Who we simulated" />
+        <section aria-labelledby="who" className="space-y-4">
+          <h2 id="who" className={h2}>Who we simulated</h2>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {PERSONAS.map((p) => (
               <article key={p.key} className={card}>
-                <h3 className="text-[22px] font-extrabold">{p.title}</h3>
+                <h3 className="text-[22px] font-black">{p.title}</h3>
                 <p className="mt-2 text-ink-2">{p.who}</p>
               </article>
             ))}
@@ -122,10 +113,8 @@ export default function ResearchPage() {
           <p className={small}>Each person was simulated {evalData.seeds} times.</p>
         </section>
 
-        <section aria-labelledby="s2" className="space-y-4">
-          <Step n={2} title="Results" />
-
-          <h3 className="pt-2 text-[24px] font-black">Cognitive-decline pattern over six months</h3>
+        <section aria-label="Results" className="space-y-4">
+          <h2 className={h2}>Cognitive-decline pattern over six months</h2>
           <p className={lede}>
             The cognitive-decline pattern unfolding at a realistic pace (weeks 3–26). In this typical run the first family
             note comes in week {realisticNotes[0]}, about halfway through the change. While the change continues, reminders
@@ -162,7 +151,7 @@ export default function ResearchPage() {
             nothing to worry about. Smaller changes take longer to notice, and some aren&apos;t noticed within six months.
           </p>
 
-          <h3 className="pt-6 text-[24px] font-black">A sudden slowdown in talking speed</h3>
+          <h2 className={`pt-8 ${h2}`}>A sudden slowdown in talking speed</h2>
           <p className={lede}>
             A big drop in pace shouldn&apos;t wait weeks for the weekly score. After every call, {APP_NAME} also checks
             talking speed on its own: if it is far below his usual on {DEFAULT_DRIFT_INDEX_OPTIONS.sharpCalls} chats in a
@@ -206,7 +195,7 @@ export default function ResearchPage() {
             hanging up.
           </p>
 
-          <h3 className="pt-6 text-[24px] font-black">Three people side by side (8 weeks, compressed)</h3>
+          <h2 className={`pt-8 ${h2}`}>Three people side by side (8 weeks, compressed)</h2>
           <DriftLegend />
           <div className="grid gap-4 lg:grid-cols-3">
             {PERSONAS.filter((p) => p.key !== 'slowdown').map((p) => {
@@ -215,7 +204,7 @@ export default function ResearchPage() {
               const wellbeing = weeks.find((w) => w.wellbeingCard);
               return (
                 <article key={p.key} className={card}>
-                  <h4 className="text-[22px] font-extrabold">{p.title}</h4>
+                  <h3 className="text-[22px] font-black">{p.title}</h3>
                   <div className="mt-3">
                     <DriftIndexChart weeks={weeks} height={210} domain={sideDomain} title={`${p.title}: weekly score`} />
                   </div>
@@ -231,7 +220,7 @@ export default function ResearchPage() {
             })}
           </div>
 
-          <h3 className="pt-6 text-[24px] font-black">Compared with simpler rules</h3>
+          <h2 className={`pt-8 ${h2}`}>Compared with simpler rules</h2>
           <div className={`${card} overflow-x-auto p-0 md:p-0`}>
             <table className="w-full min-w-[760px] text-left">
               <thead className="text-base text-ink-2">
@@ -265,7 +254,7 @@ export default function ResearchPage() {
             message a healthy family more than once a week, which is why {APP_NAME} waits for weeks of evidence.
           </p>
 
-          <h3 className="pt-6 text-[24px] font-black">Every setting is a trade-off</h3>
+          <h2 className={`pt-8 ${h2}`}>Every setting is a trade-off</h2>
           <div className={card}>
             <TradeoffChart sweep={evalData.sweep as SweepPoint[]} />
           </div>
@@ -276,10 +265,11 @@ export default function ResearchPage() {
           </p>
         </section>
 
-        <section aria-labelledby="s3" className="space-y-4">
-          <Step n={3} title="Checked on generated conversations">
+        <section aria-labelledby="generated" className="space-y-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <h2 id="generated" className={h2}>Checked on generated conversations</h2>
             <SimulatedBadge />
-          </Step>
+          </div>
           <p className={lede}>
             Separately, a synthetic transcript generator wrote four weeks of chats for a fictional person, with pauses that
             get longer each week (about 600 → 1,400 ms) and stories retold two weeks later. We ran the real marker code on

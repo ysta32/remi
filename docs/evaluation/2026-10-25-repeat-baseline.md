@@ -35,3 +35,7 @@ It contains `snapshot.tar.gz`, an archive SHA-256 file, and an unpacked snapshot
 6. For an untouched final test, tune only on development material, freeze the selected settings, then evaluate new incident families and hard negatives with separate chronological history. A new seed using the same catalog is not an independent test of new story content. Do not use the current combined demo as untouched held-out evidence.
 
 No evaluation score has been computed by this checkpoint. Human review is still pending. This does not test clinical validity or live FaceTime integration.
+
+## Open the local review packet
+
+On Ryan's Mac, open `/Users/ryanwatach/Documents/Projects/PSU/remi/data/evaluation-review/review.html` in a browser. It contains all 12 conversations and 60 planted items with links to earlier passages; predictions are hidden. Open `review-notes.txt` from the same folder in TextEdit or VS Code, record checked/corrected/unresolved for each item, and save. The browser document is read-only and does not save decisions. `START-HERE.txt` gives step-by-step instructions. These local files are ignored by Git and are not included in this pull request. The original corpus and frozen checkpoint remain unchanged.

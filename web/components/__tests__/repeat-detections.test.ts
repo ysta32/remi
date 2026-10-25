@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { RepeatDetections } from '../RepeatDetections';
 import { HowHesDoing } from '../HowHesDoing';
 import { SnapshotCard } from '../SnapshotCard';
+import { ChatCard } from '../ChatCard';
 import { earlierCallsForTarget } from '../TimelineView';
 import { syntheticTranscriptNotice, SYNTHETIC_TRANSCRIPT_NOTICE } from '@/lib/synthetic-demo';
 import type { RepeatAnalysisView, Timeline } from '@/lib/types';
@@ -69,4 +70,18 @@ describe('repeat detections visible evidence', () => {
     expect(notice).toContain('summaries have not been run');
     expect(notice).not.toContain('repeat analysis have not been run');
   });
+});
+
+it('preserves six-card pagination and expands older repeat targets in the recap layout', () => {
+  const calls = Array.from({ length: 14 }, (_, i) => ({ id: `call-${i}` }));
+  expect(earlierCallsForTarget(calls, false, undefined, 6)).toHaveLength(6);
+  expect(earlierCallsForTarget(calls, false, undefined, 12)).toHaveLength(12);
+  expect(earlierCallsForTarget(calls, false, 'call-13', 6)).toHaveLength(14);
+  expect(earlierCallsForTarget(calls, false, ['call-13'], 6)).toHaveLength(6);
+});
+it('gives recap cards the same stable targets used by repeat evidence links', () => {
+  const call = { id: 'old /?', startedAt: '2026-09-28T14:00:00Z', durationS: 180, status: 'done', summary: null, mood: null, photosShown: [], familyQuestion: null, isSimulated: true } as const;
+  const html = renderToStaticMarkup(React.createElement(ChatCard, { call: { ...call, photosShown: [] }, href: '/recap', highlight: false, factCount: 0 }));
+  expect(html).toContain('id="call-old /?"');
+  expect(html).toContain('href="/recap"');
 });

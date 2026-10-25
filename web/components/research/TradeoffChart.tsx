@@ -54,7 +54,7 @@ export function TradeoffChart({ sweep, height = 320 }: { sweep: SweepPoint[]; he
             <XAxis type="number" dataKey="stableAlertsPerYear" domain={[0, 1]} ticks={[0, 0.25, 0.5, 0.75, 1]}
               axisLine={{ stroke: R.line }} {...axis}
               label={{ value: 'Unneeded notes per year, steady person →', position: 'insideBottom', offset: -20, fill: R.ink2, fontSize: 16 }} />
-            <YAxis type="number" dataKey="detectedPct" domain={[70, 100]} ticks={[70, 80, 90, 100]} width={52}
+            <YAxis type="number" dataKey="detectedPct" domain={[70, 100]} ticks={[70, 80, 90, 100]} width={44}
               tickFormatter={(v: number) => `${v}%`} axisLine={false} {...axis} />
             <Tooltip content={<Tip />} cursor={false} />
             <Scatter data={sweep} shape={(p: unknown) => <Dot {...(p as Parameters<typeof Dot>[0])} />} isAnimationActive={false} />
