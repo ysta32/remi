@@ -13,7 +13,8 @@
     "test": "node --test 'test/*.test.mjs'",
     "help": "node agent.mjs --help",
     "models": "node --env-file=.env.local scripts/list-models.mjs",
-    "contacts": "node scripts/contacts.mjs"
+    "contacts": "node scripts/contacts.mjs",
+    "latency:model": "node --env-file=.env.local scripts/model-latency.mjs"
   },
   "dependencies": {
     "@livekit/agents": "1.8.0",

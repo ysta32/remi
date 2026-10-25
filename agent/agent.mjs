@@ -19,6 +19,7 @@ import { createTurnGuard } from './lib/turn-guard.mjs';
 import { collectTranscript } from './lib/transcript.mjs';
 import { renderPhotoCard, withPulse } from './lib/card.mjs';
 import { startCapture } from './lib/wav.mjs';
+import { createLatencyProbe, formatLatency } from './lib/latency-probe.mjs';
 import { missingTextConfig } from './brain/notify.mjs';
 import { createCallMemory } from './lib/call-memory.mjs';
 
@@ -80,9 +81,11 @@ export default defineAgent({
     const wav = config.captureAudio ? startCapture(join(CALLS_DIR, `${call.localId}.wav`), { log }) : null;
     // One decode of the caller's audio feeds the WAV now and barge-in once the guard exists.
     let guard = null;
+    const probe = createLatencyProbe({ log });
     const stopTap = tapCallerAudio(ctx.room, caller.identity, (f) => {
       wav?.write(f.data);
       guard?.onCallerFrame(f);
+      probe.onCallerFrame(f);
     }, log);
 
     // Photos load in the background; show_photo uses whatever has arrived.
@@ -145,7 +148,7 @@ export default defineAgent({
           },
       }),
     });
-    session.on(voice.AgentSessionEventTypes.AgentStateChanged, (ev) => { speaking = ev.newState === 'speaking'; });
+    session.on(voice.AgentSessionEventTypes.AgentStateChanged, (ev) => { speaking = ev.newState === 'speaking'; probe.onAgentState(ev.newState); });
     session.on(voice.AgentSessionEventTypes.Error, (ev) => log(`[session] error: ${ev.error?.message ?? ev.error}`));
 
     guard = createTurnGuard(session, {
@@ -180,6 +183,7 @@ export default defineAgent({
         const id = await call.ready;
         const audio = wav ? await wav.finish(join(CALLS_DIR, `${id ?? call.localId}.wav`)) : null;
         if (audio) log(`[wav] ${audio.ms} ms of caller audio → ${audio.path}`);
+        log(`[lat] call: ${formatLatency(probe.summary())}`);
         const utterances = transcript.utterances();
         const lat = transcript.latencies;
         const med = lat.length ? [...lat].sort((a, b) => a - b)[Math.floor(lat.length / 2)] : null;
@@ -218,6 +222,11 @@ export default defineAgent({
       },
       outputOptions: { audioEnabled: true, transcriptionEnabled: false },
     });
+    // Raw OpenAI events with their arrival time, for the latency breakdown. The realtime
+    // session is internal to AgentActivity in 1.8.0 (same reach as lib/turn-guard.mjs).
+    const rt = session.activity?.realtimeSession;
+    if (rt?.on) rt.on('openai_server_event_received', probe.onServerEvent);
+    else log('[lat] realtime session not reachable; model timings off');
 
     // Greet once, when chert dev reports FaceTime is ready (the Mac ends the call if it
     // hears nothing within 10 s of that). GREET_ON_JOIN=1 greets now: browser tests only.
