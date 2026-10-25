@@ -16,10 +16,6 @@ export function Hero() {
         <Link href={DEMO_ELDER_PATH} className="mt-7 inline-flex items-center rounded-full bg-ink px-7 py-4 text-lg font-extrabold text-white hover:bg-[#2b3d5f]">
           See Hal&apos;s chats
         </Link>
-        <p className="mt-5 text-[17px] text-ink-on-hero">
-          Judges: <b className="text-ink">FaceTime Remi as Hal</b>, then watch his page update.
-        </p>
-        <p className="mt-2 text-base text-ink-on-hero">Live demo · Hal&apos;s earlier history is simulated.</p>
       </div>
 
       {/* The bubble sits in the illustration's transparent upper-left, beside the phone, never over Hal. */}
