@@ -14,7 +14,7 @@ Each agent edits **only its own section** plus appends to "Requests" and "Contra
 - Verified APIs (package@version → names used): none yet. Tool specs are plain JSON Schema; wrap with the @livekit/agents tool helper after checking node_modules.
 - Live test results (date/time, call type, two-way audio, video, hangup, second call, latency):
 - Mocked / not yet real: iMessage alert path uses `chert-sdk imessage send` (same as tools/chert-agent.mjs), untested against the live service; dispatch webhook has no provider.
-- Known issues: 19/19 unit tests pass (Node 24.22.1). Rendered prompt is ~940–1130 words, above the ~900 target; trim if latency suffers. Greeting is on `bridge_ready` per Chert beta.10 AGENTS.md, which supersedes SPEC §5.5 "caller speaks first".
+- Known issues: 21/21 unit tests pass (Node 24.22.1). Rendered prompt is ~1330–1530 words (open-ended answering + cognitive stimulation sections), above the ~900 target; measure latency on a live call and trim if replies feel slow. Greeting is on `bridge_ready` per Chert beta.10 AGENTS.md, which supersedes SPEC §5.5 "caller speaks first".
 
 ## B — Backend
 - Status:
