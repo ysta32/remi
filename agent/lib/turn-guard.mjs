@@ -124,7 +124,11 @@ export function createTurnGuard(session, opts = {}) {
   function commitTurn() {
     const rt = session.activity?.realtimeSession;
     Promise.resolve(rt?.commitAudio?.())
-      .then(() => { try { session.generateReply(); } catch (err) { log(`[turn] reply: ${err.message}`); } })
+      .then(() => {
+        // The model may have answered on its own meanwhile; a second reply errors out.
+        if (session.agentState !== 'listening') return;
+        try { session.generateReply(); } catch (err) { log(`[turn] reply: ${err.message}`); }
+      })
       .catch((err) => log(`[turn] commit: ${err.message}`));
   }
 

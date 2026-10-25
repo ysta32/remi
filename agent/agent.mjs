@@ -169,7 +169,17 @@ export default defineAgent({
           },
       }),
     });
-    session.on(voice.AgentSessionEventTypes.AgentStateChanged, (ev) => { speaking = ev.newState === 'speaking'; probe.onAgentState(ev.newState); });
+    // Unanswered-turn watchdog: room noise can cancel the model's reply to a finished caller
+    // turn (a false speech start interrupts it), and Remi then waits until "hello?". If the
+    // caller finished and Remi is still just listening after NO_REPLY_MS, answer anyway.
+    let noReply = null;
+    const clearNoReply = () => { if (noReply) { clearTimeout(noReply); noReply = null; } };
+    session.on(voice.AgentSessionEventTypes.AgentStateChanged, (ev) => {
+      speaking = ev.newState === 'speaking';
+      probe.onAgentState(ev.newState);
+      if (ev.newState !== 'listening') clearNoReply();
+    });
+    session.on(voice.AgentSessionEventTypes.UserStateChanged, (ev) => { if (ev.newState === 'speaking') clearNoReply(); });
     session.on(voice.AgentSessionEventTypes.Error, (ev) => log(`[session] error: ${ev.error?.message ?? ev.error}`));
 
     guard = createTurnGuard(session, {
@@ -183,6 +193,13 @@ export default defineAgent({
       if (!item?.textContent) return;
       memory.add(item.role, item.textContent);
       if (item.role !== 'user') return;
+      clearNoReply();
+      noReply = setTimeout(() => {
+        noReply = null;
+        if (session.agentState !== 'listening' || session.userState === 'speaking') return;
+        log('[turn] no reply to the last caller turn; answering');
+        try { session.generateReply(); } catch (err) { log(`[turn] reply: ${err.message}`); }
+      }, config.noReplyMs);
       brain.safetyCheck(item.textContent);
       if (memory.callerTurns % MEMORY_EVERY === 0) {
         const section = memory.section(context.elder.preferredName);

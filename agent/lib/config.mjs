@@ -29,6 +29,7 @@ export function readConfig(env = process.env) {
     // at 700 the caller heard ~1.5 s of dead air (845 ms median reply after the VAD fired).
     // TURN_DETECTION=semantic keeps the plugin's semantic VAD instead.
     turnSilenceMs: int(env.TURN_SILENCE_MS, 450),
+    noReplyMs: int(env.NO_REPLY_MS, 2500),
     vadThreshold: Number.parseFloat(env.VAD_THRESHOLD) || 0.6,
     // near_field for a phone held close; far_field when it sits on a table on speaker.
     noiseReduction: env.NOISE_REDUCTION === 'near_field' ? 'near_field' : 'far_field',
