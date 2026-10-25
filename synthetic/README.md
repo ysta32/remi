@@ -212,3 +212,19 @@ WAVs are mono signed 16-bit little-endian PCM at 24,000 Hz. Each planted pause i
 For later backend STT integration, use a **copy** of the caller WAV alongside its sample-derived utterance times; the backend deletes its input WAV. The caller track retains silent agent regions and is not a complete speaker transcript. This CLI performs no POST to Remi, database import, detector call or measured word alignment. Acoustic analysis and subjective voice quality require separate validation. Synthesized speech, planted patterns and tests establish no medical inference or model accuracy.
 
 The current audio contract is [OpenAI synthetic speech migration](../docs/superpowers/specs/2026-10-25-openai-audio-design.md). Provider references: [text-to-speech guide](https://developers.openai.com/api/docs/guides/text-to-speech) and [speech request API](https://developers.openai.com/api/reference/resources/audio/subresources/speech/methods/create). Software tests use fake transport; actual paid generation and listening require separate verification.
+
+### Measure existing caller audio
+
+From `web/`, validate without network or writes:
+
+```sh
+npm run analyze:synthetic-audio -- --input /absolute/remi/synthetic/output-release --audio /absolute/remi/synthetic/audio-openai-all --output /absolute/remi/synthetic/audio-measured-fresh
+```
+
+For actual STT and pitch measurements, explicitly load local credentials and enable STT:
+
+```sh
+STT_PROVIDER=openai node --env-file=/absolute/private/env.local --import tsx scripts/analyze-synthetic-audio.ts --input /absolute/remi/synthetic/output-release --audio /absolute/remi/synthetic/audio-openai-all --output /absolute/remi/synthetic/audio-measured-fresh --apply
+```
+
+The output directory must be absent, its parent must exist, and paths must be absolute without symlinks. `audio-*` output directories are ignored. The runner preserves source WAVs and never opens the database. Only actual STT words feed lexical markers; uncovered caller turns are explicitly incomplete. Word timestamps outside caller spans are discarded and counted. Pitch confidence comes from the existing acoustic rules separately from text confidence. Provider failures leave no completed manifest; use another fresh destination to retry. These synthesized fictional recordings and measurements are not clinical evidence or detector accuracy results.

@@ -16,7 +16,8 @@
     "fixtures": "tsx scripts/make-fixtures.ts",
     "import:synthetic": "tsx scripts/import-synthetic.ts",
     "analyze:synthetic": "tsx scripts/analyze-synthetic-repeats.ts",
-    "pitch:check": "tsx scripts/pitch-check.mts"
+    "pitch:check": "tsx scripts/pitch-check.mts",
+    "analyze:synthetic-audio": "tsx scripts/analyze-synthetic-audio.ts"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",
