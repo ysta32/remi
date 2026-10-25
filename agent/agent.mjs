@@ -23,7 +23,7 @@ import { createLatencyProbe, formatLatency } from './lib/latency-probe.mjs';
 import { missingTextConfig } from './brain/notify.mjs';
 import { fillSharedEnv } from './lib/env.mjs';
 import { createCallMemory } from './lib/call-memory.mjs';
-import { avatarEnabled, startAvatar } from './lib/avatar.mjs';
+import { avatarEnabled, keepAvatarOut, startAvatar } from './lib/avatar.mjs';
 
 const PHOTO_SECONDS = 90;   // then the face comes back
 const MEMORY_EVERY = 3;     // caller turns between in-call memory refreshes
@@ -230,7 +230,11 @@ export default defineAgent({
 
     if (wantAvatar) {
       avatarOn = (await startAvatar({ session, room: ctx.room, log })).ok;
-      if (!avatarOn) await startOwnVideo();
+      if (!avatarOn) {
+        const stopGuard = keepAvatarOut(ctx.room, { log });
+        ctx.addShutdownCallback(async () => stopGuard());
+        await startOwnVideo();
+      }
     }
     await session.start({
       room: ctx.room,

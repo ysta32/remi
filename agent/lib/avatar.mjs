@@ -7,12 +7,19 @@
 // On when LEMONSLICE_API_KEY and LEMONSLICE_AGENT_ID are set; AVATAR=off turns it off.
 // Any failure leaves the call on Remi's own drawn face and voice.
 import * as lemonslice from '@livekit/agents-plugin-lemonslice';
+import { RoomServiceClient } from 'livekit-server-sdk';
 
 const unset = (v) => /^(?:YOUR_|<|$)/.test(String(v ?? '').trim());
 
 export function avatarEnabled(env = process.env) {
   return String(env.AVATAR ?? '').trim().toLowerCase() !== 'off'
     && !unset(env.LEMONSLICE_API_KEY) && !unset(env.LEMONSLICE_AGENT_ID);
+}
+
+export function avatarFraming(env = process.env) {
+  const variant = unset(env.LEMONSLICE_FRAMING) ? 'off' : env.LEMONSLICE_FRAMING.trim().toLowerCase();
+  if (variant === 'off') return { aspectRatio: '2x3' };
+  return { aspectRatio: '2x3', editImage: true, editImageVariant: variant };
 }
 
 /**
@@ -28,10 +35,12 @@ export async function startAvatar({ session, room, env = process.env, timeoutMs 
       ...(unset(env.LEMONSLICE_PROMPT) ? {} : { agentPrompt: env.LEMONSLICE_PROMPT }),
       // Leave if nothing is said for 5 minutes; the room closing ends it sooner.
       idleTimeout: Number.parseInt(env.LEMONSLICE_IDLE_TIMEOUT, 10) || 300,
-      // FaceTime shows the avatar "fit" inside a portrait phone (the shared line's framing
-      // can't be changed), so render it phone-shaped: 9x16 fills the screen; LemonSlice's
-      // default 2x3 leaves her small. LEMONSLICE_ASPECT=2x3|9x16|1x1.
-      extraPayload: { aspectRatio: unset(env.LEMONSLICE_ASPECT) ? '9x16' : env.LEMONSLICE_ASPECT.trim() },
+      // The Chert Mac shows our video "fit" in a landscape (>=1280x720) window, so the
+      // avatar is only ever as tall as that picture; the frame shape doesn't make her bigger.
+      // A tighter crop does: LemonSlice can reframe the image as a close-up before the call
+      // (editImage, 2x3 only), but that took over 7 s, past the greeting window, so it is off
+      // unless LEMONSLICE_FRAMING=portrait|bust|sitting|standing. Better: a close-up agent image.
+      extraPayload: avatarFraming(env),
       connOptions: { maxRetry: 0, retryIntervalMs: 500, timeoutMs },
     });
     const sessionId = await avatar.start(session, room);
@@ -42,4 +51,21 @@ export async function startAvatar({ session, room, env = process.env, timeoutMs 
     log(`[avatar] lemonslice unavailable (${detail}); using Remi's own face and voice`);
     return { ok: false, detail, ms: Date.now() - t0 };
   }
+}
+
+/**
+ * After a failed or timed-out start, LemonSlice may still join later and publish audio next
+ * to Remi's own; two audio publishers make the Mac end the call. Remove it if it shows up.
+ */
+export function keepAvatarOut(room, { env = process.env, identity = 'lemonslice-avatar-agent', log = () => {} } = {}) {
+  const kick = (p) => {
+    if (p?.identity !== identity) return;
+    log(`[avatar] late ${identity} joined after fallback; removing it`);
+    new RoomServiceClient(env.LIVEKIT_URL.replace(/^ws/, 'http'), env.LIVEKIT_API_KEY, env.LIVEKIT_API_SECRET)
+      .removeParticipant(room.name, identity)
+      .catch((err) => log(`[avatar] remove failed: ${err.message}`));
+  };
+  room.on('participantConnected', kick);
+  for (const p of room.remoteParticipants?.values?.() ?? []) kick(p);
+  return () => room.off('participantConnected', kick);
 }

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { avatarEnabled, startAvatar } from '../lib/avatar.mjs';
+import { avatarEnabled, avatarFraming, startAvatar } from '../lib/avatar.mjs';
 
 test('avatar is on only with a LemonSlice key and agent id, and AVATAR=off wins', () => {
   assert.equal(avatarEnabled({}), false);
@@ -15,4 +15,10 @@ test('startAvatar never throws: a failed start reports ok:false so Remi keeps it
   const r = await startAvatar({ session: {}, room: {}, env: { LEMONSLICE_API_KEY: 'k', LEMONSLICE_AGENT_ID: 'a1' }, log: (l) => lines.push(l) });
   assert.equal(r.ok, false);
   assert.match(lines[0], /\[avatar\] lemonslice unavailable/);
+});
+
+test('avatar framing defaults to plain 2x3; LEMONSLICE_FRAMING picks or disables it', () => {
+  assert.deepEqual(avatarFraming({}), { aspectRatio: '2x3' });
+  assert.deepEqual(avatarFraming({ LEMONSLICE_FRAMING: 'bust' }), { aspectRatio: '2x3', editImage: true, editImageVariant: 'bust' });
+  assert.deepEqual(avatarFraming({ LEMONSLICE_FRAMING: 'off' }), { aspectRatio: '2x3' });
 });
