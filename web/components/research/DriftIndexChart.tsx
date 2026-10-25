@@ -42,6 +42,8 @@ function Tip({ active, payload }: { active?: boolean; payload?: { payload: WeekP
 }
 
 const axis = { tick: { fontSize: 16, fill: R.ink2 }, tickLine: false } as const;
+const TOP_MARGIN = 34;
+const NOTE_ROW_Y = 18; // text baseline inside the top margin
 
 /** Weekly Drift Index bars, smoothed (EWMA) line, "usual" band ±1 and the 1.5 nudge line. */
 export function DriftIndexChart({
@@ -54,7 +56,7 @@ export function DriftIndexChart({
     <figure>
       <div style={{ height }} aria-hidden>
         <ResponsiveContainer width="100%" height="100%">
-          <ComposedChart data={data} margin={{ top: 22, right: 12, bottom: 0, left: 0 }} barCategoryGap="25%">
+          <ComposedChart data={data} margin={{ top: TOP_MARGIN, right: 12, bottom: 0, left: 0 }} barCategoryGap="25%">
             <ReferenceArea y1={-1} y2={1} fill={R.band} fillOpacity={1} stroke="none" />
             <XAxis dataKey="week" tickFormatter={(w: number) => `wk ${w}`} axisLine={{ stroke: R.line }} {...axis} />
             <YAxis domain={domain} ticks={[-1, 0, 1, threshold, 3, 4]} width={34} axisLine={false}
@@ -69,7 +71,8 @@ export function DriftIndexChart({
                 const [x, y, width] = [Number(p.x), Number(p.y), Number(p.width)];
                 if (!w?.nudge || ![x, y, width].every(Number.isFinite)) return <g />;
                 return (
-                  <text x={x + width / 2} y={y - 8} textAnchor="middle" fontSize={16} fontWeight={800} fill={R.ink}>
+                  // All notes sit in one row in the top margin, above every bar and the trend line.
+                  <text x={x + width / 2} y={NOTE_ROW_Y} textAnchor="middle" fontSize={16} fontWeight={800} fill={R.ink}>
                     Note
                   </text>
                 );
