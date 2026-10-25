@@ -25,9 +25,17 @@ export function readConfig(env = process.env) {
     demoMode: on(env.DEMO_MODE),
     // End-of-turn silence for the realtime model's server VAD (contracts default 1000).
     // TURN_DETECTION=semantic keeps the plugin's semantic VAD instead.
-    turnSilenceMs: int(env.TURN_SILENCE_MS, 1000),
+    turnSilenceMs: int(env.TURN_SILENCE_MS, 700),
+    vadThreshold: Number.parseFloat(env.VAD_THRESHOLD) || 0.6,
+    // near_field for a phone held close; far_field when it sits on a table on speaker.
+    noiseReduction: env.NOISE_REDUCTION === 'near_field' ? 'near_field' : 'far_field',
+    // lib/turn-guard.mjs: echo guard (ECHO_GUARD=0 for plain full duplex) and loud-speech barge-in.
+    echoGuard: env.ECHO_GUARD !== '0',
+    bargeIn: env.BARGE_IN !== '0',
+    bargeMinRms: Number.parseFloat(env.BARGE_MIN_RMS) || 0.02,
     turnDetection: env.TURN_DETECTION === 'semantic' ? 'semantic' : 'server',
-    realtimeModel: env.REALTIME_MODEL || 'gpt-realtime',
+    // Newest model, smarter than gpt-realtime; gpt-realtime-2.1-mini answers ~150 ms sooner.
+    realtimeModel: env.REALTIME_MODEL || 'gpt-realtime-2.1',
     voice: env.REALTIME_VOICE || 'marin',
     agentName: env.AGENT_NAME || 'remi',
   };

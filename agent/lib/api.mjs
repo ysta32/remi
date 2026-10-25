@@ -1,11 +1,16 @@
 // The backend client (contracts §4). The live agent, the call simulator and the text
 // chat all use this file, so the harnesses exercise the exact requests a call makes.
 // Nothing here throws: every call has a short timeout and resolves to a result.
-import { readFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { AGENT_DIR, readConfig } from './config.mjs';
+import { AGENT_DIR, TMP_DIR, readConfig } from './config.mjs';
+
+// Last good context per elder. If the backend is down at call time, Remi still knows
+// who it's talking to and what they talked about last time.
+export const CONTEXT_CACHE_DIR = join(TMP_DIR, 'context-cache');
+const cacheFile = (elderId) => join(CONTEXT_CACHE_DIR, `${elderId.replace(/[^\w.-]/g, '_')}.json`);
 
 export function createApi(config = readConfig()) {
   const { apiBase, apiToken, mockContext } = config;
@@ -38,8 +43,20 @@ export function createApi(config = readConfig()) {
     async getContext(elderId, { timeoutMs = 1500 } = {}) {
       if (mockContext) return JSON.parse(await readFile(join(AGENT_DIR, 'fixtures', 'context.json'), 'utf8'));
       const r = await request('GET', `/api/agent/context?elderId=${encodeURIComponent(elderId)}`, null, timeoutMs);
-      if (!r.ok) console.warn(`[api] context for ${elderId} unavailable: ${r.status || ''} ${r.error}`);
-      return r.ok ? r.json : null;
+      if (r.ok && r.json) {
+        mkdir(CONTEXT_CACHE_DIR, { recursive: true })
+          .then(() => writeFile(cacheFile(elderId), JSON.stringify({ savedAt: new Date().toISOString(), context: r.json })))
+          .catch(() => {});
+        return r.json;
+      }
+      console.warn(`[api] context for ${elderId} unavailable: ${r.status || ''} ${r.error}`);
+      try {
+        const { savedAt, context } = JSON.parse(await readFile(cacheFile(elderId), 'utf8'));
+        console.warn(`[api] using cached context from ${savedAt}`);
+        return { ...context, cached: true };
+      } catch {
+        return null;
+      }
     },
 
     /** POST /api/agent/calls → callId, or null. */

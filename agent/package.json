@@ -9,9 +9,10 @@
   "scripts": {
     "start": "node --env-file=.env.local agent.mjs start",
     "mock": "node --env-file=.env.local mock-facetime/server.mjs",
-    "check": "for f in *.mjs scripts/*.mjs test/*.mjs mock-facetime/*.mjs mock-facetime/public/*.js; do node --check \"$f\" || exit 1; done",
+    "check": "for f in *.mjs brain/*.mjs lib/*.mjs scripts/*.mjs test/*.mjs mock-facetime/*.mjs mock-facetime/public/*.js; do node --check \"$f\" || exit 1; done",
     "test": "node --test 'test/*.test.mjs'",
-    "help": "node agent.mjs --help"
+    "help": "node agent.mjs --help",
+    "models": "node --env-file=.env.local scripts/list-models.mjs"
   },
   "dependencies": {
     "@livekit/agents": "1.8.0",
