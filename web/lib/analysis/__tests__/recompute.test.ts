@@ -315,6 +315,20 @@ describe('voice markers (chart only, markers.md §4b)', () => {
     expect(nudgesOf(elderId)).toHaveLength(0);
   });
 
+  it('the stored reason of a nudge never carries voice z', async () => {
+    const { elderId, callIds } = seedWithPitch((week) => (week < 2 ? 3.0 : 1.5));
+    // Pace and pauses drift in weeks 3-4, so a real check-up nudge fires.
+    for (const id of callIds.slice(6)) {
+      getSqlite().prepare("UPDATE call_markers SET value = 110 WHERE call_id = ? AND marker = 'speech_rate'").run(id);
+      getSqlite().prepare("UPDATE call_markers SET value = 14 WHERE call_id = ? AND marker = 'pause_rate'").run(id);
+    }
+    await recomputeElder(elderId);
+    const [n] = nudgesOf(elderId);
+    expect(n.type).toBe('cognitive_checkup');
+    const reason = JSON.parse(n.reason_json) as NudgeReason;
+    for (const w of reason.weeks) expect(Object.keys(w.markerZ)).not.toContain('pitch_var');
+  });
+
   it('voice markers never make a call adequate', async () => {
     const elderId = insertElder();
     setAllConsent(elderId);

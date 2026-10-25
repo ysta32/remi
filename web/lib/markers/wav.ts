@@ -18,11 +18,16 @@ export function parseWav(buf: Uint8Array): WavAudio {
 
   let fmt: { format: number; channels: number; sampleRate: number; bits: number } | null = null;
   let data: { offset: number; size: number } | null = null;
+  // Streaming writers leave sizes as 0 or 0xFFFFFFFF. Only then is a 0-size data chunk "unknown,
+  // read to the end"; otherwise 0 means genuinely empty and later chunks (LIST…) are not audio.
+  const riffSize = view.getUint32(4, true);
+  const streamed = riffSize === 0 || riffSize === 0xffffffff;
   for (let off = 12; off + 8 <= buf.byteLength; ) {
     const id = tag(off);
     const size = view.getUint32(off + 4, true);
     const body = off + 8;
     if (id === 'fmt ') {
+      if (size < 16 || body + 16 > buf.byteLength) throw new Error('WAV fmt chunk is truncated or too short');
       let format = view.getUint16(body, true);
       if (format === FORMAT_EXTENSIBLE && size >= 26) format = view.getUint16(body + 24, true); // SubFormat GUID's first 2 bytes
       fmt = {
@@ -32,10 +37,10 @@ export function parseWav(buf: Uint8Array): WavAudio {
         bits: view.getUint16(body + 14, true),
       };
     } else if (id === 'data') {
-      // Streaming writers may leave the size as 0 or 0xFFFFFFFF; clamp to the bytes we have.
       const avail = buf.byteLength - body;
-      data = { offset: body, size: size === 0 || size > avail ? avail : size };
-      if (fmt) break;
+      const unknown = size === 0xffffffff || (size === 0 && streamed);
+      data = { offset: body, size: unknown || size > avail ? avail : size }; // truncated files: use what we have
+      if (fmt || unknown) break; // an unknown-size data chunk runs to the end of the file
     }
     off = body + size + (size % 2); // chunks are word-aligned
   }

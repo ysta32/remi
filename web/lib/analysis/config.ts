@@ -45,15 +45,24 @@ export const PITCH_HOP_MS = 20; // 50 F0 samples/s is plenty for variability sta
 export const PITCH_MIN_HZ = 60;
 export const PITCH_MAX_HZ = 400;
 export const YIN_THRESHOLD = 0.15;
+// Anti-alias low-pass before resampling to PITCH_ANALYSIS_RATE (windowed-sinc FIR).
+export const PITCH_LOWPASS_HZ = 3400;
+export const PITCH_FIR_TAPS = 63;
 // Voicing gate: frame RMS must reach this fraction of the loud-speech level (95th-percentile
-// frame RMS) and an absolute floor (~ -60 dBFS), so silence and line hiss are skipped.
-export const PITCH_GATE_REL = 0.1;
+// frame RMS, i.e. within ~30 dB of it) and an absolute floor (~ -60 dBFS). Quieter speech still
+// counts; YIN's periodicity test rejects hiss and noise that pass the gate.
+export const PITCH_GATE_REL = 0.03;
 export const PITCH_GATE_ABS = 1e-3;
-export const PITCH_MEDIAN_FILTER = 5; // frames
-export const PITCH_OUTLIER_ST = 10; // drop frames further than this from the call median (octave errors)
+export const PITCH_MEDIAN_FILTER = 5; // frames, applied within each voiced run
+export const PITCH_MIN_RUN = 3; // voiced runs shorter than this are dropped (isolated blips)
+export const PITCH_LOCAL_WINDOW = 21; // frames (~0.4 s) for the local octave-jump check
+export const PITCH_LOCAL_JUMP_ST = 6; // drop frames this far from their local median (octave errors are 12)
+export const PITCH_OUTLIER_ST = 10; // backstop: drop frames further than this from the call median
 export const PITCH_SPAN_PAD_MS = 100; // padding around STT word spans
 export const PITCH_MIN_VOICED_FRAMES = 500; // ~10 s of voiced speech at a 20 ms hop → 'high'
 export const PITCH_MIN_FRAMES_ANY = 25; // ~0.5 s; below this, no value at all
+export const PITCH_MAX_SECONDS = 30 * 60; // analyse at most the first 30 minutes of a recording
+export const PITCH_YIELD_FRAMES = 250; // async tracking yields to the event loop every N frames (~100 ms of work)
 
 // Groups that can drift toward a nudge, in display order. 'voice' (pitch) is deliberately left
 // out: phone microphones, the FaceTime codec, a cold or room noise all shift pitch, so it is

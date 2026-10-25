@@ -17,7 +17,11 @@ import { median } from './stats';
 
 /** Groups that can drift toward a nudge (config NUDGE_GROUPS; 'voice' is chart only). */
 export const GROUP_ORDER: MarkerGroup[] = NUDGE_GROUPS;
-const Z_MARKERS: MarkerKey[] = MARKER_KEYS.filter((k) => k !== 'repeat_stories');
+// Only markers in nudge groups take part in drift, so chart-only voice z never appears in a
+// nudge's stored reason.
+const Z_MARKERS: MarkerKey[] = MARKER_KEYS.filter(
+  (k) => k !== 'repeat_stories' && NUDGE_GROUPS.includes(markerMeta(k).group),
+);
 
 export interface DriftCall {
   callId: string;
