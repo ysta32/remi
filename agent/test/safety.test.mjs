@@ -139,3 +139,36 @@ test('family alert copy uses the elder timezone and no pronouns', () => {
   assert.match(body, /3:42/);
   assert.match(body, /Please check on Hal today/);
 });
+
+test('feeling unwell today is an urgent check-in; past illness and moods are not', () => {
+  for (const text of ["I don't feel so well today", 'I am feeling dizzy', "I'm not feeling well", 'honestly I feel sick']) {
+    assert.ok(screenText(text).some((h) => h.category === 'unwell' && h.level === 'urgent'), text);
+  }
+  for (const text of ["I didn't feel well back in '79", "I don't feel good about the Eagles' chances", 'she was feeling sick that winter']) {
+    assert.ok(!screenText(text).some((h) => h.category === 'unwell'), text);
+  }
+});
+
+test('SAFETY_ALERT_CONTACT texts a saved contact, named from the family list, even without contract v2', async () => {
+  const { savedAlertContact } = await import('../brain/safety.mjs');
+  const book = { get: (l) => (l === 'grandson' ? { label: 'grandson', phone: '+12155550142' } : null) };
+  const family = { ...ctx, emergency: null, family: { primaryContactName: 'Linda', members: [{ name: 'Sam', relation: 'grandson' }] } };
+  const alertContact = savedAlertContact(family, book, { SAFETY_ALERT_CONTACT: 'grandson' });
+  assert.deepEqual(alertContact, { name: 'Sam', phone: '+12155550142' });
+  assert.equal(savedAlertContact(family, book, {}), null);
+
+  const events = [];
+  const texts = [];
+  const monitor = createSafetyMonitor({
+    ctx: family, callId: 'call-2', postEvent: (e) => events.push(e), elapsedMs: () => 10, env: {}, contractV2: false, alertContact,
+    deps: { sendIMessage: async (m) => { texts.push(m); return { ok: true }; }, now: () => new Date('2026-10-24T19:42:00Z') },
+  });
+  monitor.screenCallerText("I don't feel so well today");
+  const guidance = monitor.report({ category: 'self_harm', level: 'urgent', note: 'Said he wants to end it.' });
+  await monitor.flush(100);
+  assert.equal(texts.length, 2);
+  assert.ok(texts.every((t) => t.phone === '+12155550142'));
+  assert.match(texts[0].body, /not feeling well/);
+  assert.match(guidance, /Sam has been sent an alert/);
+  assert.deepEqual(events.map((e) => e.payload.category), ['unwell', 'self_harm']);
+});

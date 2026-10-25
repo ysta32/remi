@@ -12,7 +12,7 @@
 
 import { sendIMessage, dispatchEmergency, maskPhone } from './notify.mjs';
 
-export const CATEGORIES = ['medical_emergency', 'fall', 'self_harm', 'disorientation', 'exploitation', 'other'];
+export const CATEGORIES = ['medical_emergency', 'fall', 'self_harm', 'disorientation', 'exploitation', 'unwell', 'other'];
 export const LEVELS = ['watch', 'urgent', 'emergency']; // ascending severity
 
 const LABELS = {
@@ -21,6 +21,7 @@ const LABELS = {
   self_harm: 'talk of not wanting to live or of self-harm',
   disorientation: 'not knowing where they are',
   exploitation: 'someone asking for money or personal details',
+  unwell: 'not feeling well',
   other: 'something worrying',
 };
 
@@ -45,6 +46,25 @@ export function resolveSafetyConfig(ctx, env = process.env) {
   };
 }
 
+/**
+ * SAFETY_ALERT_CONTACT names a saved contact (lib/contacts.mjs) who gets safety alerts,
+ * e.g. "grandson". Returns { name, phone } or null. The name comes from the family list
+ * when a member's relation matches the label ("grandson" → "Sam").
+ */
+export function savedAlertContact(ctx, book, env = process.env) {
+  const label = String(env.SAFETY_ALERT_CONTACT ?? '').trim();
+  if (!label || !book) return null;
+  const saved = book.get(label);
+  if (!saved || !E164.test(saved.phone)) return null;
+  const member = (ctx?.family?.members ?? []).find((m) => String(m.relation ?? '').toLowerCase() === saved.label);
+  return { name: member?.name ?? saved.label, phone: saved.phone };
+}
+
+/** A saved alert contact replaces the context's emergency contact. */
+export function withAlertContact(cfg, alertContact) {
+  return alertContact ? { ...cfg, contactName: alertContact.name, contactPhone: alertContact.phone, savedContact: true } : cfg;
+}
+
 // --- keyword backstop ---------------------------------------------------------
 // First-person, present-tense phrases only: reminiscence calls are full of past
 // stories ("Dad had chest pains in '79") that must not page the family.
@@ -65,6 +85,10 @@ const RULES = [
   { category: 'self_harm', level: 'urgent', re: /\b(?:i'?d|i would) be better off dead\b/ },
   { category: 'disorientation', level: 'urgent', re: /\bi (?:don'?t|do not) know where i am\b/ },
   { category: 'disorientation', level: 'urgent', re: /\bi (?:can'?t|cannot) find my way (?:home|back)\b/ },
+  { category: 'unwell', level: 'urgent', re: /\bi (?:don'?t|do not) feel (?:so |very |too |all that |that )?(?:well|good|great|right)\b(?! about)/ },
+  { category: 'unwell', level: 'urgent', re: /\bi(?:'?m| am) not feeling (?:so |very |too |all that )?(?:well|good|great|right)\b/ },
+  { category: 'unwell', level: 'urgent', re: /\bi(?:'?m| am) feeling (?:sick|ill|unwell|awful|terrible|poorly|dizzy|faint|under the weather)\b/ },
+  { category: 'unwell', level: 'urgent', re: /\bi feel (?:sick|ill|unwell|awful|terrible|dizzy|faint)\b/ },
   { category: 'exploitation', level: 'urgent', re: /\b(?:buy|send|pay with)\b(?: \w+){0,4} gift cards?\b/ },
   { category: 'exploitation', level: 'urgent', re: /\b(?:wire|send) (?:them|him|her|somebody|someone) (?:some )?money\b/ },
 ];
@@ -100,7 +124,7 @@ function clockTime(date, timeZone) {
 export function familyAlertText({ name, category, level, note, mode, address, at, timeZone }) {
   const when = clockTime(at, timeZone);
   const what = LABELS[category] ?? LABELS.other;
-  const detail = note ? ` Remi's note: "${note.slice(0, 200)}"` : '';
+  const detail = note ? ` Remi's note: ${note.slice(0, 200).replace(/([^.!?])$/, '$1.')}` : '';
   if (level === 'emergency') {
     const ask = mode === '911'
       ? `Please call 911 for ${name} now${address ? ` (address on file: ${address})` : ''}, then call ${name}.`
@@ -122,10 +146,11 @@ export function familyAlertText({ name, category, level, note, mode, address, at
  * @param {object} [o.env]
  * @param {object} [o.deps]  { sendIMessage, dispatchEmergency, now } for tests
  */
-export function createSafetyMonitor({ ctx, callId, postEvent = () => {}, elapsedMs = () => 0, env = process.env, deps = {}, contractV2 = true }) {
-  // Family alerts need Kevin's extended contract (emergency contact). Off: log the
-  // concern as a v1 safety event and never text or dispatch anyone.
-  const cfg = contractV2 ? resolveSafetyConfig(ctx, env) : { ...resolveSafetyConfig(ctx, env), contactPhone: null, dispatchUrl: null };
+export function createSafetyMonitor({ ctx, callId, postEvent = () => {}, elapsedMs = () => 0, env = process.env, deps = {}, contractV2 = true, alertContact = null }) {
+  // Family alerts need Kevin's extended contract (emergency contact), or a saved contact
+  // named by SAFETY_ALERT_CONTACT (alertContact). Neither: log the concern as a safety
+  // event and never text or dispatch anyone.
+  const cfg = withAlertContact(contractV2 ? resolveSafetyConfig(ctx, env) : { ...resolveSafetyConfig(ctx, env), contactPhone: null, dispatchUrl: null }, alertContact);
   const send = deps.sendIMessage ?? sendIMessage;
   const dispatch = deps.dispatchEmergency ?? dispatchEmergency;
   const now = deps.now ?? (() => new Date());
@@ -219,7 +244,7 @@ export function createSafetyMonitor({ ctx, callId, postEvent = () => {}, elapsed
   /** Feed each final caller transcript line here. */
   function screenCallerText(text) {
     for (const hit of screenText(text)) {
-      report({ category: hit.category, level: hit.level, note: `Caller said: "${hit.match}"`, source: 'keyword' });
+      report({ category: hit.category, level: hit.level, note: `${name} said "${hit.match}".`, source: 'keyword' });
     }
   }
 

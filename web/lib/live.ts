@@ -8,7 +8,8 @@ export function settled<T>(result: PromiseSettledResult<T>, previous: T): T {
   return result.status === 'fulfilled' ? result.value : previous;
 }
 
-// Poll every 3 s while a call is being written up, otherwise every 15 s (SPEC §13).
+// Poll every 3 s while a call is live or being written up, otherwise every 15 s (SPEC §13).
+// Live matters: a safety moment lands on the in-progress card mid-call.
 // Callers pass the last known `processing`, so a failed poll mid-call still retries fast.
 export function pollDelay(processing: boolean): number {
   return processing ? POLL_BUSY_MS : POLL_IDLE_MS;
@@ -19,4 +20,9 @@ export function pollDelay(processing: boolean): number {
 export function freshIds(previous: Set<string> | null, keys: string[]): string[] {
   if (!previous) return [];
   return keys.filter((k) => !previous.has(k)).map((k) => k.split('|')[0]);
+}
+
+/** True while any call is in progress or being written up: poll fast. */
+export function busy(t: { processing: boolean; calls: { status: string }[] }): boolean {
+  return t.processing || t.calls.some((c) => c.status === 'in_progress');
 }

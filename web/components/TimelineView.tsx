@@ -9,7 +9,7 @@ import {
 import { USE_FIXTURES } from '@/lib/config';
 import { copy } from '@/lib/copy';
 import { formatRelative } from '@/lib/format';
-import { freshIds, pollDelay, settled } from '@/lib/live';
+import { busy, freshIds, pollDelay, settled } from '@/lib/live';
 import type { Timeline } from '@/lib/types';
 import { FunFacts } from './FunFacts';
 import { GentleNote } from './GentleNote';
@@ -58,7 +58,7 @@ export function TimelineView({
   const known = useRef<{ elderId: string; ids: Set<string> } | null>(null);
   const lastProcessing = useRef(false);
 
-  // Poll fast while a call is processing (lib/live.ts pollDelay).
+  // Poll fast while a call is live or processing (lib/live.ts pollDelay).
   useEffect(() => {
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout>;
@@ -70,7 +70,7 @@ export function TimelineView({
       setElder((prev) => settled(e, prev));
       if (t.status === 'fulfilled') {
         const tl = t.value;
-        lastProcessing.current = tl.processing;
+        lastProcessing.current = busy(tl);
         // A call's key includes its status, so "processing → done" also counts as new.
         const keys = [...tl.calls.map((c) => `${c.id}|${c.status}`), ...tl.funFacts.map((f) => f.id)];
         const fresh = freshIds(known.current?.ids ?? null, keys);

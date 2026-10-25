@@ -2,7 +2,7 @@
 // agent.mjs (voice), scripts/chat.mjs (text) and scripts/simulate-call.mjs import only
 // this, so all three behave the same. CONTRACT_V2 switches Kevin's extended features.
 import { buildInstructions as buildCallInstructions, openingInstructions } from './callflow.mjs';
-import { createSafetyMonitor, resolveSafetyConfig, screenText } from './safety.mjs';
+import { createSafetyMonitor, resolveSafetyConfig, savedAlertContact, screenText, withAlertContact } from './safety.mjs';
 import { createCallFlowTools } from './tools.mjs';
 import { contactsSection, createMessagingTools } from './messaging.mjs';
 import { createContactBook } from '../lib/contacts.mjs';
@@ -27,7 +27,7 @@ const otherCaller = (name) => `IF THE CALLER IS NOT ${name.toUpperCase()}
 
 /** System instructions for one call. */
 export function buildInstructions(ctx, { contractV2 = false, now = new Date(), env = process.env, book = contactBookFor(ctx) } = {}) {
-  const safety = resolveSafetyConfig(ctx, contractV2 ? env : {});
+  const safety = withAlertContact(resolveSafetyConfig(ctx, contractV2 ? env : {}), savedAlertContact(ctx, book, env));
   const name = ctx.elder.preferredName;
   return `${buildCallInstructions(ctx, { safety, contractV2, now })}\n\n${contactsSection(book, name)}\n\n${VOICE_RULES}\n\n${otherCaller(name)}`;
 }
@@ -44,7 +44,8 @@ export const contactBookFor = (ctx, opts) => createContactBook(ctx.elder.id, opt
  * @param {(photo: object) => void} [o.onShowPhoto]
  */
 export function createBrain({ ctx, callId = null, emit, elapsedMs, contractV2 = false, onShowPhoto, env = process.env, book = contactBookFor(ctx), send }) {
-  const safety = createSafetyMonitor({ ctx, callId, postEvent: emit, elapsedMs, contractV2, env: contractV2 ? env : {} });
+  const alertContact = savedAlertContact(ctx, book, env);
+  const safety = createSafetyMonitor({ ctx, callId, postEvent: emit, elapsedMs, contractV2, env: contractV2 ? env : {}, alertContact });
   const tools = [
     ...createCallFlowTools({ postEvent: emit, elapsedMs, safety, contractV2, photos: ctx.photos ?? [], onShowPhoto }),
     ...createMessagingTools({

@@ -84,7 +84,7 @@ export function buildInstructions(ctx, { safety = null, maxMemoryPrompts = 2, no
   const e = ctx.elder;
   const name = e.preferredName;
   const contact = ctx.family?.primaryContactName ?? 'the family';
-  const alertContact = contractV2 && safety?.contactPhone ? (safety.contactName ?? contact) : null;
+  const alertContact = (contractV2 || safety?.savedContact) && safety?.contactPhone ? (safety.contactName ?? contact) : null;
   const demo = Boolean(ctx.demoMode);
   const memoryPrompts = contractV2 ? pickMemoryPrompts(ctx, demo ? 1 : maxMemoryPrompts) : [];
   const fq = ctx.familyQuestion;
@@ -205,18 +205,22 @@ After each one, call record_memory_prompt with its id and how it went.`);
 - Promise to call them; you can't place calls. They can call anytime.
 - Pretend to be a human or a family member.`);
 
-  sections.push(contractV2 ? safetySection(name, alertContact) : safetySectionV1(name, contact));
+  sections.push(contractV2 ? safetySection(name, alertContact) : safetySectionV1(name, contact, alertContact));
 
   return sections.join('\n\n');
 }
 
 // docs/safety-and-copy.md §4, with the categories main's backend accepts.
-function safetySectionV1(name, contact) {
+function safetySectionV1(name, contact, alertContact = null) {
+  const tell = alertContact
+    ? `When report_safety_concern says ${alertContact} was sent an alert, tell ${name} gently that you're letting ${alertContact} know.`
+    : 'Never say you told anyone, unless text_contact said the text is being sent.';
   return `SAFETY (overrides everything above)
 - If ${name} describes a medical emergency happening now (chest pain, can't breathe, a fall and can't get up, stroke signs): tell them clearly to hang up and call 911 now. Call report_safety_concern with category "medical_emergency".
 - If ${name} talks about wanting to die, harming themselves, or feeling hopeless: slow down, respond with care, and tell them they can call or text 988, the Suicide and Crisis Lifeline, any time, or call 911 if they are in danger right now. Encourage them to reach out to ${contact}. Call report_safety_concern with category "self_harm". Do not return to the photos or the theme; stay supportive.
+- If ${name} says they feel sick, unwell, dizzy, or not right today (and it is not an emergency): call report_safety_concern with category "other", then ask kindly how they're feeling and whether they've eaten and taken their medicine.
 - Anything else that worries you about their safety right now (someone asking for money or bank details, not knowing where they are): stay calm and kind, and call report_safety_concern with category "other".
-- Never say you called 911 or that help is on the way. Never say you told anyone, unless text_contact said the text is being sent.`;
+- Never say you called 911 or that help is on the way. ${tell}`;
 }
 
 function safetySection(name, alertContact) {
@@ -224,9 +228,9 @@ function safetySection(name, alertContact) {
     ? `Tell ${name} you're letting ${alertContact} know, if the tool result says an alert was sent.`
     : 'Do not say you are telling anyone; no family contact is set up.';
   return `SAFETY (overrides everything above)
-Red flags: chest pain or pressure; trouble breathing; stroke signs (face drooping, slurred speech, a weak arm); a fall, especially if hurt or unable to get up; severe pain or bleeding; talk of wanting to die or hurting themselves; not knowing where they are; not eating or drinking for a day or more; someone asking them for money, gift cards, or bank details; someone hurting or threatening them.
+Red flags: feeling sick, unwell, dizzy, or not right today (category "unwell", level "urgent" unless it's an emergency); chest pain or pressure; trouble breathing; stroke signs (face drooping, slurred speech, a weak arm); a fall, especially if hurt or unable to get up; severe pain or bleeding; talk of wanting to die or hurting themselves; not knowing where they are; not eating or drinking for a day or more; someone asking them for money, gift cards, or bank details; someone hurting or threatening them.
 The moment you hear one, call report_safety_concern BEFORE you reply, with:
-- category: medical_emergency, fall, self_harm, disorientation, exploitation, or other
+- category: medical_emergency, fall, self_harm, disorientation, exploitation, unwell, or other
 - level: "emergency" = danger right now (can't breathe, chest pain, stroke signs, fell and can't get up, about to hurt themselves); "urgent" = family should check in today (fell but okay, confused about where they are, a scam, not eating, wishing they were dead without a plan); "watch" = worth noting, nobody in danger
 - note: one short factual sentence in plain words
 Then follow the tool's result, and:

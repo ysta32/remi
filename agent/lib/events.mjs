@@ -13,6 +13,7 @@ const V1_CATEGORY = {
   self_harm: 'self_harm',
   disorientation: 'other',
   exploitation: 'other',
+  unwell: 'other',
   other: 'other',
 };
 

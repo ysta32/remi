@@ -20,3 +20,11 @@ Remi's prompt, call flow, tools and safety handling. Pure modules (no LiveKit im
    - `safety` payload extended: `category` adds `fall`, `disorientation`, `exploitation`; new `level: 'watch' | 'urgent' | 'emergency'`, `source: 'model' | 'keyword'`, `notified`, `dispatched` booleans. Today the backend accepts only `medical_emergency | self_harm | other` with a note.
 3. **Storage + family app**: a table for memory prompts and their outcomes, emergency-contact fields on the elder, and somewhere in the app to show safety levels.
 4. **Product calls for humans**: memory moments conflict with "never quiz or test memory" (safety-and-copy), and family alerting is listed as roadmap.
+
+## Safety alerts to a saved contact
+
+`SAFETY_ALERT_CONTACT=grandson` sends safety alerts (feeling unwell, self-harm talk, falls,
+emergencies) by iMessage to that saved contact (`npm run contacts -- add grandson <number>`),
+named from the family list ("grandson" → Sam). It works with or without `CONTRACT_V2`. Each
+category alerts once per call, and again only if it gets more serious. The family page shows
+the check-in note on the live call card within a few seconds.

@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { getElder, getTimeline, type ElderProfile } from '@/lib/api';
 import { DEMO_ELDER_PATH } from '@/lib/demo';
 import { formatRelative } from '@/lib/format';
-import { pollDelay, settled } from '@/lib/live';
+import { busy, pollDelay, settled } from '@/lib/live';
 import { buildSignals } from '@/lib/signals';
 import type { Timeline } from '@/lib/types';
 import { FunFacts } from '../FunFacts';
@@ -29,7 +29,7 @@ export function TodayRow({ elderId }: { elderId: string }) {
       if (cancelled) return;
       setElder((prev) => settled(e, prev));
       if (t.status === 'fulfilled') {
-        lastProcessing.current = t.value.processing;
+        lastProcessing.current = busy(t.value);
         setTimeline(t.value);
         setFailed(false);
       } else {
