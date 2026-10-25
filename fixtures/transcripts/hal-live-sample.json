@@ -1,0 +1,91 @@
+{
+  "endedAt": "2026-10-25T14:05:03Z",
+  "endReason": "caller_hangup",
+  "utterances": [
+    {
+      "speaker": "caller",
+      "text": "Hello? Is this the, uh, the Remi thing?",
+      "startMs": 1200,
+      "endMs": 5515
+    },
+    {
+      "speaker": "agent",
+      "text": "Hi Hal! It's Remi. Good to hear your voice again. How's your morning going?",
+      "startMs": 6124,
+      "endMs": 11287
+    },
+    {
+      "speaker": "caller",
+      "text": "Oh, not bad, not bad. I was out in the garden early, before it got warm. The tomatoes are about done for the year, you know, but I got a few more Better Boys off the vines. I'll give some to Linda when she comes Sunday.",
+      "startMs": 12378,
+      "endMs": 34739
+    },
+    {
+      "speaker": "agent",
+      "text": "Better Boys, nice. Last time you told me about the big snow in 1977. How has the garden been holding up this fall?",
+      "startMs": 35509,
+      "endMs": 43984
+    },
+    {
+      "speaker": "caller",
+      "text": "Well, um, it's slowing down. I pulled up the beans last week. I put the, uh, the stuff, the eggshells, in the holes like I always do, crushed up. My Dorothy used to laugh at me for that. She said I was feeding the dirt breakfast.",
+      "startMs": 45025,
+      "endMs": 67706
+    },
+    {
+      "speaker": "agent",
+      "text": "Feeding the dirt breakfast! That's lovely. Did Dorothy garden with you?",
+      "startMs": 68804,
+      "endMs": 72795
+    },
+    {
+      "speaker": "caller",
+      "text": "No, no, she did the flowers out front. Marigolds and, um, those purple things, petunias. I did the vegetables in the back. We had a, you know, a deal. She kept the front looking nice for the neighbors and I kept us fed. Worked out for forty-some years.",
+      "startMs": 73330,
+      "endMs": 97196
+    },
+    {
+      "speaker": "agent",
+      "text": "That sounds like a good partnership. Are the Steelers giving you anything to cheer about this season?",
+      "startMs": 97637,
+      "endMs": 103824
+    },
+    {
+      "speaker": "caller",
+      "text": "Ha. Uh, some. They won Sunday, but it was ugly. I mean, the quarterback, he holds the ball too long. I yell at the TV like it can hear me. Sam called me after the game, he was at some, uh, some party at school, and we argued about it for twenty minutes.",
+      "startMs": 104245,
+      "endMs": 130358
+    },
+    {
+      "speaker": "agent",
+      "text": "I bet Sam loved that. It sounds like you two have fun with football.",
+      "startMs": 131230,
+      "endMs": 136507
+    },
+    {
+      "speaker": "caller",
+      "text": "Oh yeah. He's a good kid. Studying, um, engineering up at Penn State. Smarter than me, I'll tell you that. I just fixed engines. He's gonna design the things.",
+      "startMs": 137474,
+      "endMs": 151628
+    },
+    {
+      "speaker": "agent",
+      "text": "Fixing engines for 38 years is no small thing, Hal. Thanks for chatting with me today. Shall we talk again later this week?",
+      "startMs": 152073,
+      "endMs": 160473
+    },
+    {
+      "speaker": "caller",
+      "text": "Sure, sure. That'd be nice. You take care now.",
+      "startMs": 161220,
+      "endMs": 165622
+    },
+    {
+      "speaker": "agent",
+      "text": "You too, Hal. Enjoy those tomatoes. Bye for now!",
+      "startMs": 166647,
+      "endMs": 169882
+    }
+  ],
+  "audioPath": null
+}

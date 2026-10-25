@@ -1,0 +1,85 @@
+{
+  "endedAt": "2026-10-26T14:32:29Z",
+  "endReason": "caller_hangup",
+  "utterances": [
+    {
+      "speaker": "caller",
+      "text": "Hello, hello. It's cold out today, boy.",
+      "startMs": 1200,
+      "endMs": 5127
+    },
+    {
+      "speaker": "agent",
+      "text": "Hi Hal, it's Remi! It's getting cold, isn't it? What have you been up to this week?",
+      "startMs": 5967,
+      "endMs": 12085
+    },
+    {
+      "speaker": "caller",
+      "text": "Oh, not much. Cleaning out the garage. Um, you know, this cold reminds me. Did I ever tell you about the blizzard? Seventy-seven. The big one.",
+      "startMs": 12517,
+      "endMs": 25218
+    },
+    {
+      "speaker": "agent",
+      "text": "I'd love to hear about it.",
+      "startMs": 26276,
+      "endMs": 28641
+    },
+    {
+      "speaker": "caller",
+      "text": "So, uh, January of seventy-seven. The snow just didn't stop. Three days. And at the shops, the roundhouse roof, the old part, it caved in under all that snow. Middle of the night. We heard this, um, this crack, like thunder, and then the whole thing came down on one end.",
+      "startMs": 29270,
+      "endMs": 54789
+    },
+    {
+      "speaker": "agent",
+      "text": "That sounds frightening. Was anyone hurt?",
+      "startMs": 55711,
+      "endMs": 58003
+    },
+    {
+      "speaker": "caller",
+      "text": "No, thank God. Nobody was under that part. But, um, we had engines in there, and we couldn't let 'em freeze up, so me and a couple of the guys, Eddie and, uh, Frank Kowalski, we stayed. Slept two nights right there at the shops on, you know, on some old seat cushions out of a passenger car. Kept the engines running.",
+      "startMs": 58551,
+      "endMs": 89518
+    },
+    {
+      "speaker": "agent",
+      "text": "Two nights at the shops! What did Dorothy think?",
+      "startMs": 89981,
+      "endMs": 93244
+    },
+    {
+      "speaker": "caller",
+      "text": "Ha, she was mad. I mean, not mad, worried. The phones were out. She thought I was, uh, stuck in a ditch somewhere. When I got home she made me, um, pot roast and then told me never to do that again. Course I would've done it again.",
+      "startMs": 94300,
+      "endMs": 117990
+    },
+    {
+      "speaker": "agent",
+      "text": "That's quite a story, Hal. It sounds like the crew really looked out for each other.",
+      "startMs": 118514,
+      "endMs": 124375
+    },
+    {
+      "speaker": "caller",
+      "text": "We did. We did. Good bunch of guys. Most of 'em are gone now. Eddie's still around, I see him at church sometimes.",
+      "startMs": 125302,
+      "endMs": 136129
+    },
+    {
+      "speaker": "agent",
+      "text": "Thanks for sharing that. Maybe you could tell Eddie you were remembering it. Shall we talk again soon?",
+      "startMs": 136807,
+      "endMs": 143455
+    },
+    {
+      "speaker": "caller",
+      "text": "Yeah, okay. Stay warm. Bye.",
+      "startMs": 144351,
+      "endMs": 146892
+    }
+  ],
+  "audioPath": null
+}
