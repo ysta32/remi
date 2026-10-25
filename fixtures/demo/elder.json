@@ -1,0 +1,75 @@
+{
+  "id": "elder-hal",
+  "displayName": "Harold Bennett",
+  "preferredName": "Hal",
+  "language": "en",
+  "timezone": "America/New_York",
+  "about": "Dad worked 38 years at the Altoona railroad shops and loves talking about it. Army 1965–67. Big Steelers fan, loves polka and his tomato garden. Mom (Dorothy) passed in 2021, so go gently there. He lives alone and gets lonely in the evenings.",
+  "primaryContactName": "Linda",
+  "members": [
+    {
+      "name": "Linda",
+      "relation": "daughter"
+    },
+    {
+      "name": "Sam",
+      "relation": "grandson"
+    }
+  ],
+  "isSimulated": true,
+  "photos": [
+    {
+      "id": "p-shops",
+      "caption": "Dad at the Altoona railroad shops, 1971",
+      "people": "Hal",
+      "imageUrl": "/api/photos/p-shops/file"
+    },
+    {
+      "id": "p-lake",
+      "caption": "Hal and Mom at Raystown Lake, 1980",
+      "people": "Hal, Dorothy",
+      "imageUrl": "/api/photos/p-lake/file"
+    },
+    {
+      "id": "p-car",
+      "caption": "Dad with his first car, 1962",
+      "people": "Hal",
+      "imageUrl": "/api/photos/p-car/file"
+    }
+  ],
+  "questions": [
+    {
+      "id": "q-first-job",
+      "text": "What was your first job?",
+      "askedBy": "Linda",
+      "status": "answered"
+    },
+    {
+      "id": "q-met-mom",
+      "text": "How did you meet Mom?",
+      "askedBy": "Linda",
+      "status": "answered"
+    },
+    {
+      "id": "q-first-car",
+      "text": "What was your first car?",
+      "askedBy": "Sam",
+      "status": "pending"
+    }
+  ],
+  "consent": {
+    "proposed": {
+      "summaries": true,
+      "funFacts": true,
+      "speechTrends": true,
+      "mood": true
+    },
+    "elderConfirmed": true,
+    "effective": {
+      "summaries": true,
+      "funFacts": true,
+      "speechTrends": true,
+      "mood": true
+    }
+  }
+}

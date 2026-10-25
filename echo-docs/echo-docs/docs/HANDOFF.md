@@ -32,14 +32,19 @@ Each agent edits **only its own section** plus appends to "Requests" and "Contra
 - Known issues:
 
 ## D — Family app + demo
-- Status:
-- Pages done:
-- Seed results (drift → nudge? stable → none?):
+- Status: D0 + D2 done against fixtures on branch `ws/d-family-app` (Sat ~10 PM). Next: D1 `/setup`.
+- Pages done: `/` (elder picker), `/elders/[id]` (timeline: nudge card, call cards w/ processing shimmer + "New" highlight, fun facts, waiting questions, 8 Recharts trend charts w/ baseline band + simulated/low-confidence styling, retold stories, approved disclaimers). Polls 3 s while processing, else 15 s.
+- How to run: `cd web && npm install && npm run dev` → http://localhost:3000/elders/elder-hal. Fixture switcher bar on the page: `?fixture=drift|stable|unconfirmed|processing|after-call`.
+- Fixtures: `npm run fixtures` regenerates `fixtures/demo/*.json` from `web/scripts/demo-data.ts` (Hal persona, demo.md §2 marker table, seeded PRNG 42). Seed (D4) will reuse `demo-data.ts`.
+- Live vs fixture: all fixture. `web/lib/api.ts` is the single switch; set `NEXT_PUBLIC_USE_FIXTURES=0` once B's endpoints exist.
+- Seed results (drift → nudge? stable → none?): not yet (D4).
 - Screenshots: `fixtures/demo/screenshots/`
-- Known issues:
+- Known issues: none known. Product name is **Remi** (`APP_NAME` in `web/lib/config.ts`).
 
 ## Requests (from → to: what, by when)
--
+- D → B: `web/` is scaffolded (Next 16.4.3, Tailwind 4, Recharts, vitest; `web/lib/types.ts` mirrors contracts §3, `web/lib/config.ts` has `APP_NAME`). Please build `web/db`, `web/app/api` on top of this branch rather than a second scaffold.
+- D → B: confirm field names for `GET /api/elders/:id` (contract §5 lists only the parts). D assumes `ElderProfile` in `web/lib/api.ts`: `{ id, displayName, preferredName, language, timezone, about, primaryContactName, members[], photos[{id,caption,people,imageUrl}], questions[{id,text,askedBy,status}], consent }`.
+- D → C: fixture labels/explainers copied from markers.md §5; `markerMeta()` should return the same strings.
 
 ## Contract changes (date time — change — affected workstreams)
 -
