@@ -9,12 +9,12 @@ Each agent edits **only its own section** plus appends to "Requests" and "Contra
 - Feature freeze: 10:00 AM Sun · Stable submit: 11:30 AM Sun
 
 ## A — Call agent
-- Status:
-- How to run:
-- Verified APIs (package@version → names used):
-- Live test results (date/time, call type, two-way audio, video, hangup, second call, latency):
-- Mocked / not yet real:
-- Known issues:
+- Status: live on Chert FaceTime (shared line +16282788831). Remi greets with memory from the last call, asks one thing at a time, shows family photos as video, and posts events + `/complete` to B. Branch `integrate/all` = main + `ws/A-agent` + `ws/bc-backend`; all suites green (web 169, detector 245, agent 20, smoke 81 checks, typecheck, lint).
+- How to run: `cd web && DEV_TOOLS=1 npx next dev` (needs `AGENT_API_TOKEN`), seed with `POST /api/dev/seed {"scenario":"drift"}`; `cd agent && npm start`, then `chert dev --json` in a second terminal; call the line with FaceTime Video. Browser test without a phone: `GREET_ON_JOIN=1` + `agent/mock-facetime`.
+- Verified APIs (checked in node_modules .d.ts): `@livekit/agents@1.8.0` → `voice.Agent`, `voice.AgentSession`, `voice.AgentSessionEventTypes`, `llm.tool`, `ctx.waitForParticipant`, `ctx.addShutdownCallback`, `session.generateReply`, `session.interrupt`, `activity.realtimeSession.commitAudio` (stuck-turn commit); `@livekit/agents-plugin-openai@1.8.0` → `realtime.RealtimeModel` (server_vad, input transcription, noise reduction); `@livekit/rtc-node@0.13.35` → `AudioStream`, `VideoSource`, `VideoFrame`, `LocalVideoTrack.createVideoTrack`, `publishTrack`, `RoomEvent.TrackSubscribed|RoomEvent.RoomMetadataChanged|RoomEvent.ParticipantDisconnected`.
+- Live test results (Sun Oct 25, FaceTime Video): 1846d64e 1 min 45 s, 9 clean turns, bridge_ready 8.4 s, greeting instant, two-way audio + video, hangup completes the call. 0ddc2fdc 44 s / 3 turns (greeting delay 3.7 s, fixed with deaf start). d8190af8 ended at 2.2 s with no bridge_ready (Chert relay `closed_by_relay`, not the agent). Model reply latency (agent side, caller stop → reply start): gpt-realtime 725 ms, gpt-realtime-2.1 ~850 ms (default), gpt-realtime-2.1-mini ~710 ms; ~1.9–2.7 s heard end to end.
+- Mocked / not yet real: family alerts (Kevin's v2, behind `CONTRACT_V2=1`, off); memory moments (same).
+- Known issues: FaceTime echo used to cut replies off ~2 s in (agents 1.8.0 always interrupts on speech) — fixed with the echo guard (input detached while Remi speaks) plus RMS barge-in. Noisy rooms can hold a caller turn open; the stuck-turn guard commits after 1.6 s at the noise floor. Test calls polluted Hal's DB: re-seed before the demo. Shared-line allocation expires every ~hour (`chert onboard --restart --json` after expiry).
 
 ## B — Backend
 - Status: B0–B6 done on branch `ws/bc-backend` (Next 16.4.3, Drizzle + better-sqlite3, `APP_NAME='Remi'`). `cacheComponents` is off, because it forbids the `runtime='nodejs'` the contract requires.
@@ -131,6 +131,10 @@ Each agent edits **only its own section** plus appends to "Requests" and "Contra
   - It needs a human decision. It also conflicts with "never quiz/test memory" and with "family alerting is roadmap".
 - D → B/C (Siyuan), Sat 11:30 PM: `ws/bc-backend` has `c5247e6` (voice markers `pitch_var`, `pitch_range`) that isn't on `main`. Please merge it to `main`; D will add the chart after.
 - D → A (Kevin) + humans, Sat 11:30 PM: `ws/A-call-flow` (3 commits) is still not on `main`. Decide on its `[contract]` commit, then merge so the demo path runs end to end.
+
+- A → B (only if the team adopts Kevin's `[contract]` 04f3ad3, not merged): see `agent/brain/README.md` for the exact list (new event types `memory_prompt`, safety `level` + categories, `memoryPrompts` and `emergency` on CallContext).
+- A → D: `web/scripts/demo-data.ts` + `make-fixtures.ts` now include `pitch_var`/`pitch_range` (own PRNG, so transcript markers are byte-identical); fixtures regenerated, only the voice series added. Commit `[A→D]` on `integrate/all`.
+- A → humans: `integrate/all` is ready to fast-forward `main`; not pushed (needs your OK).
 
 ## Contract changes (date time — change — affected workstreams)
 - Sun Oct 25 — `[contract]` additive: `MarkerKey` += `pitch_var`, `pitch_range`; `MarkerGroup` += `voice`; unit `st` (semitones). No DB change (`call_markers.marker` is text). Timeline now returns 10 marker series. Chart only: voice never drives nudges. Definitions in markers.md §4b. Affects C (computes), B (timeline passes through), D (render 2 more charts; group `voice`).
