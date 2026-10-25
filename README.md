@@ -49,7 +49,14 @@ During a call, the page updates live.
   analysis.
 - The demo's four weeks of history are simulated, and labeled that way in the app.
 
-## Repeat detector results
+## Can Remi recognize a story it has heard before?
+
+**TL;DR:** In our human-reviewed test, Remi recognized **24 of 30 repeated stories or questions**
+and **didn't mistake any of the 30 new items for a repeat**. It missed six repeats.
+
+This matters because someone can tell the same story in different words. Matching it to an earlier
+call helps Remi remember what has already been shared and gives the family a linked record of retellings.
+A retelling can be intentional; recognizing one is not a judgment about someone's memory or health.
 
 ![Known repeats caught: 24 / 30. Across 60 reviewed items: 24 caught, 6 missed, 30 correctly new, 0 false alarms.](web/public/evaluation/repeat-results.svg)
 
