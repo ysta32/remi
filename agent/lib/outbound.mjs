@@ -13,9 +13,20 @@ import { isUnset } from './env.mjs';
 const TERMINAL = new Set(['ended', 'failed', 'rejected']);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// The FaceTime project key (ftk_...). Anish's setup puts it in CHERT_API_KEY, so accept either.
+export function facetimeToken(env = process.env) {
+  if (/^ftk/.test(String(env.CHERT_FACETIME_TOKEN ?? '').trim())) return env.CHERT_FACETIME_TOKEN.trim();
+  if (/^ftk/.test(String(env.CHERT_API_KEY ?? '').trim())) return env.CHERT_API_KEY.trim();
+  return isUnset(env.CHERT_FACETIME_TOKEN) ? null : env.CHERT_FACETIME_TOKEN;
+}
+
 /** Names of settings an outbound call needs that are missing. */
 export function missingCallConfig(env = process.env) {
-  return ['LIVEKIT_URL', 'LIVEKIT_API_KEY', 'LIVEKIT_API_SECRET', 'CHERT_FACETIME_TOKEN', 'CHERT_PROJECT_ID'].filter((k) => isUnset(env[k]));
+  return [
+    ...['LIVEKIT_URL', 'LIVEKIT_API_KEY', 'LIVEKIT_API_SECRET'].filter((k) => isUnset(env[k])),
+    ...(facetimeToken(env) ? [] : ['CHERT_FACETIME_TOKEN']),
+    ...(isUnset(env.CHERT_PROJECT_ID) ? ['CHERT_PROJECT_ID'] : []),
+  ];
 }
 
 export function normalizeDestination(to) {
@@ -36,7 +47,7 @@ export async function placeCall({ to, video = true, env = process.env, onStatus 
   const rooms = new RoomServiceClient(host, env.LIVEKIT_API_KEY, env.LIVEKIT_API_SECRET);
   const dispatch = new AgentDispatchClient(host, env.LIVEKIT_API_KEY, env.LIVEKIT_API_SECRET);
   const facetime = new ChertControlPlane({
-    token: env.CHERT_FACETIME_TOKEN,
+    token: facetimeToken(env),
     projectId: env.CHERT_PROJECT_ID,
     ...(isUnset(env.CHERT_FACETIME_URL) ? {} : { baseUrl: env.CHERT_FACETIME_URL }),
   });
@@ -100,6 +111,6 @@ export async function placeCall({ to, video = true, env = process.env, onStatus 
 
 /** Ends a call placed earlier (by Chert call id). */
 export async function endCall(callId, env = process.env) {
-  const facetime = new ChertControlPlane({ token: env.CHERT_FACETIME_TOKEN, projectId: env.CHERT_PROJECT_ID });
+  const facetime = new ChertControlPlane({ token: facetimeToken(env), projectId: env.CHERT_PROJECT_ID });
   return facetime.endCall(callId, `remi-end-${callId}`, { reason: 'ended from control panel' });
 }

@@ -55,3 +55,31 @@ test('Messages.app failure resolves ok:false and never throws', async () => {
   assert.equal(r.ok, false);
   assert.match(r.detail, /Not authorized/);
 });
+
+test('ftk key defaults to the shared line: looks up the line, then posts shared-messages', async () => {
+  const calls = [];
+  const fetch = async (url, init = {}) => {
+    calls.push({ url, init });
+    if (url.endsWith('/lines')) return new Response(JSON.stringify({ data: { items: [{ id: '11111111-1111-4111-8111-111111111111' }] } }));
+    return new Response(JSON.stringify({ data: { id: 'm1', state: 'sent' } }));
+  };
+  const r = await sendIMessage({ phone: '+15555550123', body: 'hi', idempotencyKey: 'k1', env: { CHERT_API_KEY: 'ftk_test1', CHERT_PROJECT_ID: 'p1' }, fetch });
+  assert.equal(r.ok, true);
+  assert.equal(r.via, 'shared');
+  const post = calls.find((c) => c.url.endsWith('/shared-messages'));
+  assert.equal(post.url, 'https://facetime.trychert.com/api/v1/shared-messages');
+  assert.equal(post.init.headers['idempotency-key'], 'k1');
+  assert.equal(post.init.headers['x-chert-project-id'], 'p1');
+  assert.deepEqual(JSON.parse(post.init.body), { line_id: '11111111-1111-4111-8111-111111111111', recipient: '+15555550123', text: 'hi' });
+});
+
+test('shared line rejection falls through to the next sender in TEXT_VIA', async () => {
+  const fetch = async (url) => url.endsWith('/lines')
+    ? new Response(JSON.stringify({ data: [{ id: '22222222-2222-4222-8222-222222222222' }] }))
+    : new Response(JSON.stringify({ error: { code: 'recipient_not_verified' } }), { status: 403 });
+  const run = (cmd, args, opts, cb) => cb(null, '', '');
+  const r = await sendIMessage({ phone: '+15555550199', body: 'x', env: { CHERT_API_KEY: 'ftk_test2', CHERT_PROJECT_ID: 'p2', TEXT_VIA: 'shared,messages' }, fetch, run });
+  assert.equal(r.ok, true);
+  assert.equal(r.via, 'messages');
+  assert.match(r.detail, /recipient_not_verified/);
+});
