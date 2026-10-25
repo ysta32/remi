@@ -65,9 +65,40 @@ const markers = computeMarkers(canonicalCall.utterances, canonicalCall.language)
 
 Keep the surrounding result explicitly marked as simulated with `timingSource:'synthetic_authored'`; `computeMarkers` returns marker rows, not provenance. It does not compute `repeat_stories`. Use canonical calls for marker calculations because detector inputs intentionally omit word timing.
 
-The agent create/complete HTTP schemas do not expose a general synthetic import contract: creating calls uses `is_simulated:0`, and completion does not accept a simulation override. Do not POST this corpus there or seed it into an existing elder. This package supplies files and in-memory handoffs only; an additive, isolated import API would need separate integration work.
+The agent create/complete HTTP schemas do not expose a general synthetic import contract: creating calls uses `is_simulated:0`, and completion does not accept a simulation override. Do not POST this corpus there or seed it into an existing elder. Use the separate offline fresh-database importer below for the family dashboard; the generator itself still supplies files and in-memory handoffs only.
 
 The existing backend repetition matcher and this standalone detector are different systems. The legacy `repeat_stories` marker counts caller-initiated stories within a recent window; the standalone detector compares stories and questions against all earlier eligible calls and separates elicitation classes. Do not equate those totals, feed combined counts into the old marker, or use the planted IDs as detector-returned item IDs.
+
+## Offline transcript dashboard demo
+
+The separate `web` importer connects the reviewed canonical transcripts to the existing backend and family dashboard. It validates the manifest, profile, calls and authored timing without reading ground-truth labels, loading credentials or making network/model requests. It never opens an existing database for writing. Keep the generated source bundle and any separate audio artifacts unchanged.
+
+Run from the repository root. Reuse `synthetic/output-release` if it exists; otherwise generate it with `node synthetic/cli.mjs --output synthetic/output-release`. Use absolute paths without `.` or `..` components, with real nonsymlink ancestors (use a canonical repository location on macOS).
+
+```sh
+mkdir -p web/data
+npm --prefix web run import:synthetic -- --input "$PWD/synthetic/output-release" --database "$PWD/web/data/synthetic-demo.db"
+```
+
+This is a dry run: it validates and computes in memory, reporting `dryRun:true`, twelve calls, 96 marker rows and seven baselines for the default corpus, without creating a database. Only the following explicit apply command writes:
+
+```sh
+npm --prefix web run import:synthetic -- --input "$PWD/synthetic/output-release" --database "$PWD/web/data/synthetic-demo.db" --apply
+```
+
+The destination must be fresh under an existing directory. Existing databases, paths, symlinks and SQLite `-wal`, `-shm` or `-journal` sidecars are refused. A failure after reservation can leave a new incomplete database; preserve it for inspection and choose another fresh filename. Do not use the standard seed, reset endpoint or destructive smoke script to set up this demo.
+
+Start the live API/dashboard against exactly that database, from the repository root:
+
+```sh
+DATABASE_PATH="$PWD/web/data/synthetic-demo.db" NEXT_PUBLIC_USE_FIXTURES=0 NEXT_PUBLIC_DEMO_ELDER_ID=elder-synthetic-hal-bennett DEV_TOOLS=0 npm --prefix web run dev -- --hostname 127.0.0.1 --port 3100
+```
+
+Open `http://127.0.0.1:3100/elders/elder-synthetic-hal-bennett` (or the home page's demo link); add `?tab=doing` for speech charts. The default fixture mode and `elder-hal-demo` navigation remain available when the public overrides are omitted. Set public variables before starting dev or building for production, because Next.js embeds them in browser code. See [web/README.md](../web/README.md) for the same setup in the app documentation.
+
+Every imported call is simulated. The runtime notice appears only when the matching imported profile carries the exact provenance notice and every displayed call is simulated. The importer computes seven speech markers per call from canonical authored word times (84 speech readings); the 12 repeat readings are explicitly NULL/na. Baselines use existing helpers and the first six eligible chronological readings. Call cards show labeled, bounded first-caller-turn transcript excerpts. No model summary, topic extraction, repeat detection, embeddings or nudge generation has run for this import; no planted label becomes a detection result. Empty or unavailable latest-week repeats show **Not analyzed yet**. An actual analyzed zero still shows **About his usual**.
+
+Audio was generated separately; see [audio verification](../docs/superpowers/specs/2026-10-25-openai-audio-verification.md). This import attaches no WAVs and runs no STT. Dashboard timing remains **source-authored**, even though separate audio files exist; it is not measured from their sound or sample-derived timing. Imported sharing choices are explicitly fictional demo choices, with summaries/speech trends enabled and fun facts/mood disabled; they do not represent spoken consent from a person.
 
 ## Optional direct-import live replay
 

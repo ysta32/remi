@@ -5,7 +5,7 @@ import { isoWeekKey } from './analysis/weeks';
 import type { MarkerKey, MarkerSeries } from './types';
 
 export type SignalKey = 'pauses' | 'pace' | 'vague' | 'retold';
-export type SignalStatus = 'usual' | 'different' | 'retold' | 'learning';
+export type SignalStatus = 'usual' | 'different' | 'retold' | 'learning' | 'not_analyzed';
 
 export interface SignalPoint {
   callId: string;
@@ -30,6 +30,7 @@ export const STATUS_TEXT: Record<SignalStatus, string> = {
   different: 'Different from his usual lately',
   retold: 'Retold a few stories this week',
   learning: 'Still learning his usual',
+  not_analyzed: 'Not analyzed yet',
 };
 
 // Plain words for a combined "change from usual" reading; same threshold as the status pill.
@@ -99,24 +100,29 @@ function pausesSignal(series: MarkerSeries[]): Signal {
   };
 }
 
-function retoldSignal(series: MarkerSeries | undefined, timeZone: string): Signal {
+function retoldSignal(series: MarkerSeries | undefined, timeZone: string, latestAt: string | undefined): Signal {
   const src = series ? [...series.points].sort(byTime) : [];
   const points = src.map(({ callId, at, value, confidence, isSimulated }) => ({ callId, at, value, confidence, isSimulated }));
-  let status: SignalStatus = 'learning';
-  if (points.length) {
-    const week = isoWeekKey(points[points.length - 1].at, timeZone);
-    const sum = points.filter((p) => isoWeekKey(p.at, timeZone) === week).reduce((n, p) => n + (p.value ?? 0), 0);
-    status = sum >= REPEAT_WEEKLY_MIN ? 'retold' : 'usual';
+  let status: SignalStatus = 'not_analyzed';
+  if (latestAt) {
+    const week = isoWeekKey(latestAt, timeZone);
+    const latestWeek = points.filter((p) => isoWeekKey(p.at, timeZone) === week);
+    // Missing analysis is unknown, even when another call in the week has a count.
+    if (latestWeek.length && latestWeek.every((p) => p.value !== null && p.confidence !== 'na')) {
+      const sum = latestWeek.reduce((n, p) => n + p.value!, 0);
+      status = sum >= REPEAT_WEEKLY_MIN ? 'retold' : 'usual';
+    }
   }
   return { key: 'retold', ...COPY.retold, unit: 'count', band: null, points, status };
 }
 
 export function buildSignals(markers: MarkerSeries[], timeZone = 'America/New_York'): Signal[] {
   const get = (k: MarkerKey) => markers.find((m) => m.key === k);
+  const latestAt = markers.flatMap((m) => m.points).sort(byTime).at(-1)?.at;
   return [
     pausesSignal(PAUSE_KEYS.flatMap((k) => get(k) ?? [])),
     rawSignal('pace', get('speech_rate'), 'wpm'),
     rawSignal('vague', get('vague_rate'), 'per100w'),
-    retoldSignal(get('repeat_stories'), timeZone),
+    retoldSignal(get('repeat_stories'), timeZone, latestAt),
   ];
 }

@@ -11,6 +11,7 @@ import { copy } from '@/lib/copy';
 import { formatRelative } from '@/lib/format';
 import { freshIds, pollDelay, settled } from '@/lib/live';
 import type { Timeline } from '@/lib/types';
+import { isSyntheticTranscriptDemo, SYNTHETIC_TRANSCRIPT_NOTICE } from '@/lib/synthetic-demo';
 import { FunFacts } from './FunFacts';
 import { GentleNote } from './GentleNote';
 import { HowHesDoing } from './HowHesDoing';
@@ -109,6 +110,7 @@ export function TimelineView({
   const nudges = timeline.nudges.filter((n) => !hiddenNudges.has(n.id));
   const shownEarlier = showAll ? earlier : earlier.slice(0, EARLIER_SHOWN);
   const anySimulated = timeline.calls.some((c) => c.isSimulated);
+  const transcriptDemo = elder?.id === timeline.elder.id && isSyntheticTranscriptDemo(elder, timeline.calls);
   const photos = elder?.photos ?? [];
 
   const hide = (nudgeId: string) => {
@@ -131,6 +133,9 @@ export function TimelineView({
           </p>
           {anySimulated && (
             <p className="text-base text-ink-2">Chats marked Simulated are demo history created for this presentation.</p>
+          )}
+          {transcriptDemo && (
+            <p className="rounded-[20px] border border-line bg-card p-5 text-base text-ink-2">{SYNTHETIC_TRANSCRIPT_NOTICE}</p>
           )}
           {error && <p className="text-base text-ink" role="status">Having trouble refreshing. Showing the last update.</p>}
           <TimelineTabs elderId={id} tab={tab} fixture={USE_FIXTURES ? variant : undefined} />

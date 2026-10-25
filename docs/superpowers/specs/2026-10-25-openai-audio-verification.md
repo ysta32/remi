@@ -23,17 +23,23 @@ node synthetic/audio-cli.mjs --input synthetic/output-release
 
 Results: 147/147 synthetic tests; 245/245 detector tests; both syntax checks passed. Static voice listing works without credentials or network. Dry run: 12 calls, 252 segments, 30,271 text characters. Corpus has 96 planted pauses. RED/GREEN evidence and independent review are recorded in the plan ledger. Tests use mocked provider transport but real cache, PCM assembly and filesystem operations; they do not claim live provider or perceptual quality verification.
 
-## Remaining live blocker
+## Live generation completed
 
-No OpenAI key was found in the process or project environment files. The ignored private `synthetic/.env.local` has an empty `OPENAI_API_KEY` entry; user action is required to supply it or identify its existing local path. No actual speech file, listening check, STT or detector live run has been produced. No substitute tones or fabricated speech artifacts were delivered.
+The user configured a private OpenAI key and explicitly requested generation. A one-call smoke run succeeded, followed by all twelve calls. The key was loaded with Node's `--env-file` option; no values were printed or copied. The user's root `env.local` was protected with owner-only permissions and a local Git exclusion.
 
-Once configured, the already authorized generation commands are:
+Actual commands from the worktree root:
 
 ```sh
-node --env-file=synthetic/.env.local synthetic/audio-cli.mjs --input synthetic/output-release --generate --limit 1 --cache synthetic/audio-cache --output synthetic/audio-openai-smoke
-node --env-file=synthetic/.env.local synthetic/audio-cli.mjs --input synthetic/output-release --generate --cache synthetic/audio-cache --output synthetic/audio-openai-all
+node --env-file=/Users/ryanwatach/Documents/Projects/PSU/remi/env.local synthetic/audio-cli.mjs --input synthetic/output-release --generate --limit 1 --cache synthetic/audio-cache --output synthetic/audio-openai-smoke
+node --env-file=/Users/ryanwatach/Documents/Projects/PSU/remi/env.local synthetic/audio-cli.mjs --input synthetic/output-release --generate --cache synthetic/audio-cache --output synthetic/audio-openai-all
 ```
 
-Voice overrides `OPENAI_TTS_CALLER_VOICE` and `OPENAI_TTS_AGENT_VOICE` are optional. Use fresh output directories; existing files are not overwritten. Cached PCM from a successful smoke run is reused for the full run. Source, cache and audio output remain local ignored artifacts.
+Both exited successfully. Full run: 12 calls, 252 planned speech segments, 30,271 source characters, 74 cache hits and 38 output files. The outputs contain 24 WAVs (conversation and caller-only), 12 timing JSON files, README and manifest. Model: `gpt-4o-mini-tts-2025-12-15`; caller voice cedar, agent voice marin; mono signed PCM16 at 24 kHz.
 
-For Siyuan, use a copy of caller WAV with its sample-derived utterance times. The backend deletes input WAVs. Natural generated pauses may extend the exact inserted spans; source-authored word timings are not measured audio. Isolated simulated persistence and actual acoustic/semantic evaluation remain separate work.
+Independent verification parsed the WAVs, checked all 37 payload hashes, verified all 96 planted zero-sample spans against source schedules, and confirmed caller isolation. Every speech segment contains nonzero samples. Call durations range from 163,844 to 191,561 ms; total conversation duration is 2,083,599 ms (34 minutes 43.599 seconds). WAV payloads including headers total 200,028,816 bytes across both tracks.
+
+A cache-only replay reassembled all 12 calls with a provider that throws on cache misses: 252 cache hits, zero network requests, 24 byte-identical WAVs and 12 byte-identical timing files. No additional API billing was needed for this replay.
+
+Audio lives in ignored `synthetic/audio-openai-all/`; the verified one-call preview remains in `synthetic/audio-openai-smoke/`, and verified PCM cache in `synthetic/audio-cache/`. These are local artifacts, not Git source files. Use a fresh output directory to repeat generation; existing data is never overwritten.
+
+This verifies authenticated provider generation and file/sample correctness. Subjective listening, speech-to-text alignment, acoustic analysis, semantic detector accuracy and clinical interpretation were not performed. Natural generated pauses may extend the exact inserted spans; source-authored word timings are not measured audio. For Siyuan, use a copy of caller WAV with its sample-derived utterance times, since the backend deletes input WAVs.

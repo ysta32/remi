@@ -13,7 +13,8 @@
     "seed": "tsx scripts/seed.ts",
     "tune:repeat": "tsx scripts/tune-repeat.ts",
     "try:extract": "tsx scripts/try-extract.ts",
-    "fixtures": "tsx scripts/make-fixtures.ts"
+    "fixtures": "tsx scripts/make-fixtures.ts",
+    "import:synthetic": "tsx scripts/import-synthetic.ts"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",

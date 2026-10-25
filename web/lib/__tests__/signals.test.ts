@@ -40,7 +40,8 @@ describe('buildSignals', () => {
   it('copes with an elder who has no calls yet', () => {
     const signals = buildSignals([]);
     expect(signals).toHaveLength(4);
-    expect(signals.every((s) => s.status === 'learning' && s.points.length === 0)).toBe(true);
+    expect(signals.map((s) => s.status)).toEqual(['learning', 'learning', 'learning', 'not_analyzed']);
+    expect(signals.every((s) => s.points.length === 0)).toBe(true);
   });
 
   it('keeps unusable points as gaps and does not judge on fewer than three good calls', () => {
@@ -70,6 +71,67 @@ describe('STATUS_TEXT', () => {
       different: 'Different from his usual lately',
       retold: 'Retold a few stories this week',
       learning: 'Still learning his usual',
+      not_analyzed: 'Not analyzed yet',
     });
+  });
+});
+
+// Missing analysis must never become a measured zero or reuse an older week's result.
+describe('retold availability', () => {
+  const repeatSeries = (...points: MarkerSeries['points']): MarkerSeries => ({
+    key: 'repeat_stories', label: 'Retold stories', explainer: '', unit: 'count',
+    concern: 'up', group: 'repetition', baseline: null, points,
+  });
+  const point = (at: string, value: number | null, confidence: 'high' | 'na' = 'high') => ({
+    callId: at, at, value, z: null, confidence, isSimulated: true,
+  });
+  const status = (series: MarkerSeries) => byKey([series]).retold.status;
+
+  it('leaves null and na latest-week readings unanalyzed', () => {
+    expect(status(repeatSeries(point('2026-10-19T14:00:00Z', null, 'na')))).toBe('not_analyzed');
+    expect(status(repeatSeries(point('2026-10-19T14:00:00Z', 0, 'na')))).toBe('not_analyzed');
+    expect(status(repeatSeries(point('2026-10-19T14:00:00Z', null)))).toBe('not_analyzed');
+  });
+
+  it('does not fall back to an analyzed earlier week', () => {
+    expect(status(repeatSeries(
+      point('2026-10-12T14:00:00Z', 4),
+      point('2026-10-19T14:00:00Z', null, 'na'),
+    ))).toBe('not_analyzed');
+  });
+
+  it('uses the latest marker week when that week has no repeat rows', () => {
+    const repeats = repeatSeries(point('2026-10-12T14:00:00Z', 4));
+    const pace = { ...repeatSeries(point('2026-10-19T14:00:00Z', 110)), key: 'speech_rate' as const };
+    expect(byKey([repeats, pace]).retold.status).toBe('not_analyzed');
+  });
+
+  it('keeps a partially unavailable latest week unknown', () => {
+    expect(status(repeatSeries(
+      point('2026-10-19T14:00:00Z', 3),
+      point('2026-10-21T14:00:00Z', null, 'na'),
+    ))).toBe('not_analyzed');
+  });
+
+  it('treats an analyzed zero as usual and applies the weekly threshold to actual counts', () => {
+    expect(status(repeatSeries(point('2026-10-19T14:00:00Z', 0)))).toBe('usual');
+    expect(status(repeatSeries(point('2026-10-19T14:00:00Z', 2)))).toBe('usual');
+    expect(status(repeatSeries(
+      point('2026-10-19T14:00:00Z', 1),
+      point('2026-10-21T14:00:00Z', 2),
+    ))).toBe('retold');
+  });
+
+  it('sums only the latest week and respects the elder timezone at a week boundary', () => {
+    const series = repeatSeries(
+      point('2026-10-18T14:00:00Z', 2),
+      point('2026-10-19T01:00:00Z', 1),
+    );
+    expect(buildSignals([series], 'America/New_York')[3].status).toBe('retold');
+    expect(buildSignals([series], 'UTC')[3].status).toBe('usual');
+    expect(status(repeatSeries(
+      point('2026-10-12T14:00:00Z', 4),
+      point('2026-10-19T14:00:00Z', 0),
+    ))).toBe('usual');
   });
 });
