@@ -1,5 +1,19 @@
 import { describe, expect, it } from 'vitest';
-import { freshIds, pollDelay, settled } from '../live';
+import { freshIds, isBusy, pollDelay, settled } from '../live';
+
+describe('isBusy', () => {
+  it('is busy while a call is in progress, so updates during the call arrive fast', () => {
+    expect(isBusy({ processing: false, calls: [{ status: 'in_progress' }] })).toBe(true);
+  });
+
+  it('is busy while a call is being written up', () => {
+    expect(isBusy({ processing: true, calls: [{ status: 'processing' }] })).toBe(true);
+  });
+
+  it('is idle when every call is done', () => {
+    expect(isBusy({ processing: false, calls: [{ status: 'done' }, { status: 'failed' }] })).toBe(false);
+  });
+});
 
 describe('settled', () => {
   it('uses the new value when the request succeeded', () => {
