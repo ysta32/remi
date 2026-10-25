@@ -8,9 +8,7 @@ export function Hero() {
     <section className="grid items-center overflow-hidden rounded-[28px] bg-hero md:grid-cols-[1fr_1.15fr] md:rounded-[40px]">
       <div className="px-6 pb-4 pt-8 md:py-12 md:pl-14 md:pr-0">
         <h1 className="text-[40px] font-black leading-[1.12] tracking-tight md:text-[60px]">
-          Grandpa calls.<br />Remi listens.<br />You get his{' '}
-          {/* Marker-style highlight on the lower half only, so it never touches the line above. */}
-          <span className="bg-[linear-gradient(transparent_52%,var(--joy)_52%,var(--joy)_92%,transparent_92%)] px-1">stories.</span>
+          Grandpa calls.<br />Remi listens.<br />You get his stories.
         </h1>
         <p className="mt-5 max-w-[32ch] text-[19px] text-ink-on-hero md:text-[20px]">
           He FaceTimes a warm, patient companion that remembers every story. You get the fun facts, and a gentle note if anything seems to change.
@@ -18,10 +16,6 @@ export function Hero() {
         <Link href={DEMO_ELDER_PATH} className="mt-7 inline-flex items-center rounded-full bg-ink px-7 py-4 text-lg font-extrabold text-white hover:bg-[#2b3d5f]">
           See Hal&apos;s chats
         </Link>
-        <p className="mt-5 text-[17px] text-ink-on-hero">
-          Judges: <b className="text-ink">FaceTime Remi as Hal</b>, then watch his page update.
-        </p>
-        <p className="mt-2 text-base text-ink-on-hero">Live demo · Hal&apos;s earlier history is simulated.</p>
       </div>
 
       {/* The bubble sits in the illustration's transparent upper-left, beside the phone, never over Hal. */}

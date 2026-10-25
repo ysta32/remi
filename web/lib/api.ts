@@ -66,6 +66,41 @@ export async function getTimeline(elderId: string, variant: FixtureVariant = 'dr
   return getJson(`/api/elders/${encodeURIComponent(elderId)}/timeline`);
 }
 
+// Thrown in sample-data mode so the panel can keep the change on screen and say it isn't saved.
+export class PreviewOnly extends Error {}
+
+async function send<T>(path: string, init: RequestInit): Promise<T> {
+  if (USE_FIXTURES) throw new PreviewOnly('Sample data: not saved');
+  const res = await fetch(path, init);
+  if (!res.ok) {
+    const body = (await res.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(body?.error ?? `${path} → ${res.status}`);
+  }
+  return (res.status === 204 ? undefined : await res.json()) as T;
+}
+
+type Question = ElderProfile['questions'][number];
+type Photo = ElderProfile['photos'][number];
+
+export const addQuestion = (elderId: string, text: string, askedBy: string) =>
+  send<Question>(`/api/elders/${encodeURIComponent(elderId)}/questions`, {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ text, askedBy }),
+  });
+
+export const removeQuestion = (questionId: string) =>
+  send<void>(`/api/questions/${encodeURIComponent(questionId)}`, { method: 'DELETE' });
+
+export function addPhoto(elderId: string, file: File, caption: string, people: string) {
+  const form = new FormData();
+  form.set('file', file);
+  form.set('caption', caption);
+  if (people.trim()) form.set('people', people);
+  return send<Photo>(`/api/elders/${encodeURIComponent(elderId)}/photos`, { method: 'POST', body: form });
+}
+
+export const removePhoto = (photoId: string) =>
+  send<void>(`/api/photos/${encodeURIComponent(photoId)}`, { method: 'DELETE' });
+
 export async function dismissNudge(nudgeId: string): Promise<void> {
   if (USE_FIXTURES) return;
   const res = await fetch(`/api/nudges/${encodeURIComponent(nudgeId)}/dismiss`, { method: 'POST' });
