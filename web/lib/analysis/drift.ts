@@ -10,12 +10,18 @@ import {
   MIN_CALLS_FOR_NUDGE,
   MOOD_LOW_MIN,
   MOOD_WINDOW,
+  NUDGE_GROUPS,
   REPEAT_WEEKLY_MIN,
 } from './config';
 import { median } from './stats';
 
-export const GROUP_ORDER: MarkerGroup[] = ['pace', 'pauses', 'words', 'repetition'];
-const Z_MARKERS: MarkerKey[] = MARKER_KEYS.filter((k) => k !== 'repeat_stories');
+/** Groups that can drift toward a nudge (config NUDGE_GROUPS; 'voice' is chart only). */
+export const GROUP_ORDER: MarkerGroup[] = NUDGE_GROUPS;
+// Only markers in nudge groups take part in drift, so chart-only voice z never appears in a
+// nudge's stored reason.
+const Z_MARKERS: MarkerKey[] = MARKER_KEYS.filter(
+  (k) => k !== 'repeat_stories' && NUDGE_GROUPS.includes(markerMeta(k).group),
+);
 
 export interface DriftCall {
   callId: string;

@@ -112,7 +112,7 @@ describe('timeline consent filtering', () => {
     expect(t.calls[0].isSimulated).toBe(true);
     expect(t.calls[0].familyQuestion).toEqual({ text: 'What was your first car?', askedBy: 'Sam', answer: null });
     expect(t.funFacts).toEqual([]);
-    expect(t.markers).toHaveLength(8);
+    expect(t.markers).toHaveLength(10); // 7 speech + repeat_stories + 2 voice
     const sr = t.markers.find((m) => m.key === 'speech_rate')!;
     expect(sr.baseline).toEqual({ median: 140, mad: 5, n: 4 });
     expect(sr.points.map((p) => p.value)).toEqual([140, 120]);

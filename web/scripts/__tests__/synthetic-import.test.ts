@@ -7,11 +7,12 @@ import { spawnSync } from 'node:child_process';
 import { closeDb } from '@/db/client';
 import { buildTimeline } from '@/lib/server/timeline';
 import { computeMarkers } from '@/lib/markers';
-import { markerMeta, MARKER_KEYS } from '@/lib/markers/meta';
+import { markerMeta, MARKER_KEYS, TEXT_MARKER_KEYS } from '@/lib/markers/meta';
 import { ABS_SPREAD_FLOOR, BASELINE_N, MIN_SCALE } from '@/lib/analysis/config';
 import { buildBaseline, signedZ } from '@/lib/analysis/stats';
 import { generateBundle } from '../../../synthetic/src/generate.mjs';
 import { writeBundle } from '../../../synthetic/src/write.mjs';
+import { markersFor, prng } from '../demo-data';
 import type { Lang, Utterance } from '@/lib/types';
 const importer = await import('@/lib/server/synthetic-import').catch(() => null);
 const helper = await import('@/lib/synthetic-demo').catch(() => null);
@@ -33,6 +34,11 @@ async function run(options: Record<string, unknown> = {}) {
   return importer!.importSyntheticTranscripts({ inputDir, databasePath, ...options });
 }
 describe('isolated offline transcript import', () => {
+  it('keeps ten chart markers separate from seven computed text markers', async () => {
+    expect(Object.keys(markersFor(12,'drift',prng()))).toEqual([...TEXT_MARKER_KEYS]);
+    expect(MARKER_KEYS).toHaveLength(10); expect(TEXT_MARKER_KEYS).toHaveLength(7);
+    await expect(run()).resolves.toMatchObject({ baselineCount: 7 });
+  });
   it('dry run reads no truth, writes nothing and does not change DATABASE_PATH', async () => {
     fs.rmSync(path.join(inputDir, 'ground-truth'), { recursive: true });
     fs.symlinkSync(path.join(root, 'absent'), path.join(inputDir, 'ground-truth'));
@@ -58,7 +64,7 @@ describe('isolated offline transcript import', () => {
         expect(markers).toEqual(computeMarkers(call.utterances as Utterance[], call.language as Lang).sort((a,b) => a.marker.localeCompare(b.marker)));
         expect(db.prepare('SELECT value,z,confidence FROM call_markers WHERE call_id=? AND marker=?').get(call.callId, 'repeat_stories')).toEqual({ value: null, z: null, confidence: 'na' });
       }
-      for (const marker of MARKER_KEYS.filter(k => k !== 'repeat_stories')) {
+      for (const marker of TEXT_MARKER_KEYS) {
         const selected = bundle.calls.map(c => ({ call: c, result: computeMarkers(c.utterances as Utterance[], c.language as Lang).find(m => m.marker === marker)! })).filter(r => r.result.confidence === 'high' && r.result.value !== null).slice(0, BASELINE_N);
         const expected = buildBaseline(selected.map(r => r.result.value!));
         const stored = db.prepare('SELECT * FROM baselines WHERE marker=?').get(marker) as Record<string, unknown>;

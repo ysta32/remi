@@ -250,13 +250,14 @@ export type CallEvent =
 
 export type MarkerKey =
   | 'speech_rate' | 'pause_rate' | 'mean_pause_ms' | 'wfp_rate'
-  | 'filler_rate' | 'vague_rate' | 'mattr' | 'repeat_stories';
-export type MarkerGroup = 'pace' | 'pauses' | 'words' | 'repetition';
+  | 'filler_rate' | 'vague_rate' | 'mattr' | 'repeat_stories'
+  | 'pitch_var' | 'pitch_range';      // voice group: chart only, not used for nudges
+export type MarkerGroup = 'pace' | 'pauses' | 'words' | 'repetition' | 'voice';
 
 export interface MarkerResult {
   marker: MarkerKey;
   value: number | null;
-  unit: string;                       // 'wpm' | 'cpm' | 'per100w' | 'per100c' | 'ms' | 'ratio' | 'count'
+  unit: string;                       // 'wpm' | 'cpm' | 'per100w' | 'per100c' | 'ms' | 'ratio' | 'count' | 'st'
   confidence: 'high' | 'low' | 'na';
 }
 
@@ -391,7 +392,7 @@ export async function processCall(callId: string): Promise<void>; // never throw
 export async function recomputeElder(elderId: string): Promise<void>;
 
 // web/lib/markers/index.ts  (pure, no I/O)
-export function computeMarkers(utterances: Utterance[], lang: Lang): MarkerResult[]; // all keys except repeat_stories
+export function computeMarkers(utterances: Utterance[], lang: Lang): MarkerResult[]; // transcript markers only (TEXT_MARKER_KEYS): not repeat_stories, not the voice markers
 
 // web/lib/analysis/timeline-helpers.ts
 export function markerMeta(key: MarkerKey): { label: string; explainer: string; unit: string; concern: 'up'|'down'; group: MarkerGroup };

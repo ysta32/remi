@@ -9,9 +9,9 @@ import {
   RATE_PER,
   WFP_MIN_MS,
 } from '../analysis/config';
-import type { Lang, MarkerKey, MarkerResult, Utterance, Word } from '../types';
+import type { Lang, MarkerResult, Utterance, Word } from '../types';
 import { ZH_FILLERS, ZH_VAGUE } from './lexicon';
-import { markerMeta, MARKER_KEYS } from './meta';
+import { markerMeta, TEXT_MARKER_KEYS, type TextMarkerKey } from './meta';
 import {
   classifyEn,
   countSubstrings,
@@ -106,7 +106,7 @@ function pauseStats(words: Word[], agent: Utterance[], lang: Lang): PauseStats {
   return { pauses, wfpCount };
 }
 
-/** All marker keys except repeat_stories (computed in the pipeline), in MARKER_KEYS order. */
+/** The transcript-based markers (TEXT_MARKER_KEYS order); repeat_stories and the voice markers are computed in the pipeline. */
 export function computeMarkers(utterances: Utterance[], lang: Lang): MarkerResult[] {
   const caller = utterances.filter((u) => u.speaker === 'caller');
   const agent = utterances.filter((u) => u.speaker === 'agent');
@@ -151,7 +151,7 @@ export function computeMarkers(utterances: Utterance[], lang: Lang): MarkerResul
         : { value: null, confidence: 'low' };
   }
 
-  const computed: Record<Exclude<MarkerKey, 'repeat_stories'>, Computed> = {
+  const computed: Record<TextMarkerKey, Computed> = {
     speech_rate: speechRate,
     pause_rate: pauseRate,
     mean_pause_ms: meanPause,
@@ -162,7 +162,7 @@ export function computeMarkers(utterances: Utterance[], lang: Lang): MarkerResul
   };
 
   const adequate = U >= ADEQUATE_UNITS[lang];
-  return MARKER_KEYS.filter((k): k is Exclude<MarkerKey, 'repeat_stories'> => k !== 'repeat_stories').map((key) => {
+  return TEXT_MARKER_KEYS.map((key) => {
     const c = computed[key];
     const confidence: Confidence = !adequate && c.confidence === 'high' ? 'low' : c.confidence;
     return { marker: key, value: c.value, unit: markerMeta(key, lang).unit, confidence };

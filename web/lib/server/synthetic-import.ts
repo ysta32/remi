@@ -5,7 +5,7 @@ import Database from 'better-sqlite3';
 import { migrate } from '../../db/migrate';
 import { loadTranscriptSource } from '../../../synthetic/src/read.mjs';
 import { computeMarkers } from '../markers';
-import { markerMeta, MARKER_KEYS } from '../markers/meta';
+import { markerMeta, TEXT_MARKER_KEYS } from '../markers/meta';
 import { ABS_SPREAD_FLOOR, BASELINE_N, MIN_SCALE } from '../analysis/config';
 import { buildBaseline, signedZ, type Baseline } from '../analysis/stats';
 import { SYNTHETIC_TRANSCRIPT_NOTICE } from '../synthetic-demo';
@@ -60,7 +60,7 @@ export async function importSyntheticTranscripts({ inputDir, databasePath, apply
   const computed = new Map(calls.map(call => [call.callId, computeMarkers(call.utterances, call.language)]));
   const baselines = new Map<string, Baseline & { callIds: string[]; marker: MarkerKey; language: Lang }>();
   for (const language of ['en', 'zh'] as const) {
-    for (const marker of MARKER_KEYS.filter(k => k !== 'repeat_stories')) {
+    for (const marker of TEXT_MARKER_KEYS) {
       const selected = calls.filter(call => {
         const result = computed.get(call.callId)!.find(row => row.marker === marker)!;
         return call.language === language && result.confidence === 'high' && result.value !== null;

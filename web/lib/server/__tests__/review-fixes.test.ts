@@ -83,6 +83,69 @@ describe('complete', () => {
     expect(stored.audio_path).toBeNull();
   });
 
+  it.each([
+    ['UNC share', '\\\\attacker.example\\share\\tmp\\calls\\x.wav'],
+    ['forward-slash UNC', '//attacker.example/share/tmp/calls/x.wav'],
+    ['\\\\?\\ device path', '\\\\?\\C:\\data\\tmp\\calls\\x.wav'],
+    ['\\\\.\\ device path', '\\\\.\\C:\\data\\tmp\\calls\\x.wav'],
+    ['alternate data stream', 'C:\\data\\tmp\\calls\\secret.txt:evil.wav'],
+  ])('rejects %s audio paths (400, no filesystem access)', async (_label, audioPath) => {
+    const elderId = insertElder();
+    const callId = insertCall(elderId, { status: 'in_progress', started_at: '2026-10-25T14:00:00.000Z' });
+    const t0 = Date.now();
+    const res = await complete(
+      post(`http://x/api/agent/calls/${callId}/complete`, { endedAt: '2026-10-25T14:05:00Z', utterances: [], audioPath }),
+      callParams(callId),
+    );
+    expect(res.status).toBe(400);
+    expect(Date.now() - t0).toBeLessThan(2000); // never touches the network
+  });
+
+  it('ignores a tmp/calls path that is really a junction to somewhere else', async () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'remi-junc-'));
+    const victimDir = path.join(root, 'precious');
+    fs.mkdirSync(victimDir);
+    fs.writeFileSync(path.join(victimDir, 'keep.wav'), 'RIFF');
+    fs.mkdirSync(path.join(root, 'tmp'));
+    fs.symlinkSync(victimDir, path.join(root, 'tmp', 'calls'), 'junction');
+    const elderId = insertElder();
+    const callId = insertCall(elderId, { status: 'in_progress', started_at: '2026-10-25T14:00:00.000Z' });
+    const res = await complete(
+      post(`http://x/api/agent/calls/${callId}/complete`, {
+        endedAt: '2026-10-25T14:05:00Z',
+        utterances: [],
+        audioPath: path.join(root, 'tmp', 'calls', 'keep.wav'),
+      }),
+      callParams(callId),
+    );
+    expect(res.status).toBe(202);
+    await drainQueue();
+    expect(fs.existsSync(path.join(victimDir, 'keep.wav'))).toBe(true);
+    expect(row<{ audio_path: string | null }>('SELECT audio_path FROM calls WHERE id = ?', callId).audio_path).toBeNull();
+  });
+
+  it('a retry without words keeps stored STT words even if a WAV is (still) present', async () => {
+    const dir = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'remi-')), 'tmp', 'calls');
+    fs.mkdirSync(dir, { recursive: true });
+    const wav = path.join(dir, 'c.wav');
+    fs.writeFileSync(wav, 'RIFF');
+    const elderId = insertElder();
+    const callId = insertCall(elderId, { status: 'processing', started_at: '2026-10-25T14:00:00.000Z' });
+    const withWords = [{ speaker: 'caller', text: 'hello', startMs: 0, endMs: 400, words: [{ w: 'hello', startMs: 0, endMs: 400 }] }];
+    getSqlite().prepare('UPDATE calls SET utterances_json = ? WHERE id = ?').run(JSON.stringify(withWords), callId);
+    await complete(
+      post(`http://x/api/agent/calls/${callId}/complete`, {
+        endedAt: '2026-10-25T14:05:00Z',
+        utterances: [{ speaker: 'caller', text: 'hello', startMs: 0, endMs: 400 }],
+        audioPath: wav,
+      }),
+      callParams(callId),
+    );
+    await drainQueue();
+    const stored = JSON.parse(row<{ utterances_json: string }>('SELECT utterances_json FROM calls WHERE id = ?', callId).utterances_json);
+    expect(stored[0].words).toHaveLength(1);
+  });
+
   it('accepts an existing tmp/calls .wav', async () => {
     const dir = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'remi-')), 'tmp', 'calls');
     fs.mkdirSync(dir, { recursive: true });

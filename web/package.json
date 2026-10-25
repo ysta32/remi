@@ -15,7 +15,8 @@
     "try:extract": "tsx scripts/try-extract.ts",
     "fixtures": "tsx scripts/make-fixtures.ts",
     "import:synthetic": "tsx scripts/import-synthetic.ts",
-    "analyze:synthetic": "tsx scripts/analyze-synthetic-repeats.ts"
+    "analyze:synthetic": "tsx scripts/analyze-synthetic-repeats.ts",
+    "pitch:check": "tsx scripts/pitch-check.mts"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",

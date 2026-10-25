@@ -12,7 +12,18 @@ export interface MarkerMeta {
 export const MARKER_KEYS: MarkerKey[] = [
   'speech_rate', 'pause_rate', 'mean_pause_ms', 'wfp_rate',
   'filler_rate', 'vague_rate', 'mattr', 'repeat_stories',
+  'pitch_var', 'pitch_range',
 ];
+
+/** Markers computed from the transcript by computeMarkers (they also decide whether a call is adequate). */
+export const TEXT_MARKER_KEYS = [
+  'speech_rate', 'pause_rate', 'mean_pause_ms', 'wfp_rate', 'filler_rate', 'vague_rate', 'mattr',
+] as const satisfies readonly MarkerKey[];
+export type TextMarkerKey = (typeof TEXT_MARKER_KEYS)[number];
+
+/** Markers computed from the call audio (markers.md §4b). */
+export const VOICE_MARKER_KEYS = ['pitch_var', 'pitch_range'] as const satisfies readonly MarkerKey[];
+export type VoiceMarkerKey = (typeof VOICE_MARKER_KEYS)[number];
 
 const META: Record<MarkerKey, MarkerMeta> = {
   speech_rate: { label: 'Speaking pace', explainer: 'How quickly he talks while speaking, compared with his usual.', unit: 'wpm', concern: 'down', group: 'pace' },
@@ -23,6 +34,9 @@ const META: Record<MarkerKey, MarkerMeta> = {
   vague_rate: { label: 'General words', explainer: 'Words like "thing" or "stuff" in place of a specific word.', unit: 'per100w', concern: 'up', group: 'words' },
   mattr: { label: 'Word variety', explainer: 'How varied his vocabulary is within a stretch of talk.', unit: 'ratio', concern: 'down', group: 'words' },
   repeat_stories: { label: 'Retold stories', explainer: 'Stories he brought up himself that he also told in another call that week.', unit: 'count', concern: 'up', group: 'repetition' },
+  // Voice group (markers.md §4b): acoustic, chart only. Never described as mood or emotion.
+  pitch_var: { label: 'Voice rise and fall', explainer: 'How much his voice rises and falls while he talks, compared with his usual.', unit: 'st', concern: 'down', group: 'voice' },
+  pitch_range: { label: 'Voice range', explainer: 'The spread between his lower and higher notes when he talks.', unit: 'st', concern: 'down', group: 'voice' },
 };
 
 /** Units are per-language for rate markers (wpm/cpm, per100w/per100c); `lang` defaults to en. */
@@ -41,4 +55,5 @@ export const GROUP_PLAIN_LANGUAGE: Record<MarkerGroup, string> = {
   pauses: 'pausing more often or for longer',
   words: 'using more filler or general words, or a narrower range of words',
   repetition: 'retelling some of the same stories within a week',
+  voice: 'speaking with less rise and fall in his voice than usual', // unused while voice is chart only
 };

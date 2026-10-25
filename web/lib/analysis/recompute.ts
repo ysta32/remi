@@ -2,7 +2,7 @@
 // from stored rows. One SQLite transaction, no model calls, idempotent.
 import { getSqlite } from '@/db/client';
 import { newId, nowIso } from '@/lib/server/ids';
-import { markerMeta, MARKER_KEYS } from '../markers/meta';
+import { markerMeta, MARKER_KEYS, TEXT_MARKER_KEYS } from '../markers/meta';
 import type { MarkerKey, NudgeReason } from '../types';
 import { ABS_SPREAD_FLOOR, BASELINE_N, MIN_SCALE, NUDGE_REFIRE_DAYS } from './config';
 import { checkupNudge, wellbeingNudge, weeklyDrift, type DriftCall } from './drift';
@@ -68,12 +68,13 @@ export async function recomputeElder(elderId: string): Promise<void> {
     };
 
     let markersByCall = loadMarkers();
-    // A call is adequate when any non-repeat marker kept 'high' confidence (inadequate calls are downgraded).
+    // A call is adequate when any transcript marker kept 'high' confidence (inadequate calls are
+    // downgraded). Voice markers never decide adequacy (markers.md §4b).
     const adequate = new Set(
       calls
         .filter((c) => {
           const m = markersByCall.get(c.id);
-          return !!m && Z_MARKERS.some((k) => m.get(k)?.confidence === 'high');
+          return !!m && TEXT_MARKER_KEYS.some((k) => m.get(k)?.confidence === 'high');
         })
         .map((c) => c.id),
     );
