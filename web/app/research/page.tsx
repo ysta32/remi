@@ -9,7 +9,7 @@ import evalData from '@/lib/research/drift-eval.json';
 import corpus from '@/lib/research/corpus-eval.json';
 
 // Regenerate the JSON with: npx tsx scripts/sim-personas.ts && npx tsx scripts/eval-synthetic.ts
-export const metadata: Metadata = { title: `How ${APP_NAME} notices slow changes` };
+export const metadata: Metadata = { title: `${APP_NAME}: noticing speech changes linked to cognitive decline` };
 
 type RuleResult = {
   driftDetectionPct: number; driftDelayMedianWeeks: number; driftDelayIqr: string;
@@ -51,7 +51,7 @@ function Stat({ value, label }: { value: string; label: string }) {
 }
 
 const PERSONAS: { key: 'drift' | 'stable' | 'mood'; title: string; who: string }[] = [
-  { key: 'drift', title: 'Slow change', who: 'Someone whose speech gradually shifts: longer pauses, slower talking, more "um"s, and more retold stories.' },
+  { key: 'drift', title: 'Cognitive-decline pattern', who: 'Someone whose speech gradually shifts the way studies describe early cognitive decline: longer pauses, slower talking, more "um"s, and more retold stories.' },
   { key: 'stable', title: 'Steady', who: 'Someone who doesn’t change, apart from ordinary ups and downs and one week with a cold.' },
   { key: 'mood', title: 'Two low weeks', who: 'Someone who feels down for two weeks, talks a little slower, then recovers.' },
 ];
@@ -79,17 +79,19 @@ export default function ResearchPage() {
       <main className="mx-auto max-w-[1200px] space-y-14 px-4 pb-16 md:px-8">
         <header className="space-y-4">
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-[40px] font-black leading-tight tracking-tight">Noticing slow changes in speech, without crying wolf</h1>
+            <h1 className="text-[40px] font-black leading-tight tracking-tight">Noticing the speech changes linked to early cognitive decline</h1>
             <SimulatedBadge />
           </div>
           <p className={lede}>
-            How {APP_NAME}&apos;s rule for writing to the family behaves on simulated people: whether it notices a slow
-            change, and whether it stays quiet when nothing has changed.
+            Research links early cognitive decline to gradual changes in everyday speech: longer and more frequent pauses,
+            slower talking, more &quot;um&quot;s, and the same stories told again. We simulated people whose speech changes
+            this way, and people whose speech doesn&apos;t, to see whether {APP_NAME} notices the pattern and tells the
+            family, without worrying families when nothing has changed.
           </p>
         </header>
 
         <section aria-label="Headline results" className="grid gap-4 md:grid-cols-3">
-          <Stat value={`${pc(full.driftIndexDetectedPct)}`} label={`of slow changes spread over six months were noticed, typically ${full.driftIndexDelayMedian} weeks in`} />
+          <Stat value={`${pc(full.driftIndexDetectedPct)}`} label={`of simulated cognitive-decline speech patterns were noticed within six months, typically ${full.driftIndexDelayMedian} weeks in`} />
           <Stat value={`1 in ${yearsPerNote} yrs`} label={`an unneeded note for a steady person, ${fewer}× fewer than our first rule`} />
           <Stat value={`${pc(di.moodCognitiveAlertPct)}`} label={`of low-mood weeks were mistaken for a change in talking (first rule: ${pc(cur.moodCognitiveAlertPct)})`} />
         </section>
@@ -110,14 +112,14 @@ export default function ResearchPage() {
         <section aria-labelledby="s2" className="space-y-4">
           <Step n={2} title="Results" />
 
-          <h3 className="pt-2 text-[24px] font-black">A change at a realistic pace</h3>
+          <h3 className="pt-2 text-[24px] font-black">Cognitive-decline pattern over six months</h3>
           <p className={lede}>
-            The slow-change person, with the full change spread across six months (weeks 3–26). In this typical run the
-            first note comes in week {realisticNotes[0]}, about halfway through the change. While the change continues,
-            reminders come no more than once every 4 weeks.
+            The cognitive-decline pattern unfolding at a realistic pace (weeks 3–26). In this typical run the first family
+            note comes in week {realisticNotes[0]}, about halfway through the change. While the change continues, reminders
+            come no more than once every 4 weeks.
           </p>
           <div className={card}>
-            <DriftIndexChart weeks={realisticExample} height={260} title="Six-month slow change: weekly score" />
+            <DriftIndexChart weeks={realisticExample} height={260} title="Six-month cognitive-decline pattern: weekly score" />
             <div className="mt-2"><DriftLegend /></div>
           </div>
           <div className={`${card} overflow-x-auto p-0 md:p-0`}>
@@ -178,7 +180,7 @@ export default function ResearchPage() {
               <thead className="text-base text-ink-2">
                 <tr className="border-b border-line">
                   <th className="px-5 py-3 font-bold">Rule</th>
-                  <th className="px-4 py-3 text-right font-bold">Slow change noticed (8 wk)</th>
+                  <th className="px-4 py-3 text-right font-bold">Decline pattern noticed (8 wk)</th>
                   <th className="px-4 py-3 text-right font-bold">Unneeded notes / year</th>
                   <th className="px-5 py-3 text-right font-bold">Low mood mistaken for change</th>
                 </tr>
@@ -234,14 +236,6 @@ export default function ResearchPage() {
             <li><strong>The marker code measured the planted pauses exactly.</strong> Pace barely moves and there are no fillers, because the generator only varies pauses.</li>
             <li><strong>{APP_NAME}&apos;s rule: {corpusFirstNote ? `note in week ${corpusFirstNote}` : 'no note'}</strong>, using a shortened setup for four weeks of data (week 1 as the baseline, 2 of 3 weeks).</li>
             <li><strong>It found a gap to fix:</strong> every retelling comes 14 days after the first, but the repeat counter looks back only 7 days, so it counted none.</li>
-          </ul>
-        </section>
-
-        <section aria-labelledby="limits" className={`${card} space-y-2`}>
-          <h2 id="limits" className="text-[24px] font-black">What this does and doesn&apos;t show</h2>
-          <ul className="list-disc space-y-1.5 pl-6 text-base text-ink-2">
-            <li>It shows the rule behaves as designed: quiet for steady people, not fooled by low mood, responsive to sustained change. It does not show how well it works on real people; that needs months of real chats.</li>
-            <li>{APP_NAME} notices changes in how someone talks compared with their own usual. Sleep, illness, mood, hearing or a new phone can all cause them. It cannot diagnose anything; it suggests mentioning a lasting change at the next check-up.</li>
           </ul>
         </section>
       </main>
