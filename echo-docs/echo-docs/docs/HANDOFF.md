@@ -45,7 +45,7 @@ Each agent edits **only its own section** plus appends to "Requests" and "Contra
   - The elder timezone is validated.
 
 ## C — Analysis
-- Status: C1–C5 done. `processCall` runs stt → extract → markers → repetition → done → recompute. stt, extract and repetition are soft steps: a failure is logged and the call still finishes.
+- Status: C1–C5 done. `processCall` runs stt → acoustic (voice markers) → extract → markers → repetition → done → recompute. stt, acoustic, extract and repetition are soft steps: a failure is logged and the call still finishes.
   - If extraction fails twice, the summary falls back to "{name} and Remi chatted for N minutes."
   - The WAV is deleted in a `finally`.
 - Providers + models in use (all overridable by env):
@@ -83,7 +83,7 @@ Each agent edits **only its own section** plus appends to "Requests" and "Contra
   - Runs as the soft pipeline step `acoustic` after STT and before the WAV is deleted, and analyses only the caller's word spans.
   - **Chart only:** they get baselines, z-scores and charts, but `NUDGE_GROUPS` in `web/lib/analysis/config.ts` leaves out `voice`. Add it there to let voice drive nudges once real calls show it's stable.
   - Adequacy is decided by transcript markers only.
-  - Cost: at most about 3.5 s for 10 minutes of continuous voiced speech.
+  - Cost: about 2.5–3 s for 10 minutes of continuous voiced speech (worst case), run in chunks that yield to the event loop so the server keeps answering requests. Analysis covers STT word spans, else the live caller turns; with neither it is capped at `low`.
   - Checks:
     - unit tests on synthetic tones and glides;
     - `npm run pitch:check -- --file x.wav` on a synthetic 140 ± 25 Hz voice gave a median of 142 Hz and pitch_range 5.96 st (expected about 6);

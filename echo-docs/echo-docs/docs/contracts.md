@@ -373,7 +373,7 @@ export async function processCall(callId: string): Promise<void>; // never throw
 export async function recomputeElder(elderId: string): Promise<void>;
 
 // web/lib/markers/index.ts  (pure, no I/O)
-export function computeMarkers(utterances: Utterance[], lang: Lang): MarkerResult[]; // all keys except repeat_stories
+export function computeMarkers(utterances: Utterance[], lang: Lang): MarkerResult[]; // transcript markers only (TEXT_MARKER_KEYS): not repeat_stories, not the voice markers
 
 // web/lib/analysis/timeline-helpers.ts
 export function markerMeta(key: MarkerKey): { label: string; explainer: string; unit: string; concern: 'up'|'down'; group: MarkerGroup };

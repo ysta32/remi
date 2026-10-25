@@ -59,7 +59,13 @@ Consecutive words are taken across the caller's whole word stream sorted by `sta
 
 Added Oct 25 (see HANDOFF "Contract changes"). Computed from the caller's call audio (`audioPath`, from agent capture A6), **not** from the transcript. No trained model: classic YIN pitch tracking (de Cheveigné & Kawahara 2002, *JASA* 111(4)), pure TypeScript in `web/lib/markers/pitch.ts`. **Never** described or used as mood, emotion or mental-health information (claims policy).
 
-- **Pitch track:** downsample to 8 kHz; 40 ms frames, 20 ms hop; voicing gate = frame RMS ≥ max(0.1 × the 95th-percentile frame RMS, 1e-3 ≈ −60 dBFS); YIN cumulative-mean-normalised difference, absolute threshold 0.15, parabolic interpolation, search band 60–400 Hz; 5-frame median filter; drop frames more than 10 semitones from the call median (octave errors). Only caller speech is analysed: STT word spans ± 100 ms when present, else the whole file. Cost: ≤ ~3.5 s for 10 minutes of continuous voiced speech (worst case).
+- **Pitch track:**
+  - Resample to 8 kHz (or analyse at the file's own rate if it is lower) after a centred 63-tap windowed-sinc low-pass at 3.4 kHz. Frames are 40 ms with a 20 ms hop.
+  - **Voicing gate:** frame RMS ≥ max(0.03 × the 95th-percentile frame RMS (≈ −30 dB), 1e-3 ≈ −60 dBFS). YIN's periodicity test rejects hiss that passes.
+  - **YIN:** cumulative-mean-normalised difference, absolute threshold 0.15, parabolic interpolation, search band 60–400 Hz.
+  - **Cleaning, per voiced run (nothing crosses a gap):** drop runs shorter than 3 frames; apply a true 5-frame median; drop frames more than 6 semitones from the median of their ~0.4 s neighbourhood (octave errors are 12 st). As a backstop, drop frames more than 10 semitones from the call median.
+  - **What is analysed:** only caller speech. That means STT word spans ± 100 ms when present, else the live transcript's caller turns. With neither, the whole file is analysed and the result is capped at `low`, so it never enters a baseline.
+  - **Cost:** about 2.5–3 s for 10 minutes of continuous voiced speech (the worst case). The pipeline uses the async variant, which yields to the event loop every 250 frames so the server keeps answering requests.
 - **`pitch_var`** (unit `st`; concern: down; group: voice) — standard deviation of voiced-frame F0 in semitones, `12·log2(f / median f)`.
 - **`pitch_range`** (unit `st`; concern: down; group: voice) — 90th minus 10th percentile of voiced-frame F0 in semitones.
 - **Confidence:** `high` if ≥ 500 voiced frames (~10 s voiced speech) and the call is adequate by §5; `low` if fewer voiced frames or an inadequate call (value null below 25 frames); `na` when there is no audio.
@@ -109,6 +115,7 @@ The agent must never tell the caller he is repeating himself (see `docs/safety-a
 - Weeks are ISO weeks in the elder's timezone.
 - For each marker and week: `weekZ = median(z_store)` over adequate calls that week. Weeks with fewer than 2 adequate calls are skipped (no drift, no reset).
 - A **group drifts** in a week if any of its markers has `weekZ ≥ 1.5` (`DRIFT_Z`). The **repetition** group drifts if the week's Σ `repeat_stories` ≥ 3 (`REPEAT_WEEKLY_MIN`).
+- Only the groups in `NUDGE_GROUPS` (pace, pauses, words, repetition) take part in drift. The voice group (§4b) is chart only and never appears in a nudge or its stored reason.
 - **`cognitive_checkup` nudge** when ≥ 2 groups (`DRIFT_GROUPS_MIN`) drift in each of 2 consecutive evaluated weeks (`DRIFT_WEEKS`), the elder has ≥ 8 adequate calls (`MIN_CALLS_FOR_NUDGE`), and `effective.speechTrends` is true.
 - **`wellbeing` nudge** when `mood_label = 'low'` on ≥ 3 of the last 5 calls and `effective.mood` is true.
 - At most one undismissed nudge per type. A dismissed nudge may re-fire 14 days after dismissal if the rule still holds.

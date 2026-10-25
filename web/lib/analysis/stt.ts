@@ -1,6 +1,6 @@
 // Post-call STT adapter: word-level timestamps for caller audio.
 // STT_PROVIDER=none -> null; openai -> /audio/transcriptions with verbose_json + word timestamps;
-// deepgram is not configured. This module never deletes the WAV (the pipeline does, in finally).
+// deepgram is not configured. This module never deletes the WAV (the pipeline does, after the acoustic step).
 import fs from 'node:fs';
 import { config } from '@/lib/config';
 import type { Lang, Word } from '@/lib/types';

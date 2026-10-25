@@ -18,7 +18,7 @@ const isoDate = z
   .transform((s) => new Date(s).toISOString());
 const atMs = z.number().int().min(0);
 
-// The pipeline deletes audioPath after STT, so only accept the agent's capture files:
+// The pipeline deletes audioPath after the STT and acoustic steps, so only accept the agent's capture files:
 // an absolute .wav path inside a `tmp/calls` directory (contracts §4 example).
 const audioPathSchema = z
   .string()

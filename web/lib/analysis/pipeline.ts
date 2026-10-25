@@ -7,7 +7,7 @@ import { getDb, getSqlite } from '@/db/client';
 import { callEvents, calls, elders, familyQuestions, funFacts, topics } from '@/db/schema';
 import { APP_NAME, config } from '@/lib/config';
 import { computeMarkers } from '@/lib/markers';
-import { pitchMarkers, pitchNotAvailable } from '@/lib/markers/pitch';
+import { pitchMarkersAsync, pitchNotAvailable } from '@/lib/markers/pitch';
 import { parseWav } from '@/lib/markers/wav';
 import { newId, nowIso } from '@/lib/server/ids';
 import type { Lang, MarkerResult, Utterance, Word } from '@/lib/types';
@@ -75,11 +75,10 @@ export async function processCall(callId: string): Promise<void> {
       await step(callId, 'acoustic', async () => upsertMarkers(callId, await voiceMarkers(wav, final, lang), true), true);
       await deleteAudio(callId, wav);
       audioPath = null;
-    } else {
-      // No audio this run: mark voice markers not available, but never overwrite earlier real
-      // values (a re-run after the WAV was deleted).
-      upsertMarkers(callId, pitchNotAvailable(), false);
     }
+    // No audio this run, or the acoustic step failed (e.g. an unreadable WAV): mark the voice
+    // markers not available, but never overwrite real values from an earlier run.
+    await step(callId, 'voice_na', () => upsertMarkers(callId, pitchNotAvailable(), false), true);
 
     // 2. Extraction (soft): on failure keep any earlier extraction, else a neutral fallback summary.
     const events = db.select().from(callEvents).where(eq(callEvents.callId, callId)).all();
@@ -141,11 +140,16 @@ export async function processCall(callId: string): Promise<void> {
 /** Pitch markers (markers.md §4b) for one call's WAV. Adequacy comes from the transcript markers. */
 async function voiceMarkers(wav: string, utterances: Utterance[], lang: Lang): Promise<MarkerResult[]> {
   const { sampleRate, samples } = parseWav(await fs.readFile(wav));
-  const spans = utterances
-    .filter((u) => u.speaker === 'caller')
-    .flatMap((u) => (u.words ?? []).map((w) => ({ startMs: w.startMs, endMs: w.endMs })));
+  const caller = utterances.filter((u) => u.speaker === 'caller');
+  // Analyse only the caller's speech: STT word spans when present, else the live caller turns
+  // (approximate times, but they keep agent turns, echo and room noise out). With neither, the
+  // whole file is analysed and the result is capped at 'low' so it never enters a baseline.
+  const wordSpans = caller.flatMap((u) => (u.words ?? []).map((w) => ({ startMs: w.startMs, endMs: w.endMs })));
+  const turnSpans = caller.map((u) => ({ startMs: u.startMs, endMs: u.endMs })).filter((s) => s.endMs > s.startMs);
+  const spans = wordSpans.length ? wordSpans : turnSpans.length ? turnSpans : undefined;
   const adequate = computeMarkers(utterances, lang).some((m) => m.confidence === 'high');
-  return pitchMarkers(samples, sampleRate, spans.length ? spans : undefined, adequate);
+  const results = await pitchMarkersAsync(samples, sampleRate, spans, adequate);
+  return spans ? results : results.map((r) => (r.confidence === 'high' ? { ...r, confidence: 'low' as const } : r));
 }
 
 /** Upsert marker rows (z reset to NULL; recomputeElder fills it). `overwrite=false` keeps existing rows. */
