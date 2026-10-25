@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Mock FaceTime</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<main class="stage">
+  <section class="phone" aria-label="FaceTime call with Remi" data-state="warming">
+    <video id="remote-fill" class="remote-fill" muted playsinline autoplay aria-hidden="true"></video>
+    <video id="remote" class="remote" muted playsinline autoplay></video>
+    <video id="self" class="self" muted playsinline autoplay hidden></video>
+
+    <header class="top">
+      <div class="avatar" aria-hidden="true">R</div>
+      <h1 class="name">Remi</h1>
+      <p class="status" id="status" aria-live="polite">Getting Remi ready…</p>
+    </header>
+
+    <div class="dial">
+      <button class="round go" id="call" disabled aria-label="Start FaceTime call">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5A2.5 2.5 0 0 1 6 5h7a2.5 2.5 0 0 1 2.5 2.5v9A2.5 2.5 0 0 1 13 19H6a2.5 2.5 0 0 1-2.5-2.5v-9Zm13 3.2 3.4-2.6c.7-.5 1.6 0 1.6.8v6.2c0 .8-.9 1.3-1.6.8l-3.4-2.6v-2.6Z"/></svg>
+      </button>
+      <span class="dial-label">FaceTime</span>
+    </div>
+
+    <nav class="controls" aria-label="Call controls">
+      <button class="round glass" id="mute" aria-pressed="false" aria-label="Mute">
+        <svg viewBox="0 0 24 24" aria-hidden="true" class="on"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Zm-6 9a1 1 0 0 1 2 0 4 4 0 0 0 8 0 1 1 0 1 1 2 0 6 6 0 0 1-5 5.9V20h2a1 1 0 1 1 0 2H9a1 1 0 1 1 0-2h2v-2.1A6 6 0 0 1 6 12Z"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true" class="off"><path d="M3.3 3.3a1 1 0 0 1 1.4 0l16 16a1 1 0 0 1-1.4 1.4l-3.6-3.6A6 6 0 0 1 13 17.9V20h2a1 1 0 1 1 0 2H9a1 1 0 1 1 0-2h2v-2.1A6 6 0 0 1 6 12a1 1 0 1 1 2 0 4 4 0 0 0 6.2 3.4l-1.1-1.1A3 3 0 0 1 9 12v-1.6L3.3 4.7a1 1 0 0 1 0-1.4ZM12 3a3 3 0 0 1 3 3v5.2L9.2 5.4A3 3 0 0 1 12 3Z"/></svg>
+      </button>
+      <button class="round glass" id="camera" aria-pressed="false" aria-label="Show my camera">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5A2.5 2.5 0 0 1 6 5h7a2.5 2.5 0 0 1 2.5 2.5v9A2.5 2.5 0 0 1 13 19H6a2.5 2.5 0 0 1-2.5-2.5v-9Zm13 3.2 3.4-2.6c.7-.5 1.6 0 1.6.8v6.2c0 .8-.9 1.3-1.6.8l-3.4-2.6v-2.6Z"/></svg>
+      </button>
+      <button class="round stop" id="end" aria-label="End call">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.2 13.6c-.4-.9-.2-2 .6-2.7C5.3 8.7 8.6 7.6 12 7.6s6.7 1.1 9.2 3.3c.8.7 1 1.8.6 2.7l-.6 1.3c-.4.8-1.3 1.2-2.2 1l-2.6-.7c-.8-.2-1.4-.9-1.4-1.8v-1.6a11 11 0 0 0-6 0v1.6c0 .9-.6 1.6-1.4 1.8l-2.6.7c-.9.2-1.8-.2-2.2-1l-.6-1.3Z"/></svg>
+      </button>
+    </nav>
+
+    <div class="ended" id="ended" hidden>
+      <p class="ended-title">Call ended</p>
+      <p class="ended-why" id="ended-why"></p>
+      <button class="pill" id="again">Call again</button>
+    </div>
+  </section>
+
+  <aside class="rail" aria-label="What the Chert Mac sees">
+    <h2>This call</h2>
+    <dl class="meters">
+      <div><dt>You</dt><dd><span class="bar"><span id="meter-you"></span></span></dd></div>
+      <div><dt>Remi</dt><dd><span class="bar"><span id="meter-remi"></span></span></dd></div>
+      <div><dt>Reply time</dt><dd id="latency" class="num">No turns yet</dd></div>
+    </dl>
+
+    <ol class="log" id="log" aria-live="polite"></ol>
+
+    <h2>Mac rules</h2>
+    <div class="settings">
+      <label>FaceTime ready after
+        <select id="ready-delay">
+          <option value="500">0.5 s</option>
+          <option value="2000" selected>2 s</option>
+          <option value="5000">5 s</option>
+          <option value="-1">never</option>
+        </select>
+      </label>
+      <label class="check"><input type="checkbox" id="silence-rule" checked> End the call if Remi is silent 10 s after ready</label>
+      <label class="check"><input type="checkbox" id="one-voice-rule" checked> End the call if a second participant publishes audio</label>
+    </div>
+
+    <p class="links">
+      <a href="http://localhost:3000/elders/elder-hal-demo" target="_blank" rel="noopener">Hal's family timeline</a>
+      <a href="http://localhost:3000/api/dev/status" target="_blank" rel="noopener">Backend call status</a>
+    </p>
+  </aside>
+</main>
+<script type="module" src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+{
+  "name": "remi-agent",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "^22.23.2 || ^24.0.0 || ^26.0.0"
+  },
+  "scripts": {
+    "start": "node --env-file=.env.local agent.mjs start",
+    "mock": "node --env-file=.env.local mock-facetime/server.mjs",
+    "check": "for f in *.mjs brain/*.mjs lib/*.mjs scripts/*.mjs test/*.mjs mock-facetime/*.mjs mock-facetime/public/*.js; do node --check \"$f\" || exit 1; done",
+    "test": "node --test 'test/*.test.mjs'",
+    "help": "node agent.mjs --help",
+    "models": "node --env-file=.env.local scripts/list-models.mjs"
+  },
+  "dependencies": {
+    "@livekit/agents": "1.8.0",
+    "@livekit/agents-plugin-openai": "1.8.0",
+    "@livekit/rtc-node": "0.13.35",
+    "@napi-rs/canvas": "0.1.100"
+  },
+  "devDependencies": {
+    "livekit-client": "2.22.4",
+    "livekit-server-sdk": "2.19.2"
+  }
+}
