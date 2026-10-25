@@ -16,10 +16,11 @@ export const FIXTURE_VARIANTS = {
   processing: processing as Timeline,
   'after-call': afterCall as Timeline,
 } as const;
-export type FixtureVariant = keyof typeof FIXTURE_VARIANTS;
+// 'live' reads the real API even in sample-data mode: the calls happening now.
+export type FixtureVariant = keyof typeof FIXTURE_VARIANTS | 'live';
 
 export const isFixtureVariant = (v: unknown): v is FixtureVariant =>
-  typeof v === 'string' && v in FIXTURE_VARIANTS;
+  typeof v === 'string' && (v === 'live' || v in FIXTURE_VARIANTS);
 
 export interface ElderSummary { id: string; displayName: string; preferredName: string }
 
@@ -36,7 +37,7 @@ export interface ElderProfile extends ElderSummary {
 }
 
 export async function getElder(elderId: string, variant: FixtureVariant = 'drift'): Promise<ElderProfile> {
-  if (USE_FIXTURES) {
+  if (USE_FIXTURES && variant !== 'live') {
     const elder = structuredClone(elderFixture as ElderProfile);
     // After the live call, Sam's question has been asked and answered (the API does this for real).
     if (variant === 'after-call') {
@@ -45,6 +46,21 @@ export async function getElder(elderId: string, variant: FixtureVariant = 'drift
     return elder;
   }
   return getJson(`/api/elders/${encodeURIComponent(elderId)}`);
+}
+
+export interface LiveNote { id: string; callId: string; kind: 'fact' | 'moment'; text: string; createdAt: string }
+export interface LiveView {
+  elderName: string;
+  sharing: boolean;
+  call: { id: string; startedAt: string; endedAt: string | null; status: string; durationS: number | null } | null;
+  thisCall: LiveNote[];
+  facts: LiveNote[];
+  now: string;
+}
+
+/** GET /api/elders/:id/live — always the real API (notes Remi writes during a call). */
+export function getLive(elderId: string): Promise<LiveView> {
+  return getJson(`/api/elders/${encodeURIComponent(elderId)}/live`);
 }
 
 async function getJson<T>(path: string): Promise<T> {
@@ -62,7 +78,7 @@ export async function getElders(): Promise<ElderSummary[]> {
 }
 
 export async function getTimeline(elderId: string, variant: FixtureVariant = 'drift'): Promise<Timeline> {
-  if (USE_FIXTURES) return structuredClone(FIXTURE_VARIANTS[variant]);
+  if (USE_FIXTURES && variant !== 'live') return structuredClone(FIXTURE_VARIANTS[variant]);
   return getJson(`/api/elders/${encodeURIComponent(elderId)}/timeline`);
 }
 

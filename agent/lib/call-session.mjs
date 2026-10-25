@@ -101,8 +101,18 @@ export function createCallSession({ api, create, contractV2 = false, log = (l) =
     return completed;
   }
 
+  /** Live note for the family page. Fire-and-forget like emit(). */
+  function note(kind, text) {
+    track(ready.then(async (id) => {
+      if (!id) return;
+      const r = await api.postNote(id, { kind, text });
+      log(r.ok ? `[call] note ${kind} sent (${r.ms ?? 0} ms)` : `[call] note ${kind} failed: ${r.status || ''} ${r.error}`);
+    }));
+  }
+
   return {
     ready,
+    note,
     get callId() { return callId; },
     get localId() { return localId; },
     get completed() { return Boolean(completed); },

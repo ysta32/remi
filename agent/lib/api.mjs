@@ -71,6 +71,12 @@ export function createApi(config = readConfig()) {
       return request('POST', `/api/agent/calls/${encodeURIComponent(callId)}/events`, event, timeoutMs);
     },
 
+    /** Live note for the family page's Live tab: { kind: 'fact' | 'moment', text }. */
+    postNote(callId, note, { timeoutMs = 3000 } = {}) {
+      if (mockContext) return Promise.resolve({ ok: true, status: 204, mock: true });
+      return request('POST', `/api/agent/calls/${encodeURIComponent(callId)}/notes`, note, timeoutMs);
+    },
+
     completeCall(callId, body, { timeoutMs = 5000 } = {}) {
       if (mockContext) return Promise.resolve({ ok: true, status: 202, mock: true });
       return request('POST', `/api/agent/calls/${encodeURIComponent(callId)}/complete`, body, timeoutMs);

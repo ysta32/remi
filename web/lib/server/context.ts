@@ -1,5 +1,6 @@
 // Builds the agent's CallContext (contracts §3/§4). Synchronous better-sqlite3 queries only, so it stays fast.
 import { getSqlite } from '@/db/client';
+import { rememberedFacts } from './live-notes';
 import { config } from '../config';
 import type { CallContext, Lang } from '../types';
 import { consentView, type ConsentRow } from './consent';
@@ -78,6 +79,8 @@ export function buildCallContext(elderId: string, origin: string): CallContext |
       )
       .all(elderId) as { text: string }[]
   ).map((r) => r.text);
+  // Things Hal asked Remi to remember on earlier calls (Live tab notes) come first.
+  knownFacts.unshift(...rememberedFacts(elderId, 8).filter((f) => !knownFacts.includes(f)));
 
   const since = new Date(Date.now() - 14 * DAY_MS).toISOString();
   const recentStories = (

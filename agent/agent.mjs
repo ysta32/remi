@@ -144,6 +144,27 @@ export default defineAgent({
       onShowPhoto: showPhoto,
     });
     const tools = brain.tools.map((t) => llm.tool({ name: t.name, description: t.description, parameters: t.parameters, execute: async (args) => t.execute(args) }));
+    // Live tab on the family page: what Remi learns, as it happens (never the raw transcript).
+    tools.push(llm.tool({
+      name: 'note_for_family',
+      description: `Write a short note on ${context.elder.preferredName}'s family page while you talk. Call it right away, without mentioning it, whenever ${context.elder.preferredName} asks you to remember something or shares a lasting personal fact (a favorite, a person, a place, a plan, a preference) — kind "fact" — or tells a story or memory worth keeping — kind "moment". One short line in third person, e.g. "Favorite fruit is an apple." Not for small talk.`,
+      parameters: {
+        type: 'object',
+        properties: {
+          kind: { type: 'string', enum: ['fact', 'moment'] },
+          text: { type: 'string', description: 'One short line, third person, under 20 words.' },
+        },
+        required: ['kind', 'text'],
+        additionalProperties: false,
+      },
+      execute: async ({ kind, text }) => {
+        const line = String(text ?? '').trim().slice(0, 300);
+        if (!line) return 'Nothing to note.';
+        call.note(kind === 'moment' ? 'moment' : 'fact', line);
+        log(`[note] ${kind}: ${line.length} chars`);
+        return 'Noted. If they asked you to remember it, say you will; otherwise keep talking naturally.';
+      },
+    }));
 
     // Instructions: the call plan, plus a running memory of this call added as it goes.
     const instructions = buildInstructions(context, { contractV2: config.contractV2 });

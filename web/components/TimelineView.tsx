@@ -13,6 +13,7 @@ import { ChatCard, recapHref } from './ChatCard';
 import { FunFacts } from './FunFacts';
 import { GentleNote } from './GentleNote';
 import { HowHesDoing } from './HowHesDoing';
+import { LiveNotes } from './LiveNotes';
 import { NextChatPanel } from './NextChatPanel';
 import { SiteNav } from './SiteNav';
 import { SnapshotCard } from './SnapshotCard';
@@ -31,14 +32,14 @@ function FixtureBar({ elderId, current, tab }: { elderId: string; current: Fixtu
   return (
     <nav aria-label="Demo data" className="flex items-center gap-2 overflow-x-auto whitespace-nowrap rounded-2xl bg-card px-4 py-2 text-base text-ink-2">
       <span className="font-bold">Sample data:</span>
-      {(Object.keys(FIXTURE_VARIANTS) as FixtureVariant[]).map((v) => (
+      {([...Object.keys(FIXTURE_VARIANTS), 'live'] as FixtureVariant[]).map((v) => (
         <Link
           key={v}
           href={`/elders/${elderId}?fixture=${v}${tab === 'doing' ? '&tab=doing' : ''}`}
           scroll={false}
           className={`rounded-full px-3 py-0.5 ${v === current ? 'bg-ink text-white' : 'hover:bg-ground'}`}
         >
-          {v}
+          {v === 'live' ? '● live call' : v}
         </Link>
       ))}
     </nav>
@@ -174,6 +175,7 @@ export function TimelineView({
           <HowHesDoing timeline={timeline} />
         ) : (
           <>
+            {variant === 'live' && <LiveNotes elderId={id} />}
             {timeline.repeatAnalysis && <RepeatDetections analysis={timeline.repeatAnalysis} elderId={id} />}
             {!confirmed && <p className="rounded-[20px] border border-line bg-card p-5">{copy.notYetConfirmed(name)}</p>}
 
