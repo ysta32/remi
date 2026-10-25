@@ -59,9 +59,23 @@ test('pickMemoryPrompts skips prompts without an answer', () => {
   assert.deepEqual(picked.map((p) => p.id), ['b']);
 });
 
+test('handles open-ended questions and keeps the mind active', () => {
+  const text = render(base);
+  assert.match(text, /ANSWERING ANYTHING/);
+  assert.match(text, /can't look anything up/);
+  assert.match(text, /as if for the first time/);
+  assert.match(text, /KEEPING THE MIND ACTIVE/);
+  assert.match(text, /never a test/);
+});
+
+test('knows today in the elder timezone', () => {
+  // 20:00Z on Oct 24 2026 is 4:00 PM in New York (EDT).
+  assert.match(render(base), /TODAY: Saturday, October 24, 2026 at 4:00 PM where Hal is/);
+});
+
 test('prompt stays reasonably short for latency', () => {
   const words = render(base).split(/\s+/).length;
-  assert.ok(words < 1300, `${words} words`);
+  assert.ok(words < 1600, `${words} words`);
 });
 
 test('tools post events once and route safety through the monitor', () => {
