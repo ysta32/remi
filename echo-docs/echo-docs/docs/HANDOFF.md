@@ -88,12 +88,12 @@ Each agent edits **only its own section** plus appends to "Requests" and "Contra
 - Pages done: `/` judge-facing home (hero, live "Today on Remi" row, how it works, signals, privacy, closing CTA); `/elders/[id]` with **Chats** (newest snapshot + develop/NEW moment, gentle note below it, earlier chats, waiting questions, fun facts) and **How he's doing** (`?tab=doing`: four signals — pauses & hesitation, speaking pace, vague words, retold stories — with plain status words).
 - How to run: `cd web && npm install && npm run dev` → http://localhost:3000 and http://localhost:3000/elders/elder-hal-demo. Sample-data bar on Hal's page: `?fixture=drift|stable|unconfirmed|processing|after-call`.
 - Fixture vs live: fixtures by default; `NEXT_PUBLIC_USE_FIXTURES=0` reads B's API. The API is empty until the seed exists.
-- Seed results: **not yet** — `web/scripts/seed.ts` is still B's stub (owned by D). Next D task: implement it from `web/scripts/demo-data.ts` (demo elder id `elder-hal-demo`).
+- Seed results (branch `integrate/main`): `web/scripts/seed.ts` implemented from `web/scripts/demo-data.ts`; `npm run seed -- --scenario drift|stable` and `POST /api/dev/seed` both work. drift → exactly 1 `cognitive_checkup` nudge (W−2, W−1, all four groups); stable → none (`web/scripts/__tests__/seed.test.ts`). Live check with `NEXT_PUBLIC_USE_FIXTURES=0`: seeded timeline, profile and agent context are correct (Sam's question pending, car photo first), and a simulated agent call lands as the newest card with the nudge kept. Photos are seeded from `fixtures/demo/p-*.jpg` when present; until then their file URLs 404 and the UI shows the photo-icon panel.
 - Screenshots: `web/.impeccable/review/` (git-ignored).
 - Known issues: no licensed family photos yet (cards show an honest photo-icon panel); setup/manage pages (incl. Kevin's memory moments + emergency contact) not built yet.
 - **Still to do (D), in order:**
-  1. Seed script `web/scripts/seed.ts` (`npm run seed -- --scenario drift|stable`) so a real call shows on Hal's page during the demo. Blocks the definition of done.
-  2. Three family photos (from ChatGPT, owned by Jimmy) into `fixtures/demo/` to replace the photo-icon panels.
+  1. ~~Seed script~~ done (see Seed results).
+  2. Three family photos (from ChatGPT, owned by Jimmy) into `fixtures/demo/` as `p-shops.jpg`, `p-lake.jpg`, `p-car.jpg` (JPEG or PNG, ≤ 8 MB); re-seed and they're served to the UI and the agent.
   3. Voice chart (pitch variation / range) on the "How he's doing" tab once Siyuan's `c5247e6` lands on `main`. Sound only, never mood.
   4. Setup/manage pages for Kevin's memory moments + emergency contact, only if humans approve that contract change (see Requests).
 
