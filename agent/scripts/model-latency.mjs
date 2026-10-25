@@ -34,7 +34,7 @@ async function runClip(path) {
       const ev = JSON.parse(raw);
       const now = performance.now();
       if (ev.type === 'input_audio_buffer.speech_stopped' && !t.stopped) t.stopped = now;
-      else if (ev.type === 'response.created' && !t.created) t.created = now;
+      else if (ev.type === 'response.created') { t.responses = (t.responses ?? 0) + 1; if (!t.created) t.created = now; }
       else if ((ev.type === 'response.output_audio.delta' || ev.type === 'response.audio.delta') && !t.audio) { t.audio = now; resolve(); }
       else if (ev.type === 'error') reject(new Error(ev.error?.message ?? 'realtime error'));
     });
@@ -56,6 +56,7 @@ async function runClip(path) {
         },
         output: { voice: config.voice },
       },
+      ...(process.env.REASONING ? { reasoning: { effort: process.env.REASONING } } : {}),
     },
   }));
   await sleep(500);
@@ -70,18 +71,26 @@ async function runClip(path) {
   t.clipEnd = performance.now();
   const silence = Buffer.alloc(CHUNK).toString('base64');
   const feeding = setInterval(() => ws.readyState === 1 && ws.send(JSON.stringify({ type: 'input_audio_buffer.append', audio: silence })), 20);
-  try { await done; } finally { clearInterval(feeding); ws.close(); }
+  // EARLY_COMMIT_MS: end the turn ourselves after this much silence (what a local endpointer would do).
+  const early = Number(process.env.EARLY_COMMIT_MS);
+  if (early > 0) setTimeout(() => {
+    if (t.stopped || ws.readyState !== 1) return;
+    t.stopped = performance.now(); t.early = true;
+    ws.send(JSON.stringify({ type: 'input_audio_buffer.commit' }));
+    ws.send(JSON.stringify({ type: 'response.create' }));
+  }, early);
+  try { await done; await sleep(2500); } finally { clearInterval(feeding); ws.close(); }
   const r = (a, b) => Math.round(t[b] - t[a]);
-  return { endpoint: r('clipEnd', 'stopped'), respond: r('stopped', 'created'), model: r('created', 'audio'), total: r('clipEnd', 'audio') };
+  return { endpoint: r('clipEnd', 'stopped'), respond: r('stopped', 'created'), model: r('created', 'audio'), total: r('clipEnd', 'audio'), responses: t.responses, early: !!t.early };
 }
 
 const clips = process.argv.slice(2);
 if (!clips.length) { console.error('usage: npm run latency:model -- clip.wav [...]'); process.exit(2); }
 if (!process.env.OPENAI_API_KEY) { console.error('OPENAI_API_KEY is not set'); process.exit(3); }
-console.log(`model ${config.realtimeModel}, ${config.turnDetection === 'semantic' ? `semantic VAD (${process.env.EAGERNESS || 'high'})` : `silence ${config.turnSilenceMs} ms`}, prompt ${instructions.split(/\s+/).length} words`);
+console.log(`model ${config.realtimeModel}${process.env.REASONING ? ` (reasoning ${process.env.REASONING})` : ''}, ${config.turnDetection === 'semantic' ? `semantic VAD (${process.env.EAGERNESS || 'high'})` : `silence ${config.turnSilenceMs} ms`}, prompt ${instructions.split(/\s+/).length} words`);
 const rows = [];
 for (const clip of clips) {
-  try { const r = await runClip(clip); rows.push(r); console.log(`${clip.split('/').pop()}: endpoint ${r.endpoint} + respond ${r.respond} + model ${r.model} = ${r.total} ms`); }
+  try { const r = await runClip(clip); rows.push(r); console.log(`${clip.split('/').pop()}: endpoint ${r.endpoint} + respond ${r.respond} + model ${r.model} = ${r.total} ms${r.early ? ' (early commit)' : ''}${r.responses > 1 ? ` [${r.responses} responses!]` : ''}`); }
   catch (err) { console.log(`${clip}: ${err.message}`); }
 }
 const med = (k) => [...rows.map((r) => r[k])].sort((a, b) => a - b)[Math.floor(rows.length / 2)];

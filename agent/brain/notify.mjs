@@ -1,74 +1,47 @@
-// Outbound alerts: iMessage to the emergency contact via the Chert SDK CLI, and
+// Outbound alerts: iMessage via the Chert SDK (@trychert/sdk 0.2.0, in process), and
 // an optional emergency-dispatch webhook. Neither ever throws; both resolve to
 // { ok, detail }. Never log message bodies or phone numbers in full.
 //
-// Uses the same `chert-sdk imessage send` invocation as tools/chert-agent.mjs.
-// Needs CHERT_BASE_URL and CHERT_API_KEY in the agent's environment.
-
-import { spawn } from 'node:child_process';
-import { existsSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const HERE = dirname(fileURLToPath(import.meta.url));
-const SDK_PKG = '@trychert/sdk@0.1.0';
+// Needs CHERT_API_KEY; CHERT_BASE_URL is optional (the SDK defaults to console.trychert.com).
+import { ChertClient } from '@trychert/sdk/imessage';
 
 const PLACEHOLDER = /^(?:YOUR_|<|$)/;
+const unset = (v) => PLACEHOLDER.test(String(v ?? '').trim());
 
 /** Names of the iMessage settings that are missing or still template placeholders. */
 export function missingTextConfig(env = process.env) {
-  return ['CHERT_BASE_URL', 'CHERT_API_KEY'].filter((k) => PLACEHOLDER.test(String(env[k] ?? '').trim()));
+  return ['CHERT_API_KEY'].filter((k) => unset(env[k]));
 }
 
 export function maskPhone(phone) {
   return phone ? `***${String(phone).slice(-4)}` : 'none';
 }
 
-function sdkCommand(args) {
-  const local = join(HERE, '..', 'node_modules', '.bin', 'chert-sdk');
-  if (existsSync(local)) return [local, args];
-  return ['npx', ['--yes', '--package', SDK_PKG, 'chert-sdk', ...args]];
-}
-
-function runOnce(args, timeoutMs) {
-  return new Promise((resolve) => {
-    const [cmd, argv] = sdkCommand(args);
-    let stdout = '';
-    let settled = false;
-    let timer;
-    const done = (r) => { if (!settled) { settled = true; clearTimeout(timer); resolve(r); } };
-    let child;
-    try {
-      child = spawn(cmd, argv, { env: process.env, stdio: ['ignore', 'pipe', 'pipe'] });
-    } catch (err) {
-      return done({ ok: false, detail: `spawn failed: ${err.message}` });
-    }
-    timer = setTimeout(() => { child.kill('SIGTERM'); done({ ok: false, detail: `timed out after ${timeoutMs} ms` }); }, timeoutMs);
-    let stderr = '';
-    child.stdout.on('data', (d) => { stdout += d; });
-    // The SDK prints one JSON line with a generic reason and never the key or body.
-    child.stderr.on('data', (d) => { stderr += d; });
-    child.on('error', (err) => done({ ok: false, detail: `spawn error: ${err.message}` }));
-    child.on('close', (code) => {
-      let parsed = null;
-      try { parsed = JSON.parse(stdout.trim().split('\n').pop()); } catch { /* not JSON */ }
-      done(code === 0 && parsed
-        ? { ok: true, detail: 'queued (not proof of delivery)' }
-        : { ok: false, detail: `chert-sdk exit ${code}${stderr.trim() ? `: ${stderr.trim().split('\n').pop().slice(0, 200)}` : ''}` });
-    });
-  });
+async function sendOnce(client, request, timeoutMs) {
+  try {
+    const receipt = await client.sendText(request, { signal: AbortSignal.timeout(timeoutMs) });
+    return { ok: true, detail: `queued (not proof of delivery)`, messageId: receipt.message_id, chatId: receipt.chat_id };
+  } catch (err) {
+    return { ok: false, detail: `chert ${err.status ?? ''} ${err.code ?? err.name}: ${String(err.message).slice(0, 160)}`.trim() };
+  }
 }
 
 /**
  * Send one iMessage. Retries once with the SAME idempotency key, so the
  * service can de-duplicate if the first attempt actually went through.
  */
-export async function sendIMessage({ phone, body, idempotencyKey, timeoutMs = 20000 }) {
-  const args = ['imessage', 'send', '--phone', phone, '--body', body, '--idempotency-key', idempotencyKey];
-  const first = await runOnce(args, timeoutMs);
-  if (first.ok) return first;
+export async function sendIMessage({ phone, body, idempotencyKey, timeoutMs = 20000, env = process.env }) {
+  if (unset(env.CHERT_API_KEY)) return { ok: false, detail: 'CHERT_API_KEY is not set' };
+  const client = new ChertClient({
+    apiKey: env.CHERT_API_KEY,
+    ...(unset(env.CHERT_BASE_URL) ? {} : { baseURL: env.CHERT_BASE_URL }),
+    ...(unset(env.CHERT_TENANT) ? {} : { tenant: env.CHERT_TENANT }),
+  });
+  const request = { phone, body, idempotency_key: idempotencyKey };
+  const first = await sendOnce(client, request, timeoutMs);
+  if (first.ok || /\b4\d\d\b/.test(first.detail)) return first;   // a 4xx won't fix itself
   await new Promise((r) => setTimeout(r, 2000));
-  return runOnce(args, timeoutMs);
+  return sendOnce(client, request, timeoutMs);
 }
 
 /**

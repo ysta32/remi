@@ -82,7 +82,7 @@ test('says honestly when texting is not set up', () => {
   book.save('grandson', '2155550142');
   const sent = [];
   const tools = Object.fromEntries(createMessagingTools({
-    book, elderName: 'Hal', log: () => {}, env: { CHERT_BASE_URL: 'YOUR_CHERT_BASE_URL', CHERT_API_KEY: 'YOUR_CHERT_API_KEY' },
+    book, elderName: 'Hal', log: () => {}, env: { CHERT_API_KEY: 'YOUR_CHERT_API_KEY' },
     send: async (m) => { sent.push(m); return { ok: true }; },
   }).map((t) => [t.name, t]));
   assert.match(tools.text_contact.execute({ label: 'grandson', message: 'hi', urgent: true }), /No text was sent: texting isn't set up.*call 911/);

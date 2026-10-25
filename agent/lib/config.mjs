@@ -38,6 +38,9 @@ export function readConfig(env = process.env) {
     turnDetection: env.TURN_DETECTION === 'semantic' ? 'semantic' : 'server',
     // Newest model, smarter than gpt-realtime; gpt-realtime-2.1-mini answers ~150 ms sooner.
     realtimeModel: env.REALTIME_MODEL || 'gpt-realtime-2.1',
+    // gpt-realtime-2.x reasons before speaking; minimal answered ~80 ms sooner than the default
+    // in scripts/model-latency.mjs. REALTIME_REASONING=default leaves it to OpenAI.
+    realtimeReasoning: env.REALTIME_REASONING || 'minimal',
     voice: env.REALTIME_VOICE || 'marin',
     agentName: env.AGENT_NAME || 'remi',
   };

@@ -75,7 +75,8 @@ test('knows today in the elder timezone', () => {
 
 test('prompt stays reasonably short for latency', () => {
   const words = render(base).split(/\s+/).length;
-  assert.ok(words < 1600, `${words} words`);
+  // scripts/model-latency.mjs: an 18-word prompt answered no faster than the full one.
+  assert.ok(words < 1900, `${words} words`);
 });
 
 test('tools post events once and route safety through the monitor', () => {
@@ -111,5 +112,12 @@ test('style: adds material instead of parroting, asks fewer and deeper questions
   assert.match(text, /Never parrot/);
   assert.match(text, /fun fact/);
   assert.match(text, /Most turns end with a statement/);
+  assert.match(text, /PERSONALITY/);
+  assert.match(text, /Never use canned therapist lines/);
   assert.doesNotMatch(text, /What did the shop floor smell like/);
+});
+
+test('outbound opening: Remi says she is calling', () => {
+  assert.match(openingInstructions(base, { outbound: true }), /it's Remi calling/);
+  assert.doesNotMatch(openingInstructions(base), /calling/);
 });

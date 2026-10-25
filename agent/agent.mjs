@@ -21,6 +21,7 @@ import { renderPhotoCard, withPulse } from './lib/card.mjs';
 import { startCapture } from './lib/wav.mjs';
 import { createLatencyProbe, formatLatency } from './lib/latency-probe.mjs';
 import { missingTextConfig } from './brain/notify.mjs';
+import { fillSharedEnv } from './lib/env.mjs';
 import { createCallMemory } from './lib/call-memory.mjs';
 
 const PHOTO_SECONDS = 90;   // then the face comes back
@@ -29,6 +30,8 @@ const log = (line) => console.log(line);
 export const CALLS_DIR = join(TMP_DIR, 'calls');
 
 // At startup: say plainly if texting contacts can't work (placeholders in .env.local).
+const sharedFromRoot = fillSharedEnv();
+if (sharedFromRoot.length) console.log(`[env] from the repo-root .env.local: ${sharedFromRoot.join(', ')}`);
 const missingText = missingTextConfig();
 if (missingText.length) console.warn(`[contacts] texting is off until ${missingText.join(' and ')} are filled in agent/.env.local`);
 
@@ -55,7 +58,10 @@ export default defineAgent({
       return;
     }
     const startedMs = Date.now();
-    log(`[call] caller ${caller.identity} joined`);
+    // Outbound calls (lib/outbound.mjs) dispatch Remi with {"outbound":true}.
+    let outbound = false;
+    try { outbound = JSON.parse(ctx.job?.metadata || '{}').outbound === true; } catch { /* inbound */ }
+    log(`[call] caller ${caller.identity} joined${outbound ? ' (Remi placed this call)' : ''}`);
     const api = createApi(config);
 
     // Context: short wait, then the cache, then a generic persona.
@@ -133,6 +139,7 @@ export default defineAgent({
     const session = new voice.AgentSession({
       llm: new realtime.RealtimeModel({
         model: config.realtimeModel,
+        ...(config.realtimeReasoning !== 'default' ? { reasoning: { effort: config.realtimeReasoning } } : {}),
         voice: config.voice,
         inputAudioTranscription: { model: 'gpt-4o-mini-transcribe', language },
         inputAudioNoiseReduction: { type: config.noiseReduction },
@@ -232,7 +239,7 @@ export default defineAgent({
     // hears nothing within 10 s of that). GREET_ON_JOIN=1 greets now: browser tests only.
     const greet = () => {
       log(`[call] greeting (${Date.now() - startedMs} ms after join)`);
-      session.generateReply({ instructions: openingInstructions(context) });
+      session.generateReply({ instructions: openingInstructions(context, { outbound }) });
     };
     if (config.greetOnJoin) greet();
     else {
