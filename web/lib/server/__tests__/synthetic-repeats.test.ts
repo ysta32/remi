@@ -5,6 +5,7 @@ import path from 'node:path';
 import Database from 'better-sqlite3';
 import { spawnSync } from 'node:child_process';
 import { closeDb } from '@/db/client';
+import { buildDriftIndexView } from '../drift-index-view';
 import { buildTimeline } from '../timeline';
 import { importSyntheticTranscripts } from '../synthetic-import';
 import { generateBundle } from '../../../../synthetic/src/generate.mjs';
@@ -72,6 +73,9 @@ describe('explicit chronological synthetic repeat analysis', () => {
     const before = legacy(), t = transport(), progress: number[] = [];
     expect(await run(true, { ...options(t), onProgress: e => progress.push(e.completed) })).toMatchObject({ dryRun: false, analyzedCallCount: 12, reused: false });
     expect(progress).toEqual([1,2,3,4,5,6,7,8,9,10,11,12]); expect(rows()).toHaveLength(12); expect(legacy()).toEqual(before);
+    const drift = buildDriftIndexView(db,calls[0].elderId,'en',{speechTrends:true,mood:false})!;
+    expect(drift.repeatCoverage).toEqual({knownCallCount:12,unknownCallCount:0,unpromptedStoryCount:11});
+    expect(drift.provenance.timing).toBe('synthetic_authored');
     const view = buildTimeline(calls[0].elderId)!.repeatAnalysis!;
     expect(view).toMatchObject({ scope: 'all_prior_calls', status: 'complete', analyzedCallCount: 12, totalCallCount: 12, counts: { total: 33, unprompted: 11, prompted: 11, uncertain: 11, stories: 22, questions: 11 }, provenance: { extractionModel: 'gpt-6.1-sol', embeddingModel: 'text-embedding-3-small', threshold: 0.85, detectorVersion: '1.0.0' } });
     expect(new Set(view.matches.map(m => m.label))).toEqual(new Set(['Unprompted repeat','Prompted retelling','Uncertain']));
@@ -98,6 +102,7 @@ describe('explicit chronological synthetic repeat analysis', () => {
   it('distinguishes complete zero from unavailable and reuses only a complete unchanged batch', async () => {
     await run(true, options(transport({ empty: true })));
     expect(buildTimeline(calls[0].elderId)!.repeatAnalysis).toMatchObject({ status: 'complete', counts: { total: 0 }, matches: [] });
+    expect(buildDriftIndexView(db,calls[0].elderId,'en',{speechTrends:true,mood:false})!.repeatCoverage).toEqual({knownCallCount:12,unknownCallCount:0,unpromptedStoryCount:0});
     expect(await run(true)).toMatchObject({ reused: true, analyzedCallCount: 12 });
     const prior = rows();
     await expect(run(true, { ...options(transport({ failAt: 3 })), extractionModel: 'different-model' })).rejects.toThrow('SYNTHETIC_REPEATS_');

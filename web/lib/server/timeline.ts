@@ -7,6 +7,7 @@ import { consentView } from './consent';
 import { getConsentRow } from './context';
 import { renderNudge } from './nudge-copy';
 import { nowIso } from './ids';
+import { buildDriftIndexView } from './drift-index-view';
 import { buildRepeatAnalysis } from './detector-results';
 
 interface CallRow {
@@ -158,8 +159,10 @@ export function buildTimeline(elderId: string): Timeline | null {
       return { id: n.id, type: n.type, createdAt: n.created_at, message, link, isSimulated: n.is_simulated === 1 };
     });
 
+  const driftIndex = buildDriftIndexView(db, elderId, elder.language, eff);
   const repeatAnalysis = buildRepeatAnalysis(db, elderId, eff);
   return {
+    ...(driftIndex ? { driftIndex } : {}),
     ...(repeatAnalysis ? { repeatAnalysis } : {}),
     elder: {
       id: elder.id,
