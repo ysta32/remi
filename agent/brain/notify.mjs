@@ -5,6 +5,7 @@
 //
 // Needs CHERT_API_KEY (the tenant's messaging signing secret); CHERT_BASE_URL is optional
 // (the SDK defaults to console.trychert.com/api/v1).
+import { execFile } from 'node:child_process';
 import { ChertClient } from '@trychert/sdk/imessage';
 
 const PLACEHOLDER = /^(?:YOUR_|<|$)/;
@@ -12,11 +13,31 @@ const unset = (v) => PLACEHOLDER.test(String(v ?? '').trim());
 
 /** Names of the iMessage settings that are missing or still template placeholders. */
 export function missingTextConfig(env = process.env) {
+  if (viaMessagesApp(env)) return [];
   return ['CHERT_API_KEY'].filter((k) => unset(env[k]));
 }
 
 export function maskPhone(phone) {
   return phone ? `***${String(phone).slice(-4)}` : 'none';
+}
+
+// TEXT_VIA=messages: send from this Mac's Messages app (the signed-in Apple ID) instead of
+// Chert. Phone and body go in as osascript arguments, never spliced into the script.
+const viaMessagesApp = (env) => String(env.TEXT_VIA ?? '').trim().toLowerCase() === 'messages';
+const MESSAGES_SCRIPT = `on run argv
+  tell application "Messages"
+    set svc to 1st account whose service type = iMessage
+    send (item 2 of argv) to participant (item 1 of argv) of svc
+  end tell
+end run`;
+
+export function sendViaMessagesApp({ phone, body, timeoutMs = 20000, run = execFile }) {
+  return new Promise((resolve) => {
+    run('osascript', ['-e', MESSAGES_SCRIPT, String(phone), String(body)], { timeout: timeoutMs }, (err, _out, stderr) => {
+      if (!err) return resolve({ ok: true, detail: 'handed to Messages.app (not proof of delivery)' });
+      resolve({ ok: false, detail: `messages.app ${err.killed ? 'timed out' : String(stderr || err.message).trim().slice(0, 160)}` });
+    });
+  });
 }
 
 async function sendOnce(client, request, timeoutMs) {
@@ -41,7 +62,8 @@ async function sendOnce(client, request, timeoutMs) {
  * Send one iMessage. Retries once with the SAME idempotency key, so the
  * service can de-duplicate if the first attempt actually went through.
  */
-export async function sendIMessage({ phone, body, idempotencyKey, timeoutMs = 20000, env = process.env, fetch, retryDelayMs = 2000 }) {
+export async function sendIMessage({ phone, body, idempotencyKey, timeoutMs = 20000, env = process.env, fetch, retryDelayMs = 2000, run }) {
+  if (viaMessagesApp(env)) return sendViaMessagesApp({ phone, body, timeoutMs, ...(run ? { run } : {}) });
   if (unset(env.CHERT_API_KEY)) return { ok: false, detail: 'CHERT_API_KEY is not set' };
   const client = new ChertClient({
     apiKey: env.CHERT_API_KEY,
