@@ -21,6 +21,11 @@ describe('snapshotCaption', () => {
     expect(snapshotCaption(call({ summary: 'Hal talked about tomatoes!' }))).toEqual({ caption: 'Hal talked about tomatoes!', body: null });
   });
 
+  it('keeps a long first sentence as plain body text (handwriting is for short captions)', () => {
+    const long = 'Hal described the 1977 blizzard and the roundhouse once more, then talked about Sam visiting for Thanksgiving.';
+    expect(snapshotCaption(call({ summary: `${long} He laughed.` }))).toEqual({ caption: null, body: `${long} He laughed.` });
+  });
+
   it('returns nothing to show for an unconsented or unfinished call', () => {
     expect(snapshotCaption(call({ summary: null, durationS: null }))).toEqual({ caption: null, body: null });
   });

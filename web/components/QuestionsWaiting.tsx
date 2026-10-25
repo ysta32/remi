@@ -4,16 +4,16 @@ export function QuestionsWaiting({ questions, name }: { questions: ElderProfile[
   const waiting = questions.filter((q) => q.status === 'pending');
   if (waiting.length === 0) return null;
   return (
-    <div className="rounded-3xl border border-dashed border-accent/40 bg-accent-soft/50 p-5">
-      <h3 className="font-display text-lg font-semibold text-accent">Waiting for {name}’s next chat</h3>
-      <ul className="mt-3 space-y-2">
+    <section aria-labelledby="waiting" className="rounded-[20px] bg-sky-soft p-4">
+      <h2 id="waiting" className="text-[22px] font-extrabold">Waiting for {name}’s next chat</h2>
+      <ul className="mt-2 space-y-2">
         {waiting.map((q) => (
           <li key={q.id}>
-            <p className="font-semibold">“{q.text}”</p>
-            <p className="text-sm text-ink-soft">from {q.askedBy}</p>
+            <p className="font-bold">“{q.text}”</p>
+            <p className="text-base text-ink-2">from {q.askedBy}</p>
           </li>
         ))}
       </ul>
-    </div>
+    </section>
   );
 }

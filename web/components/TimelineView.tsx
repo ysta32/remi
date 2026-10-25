@@ -10,35 +10,28 @@ import { USE_FIXTURES } from '@/lib/config';
 import { copy } from '@/lib/copy';
 import { formatRelative } from '@/lib/format';
 import type { Timeline } from '@/lib/types';
-import { CallCardView } from './CallCardView';
 import { FunFacts } from './FunFacts';
-import { NudgeCard } from './NudgeCard';
+import { GentleNote } from './GentleNote';
+import { HowHesDoing } from './HowHesDoing';
 import { QuestionsWaiting } from './QuestionsWaiting';
-import { Repeats } from './Repeats';
-import { Trends } from './Trends';
+import { SiteNav } from './SiteNav';
+import { SnapshotCard } from './SnapshotCard';
+import { TimelineTabs } from './TimelineTabs';
 
 const POLL_BUSY_MS = 3_000;
 const POLL_IDLE_MS = 15_000;
-const CALLS_SHOWN = 4;
+const EARLIER_SHOWN = 4;
 
-function Section({ title, children, id }: { title: string; children: React.ReactNode; id?: string }) {
+function FixtureBar({ elderId, current, tab }: { elderId: string; current: FixtureVariant; tab: 'chats' | 'doing' }) {
   return (
-    <section aria-labelledby={id} className="space-y-4">
-      <h2 id={id} className="font-display text-2xl font-semibold tracking-tight">{title}</h2>
-      {children}
-    </section>
-  );
-}
-
-function FixtureBar({ elderId, current }: { elderId: string; current: FixtureVariant }) {
-  return (
-    <nav className="flex flex-wrap items-center gap-2 rounded-2xl bg-sand px-4 py-2 text-sm text-ink-soft">
-      <span className="font-semibold">Fixture data:</span>
+    <nav aria-label="Demo data" className="flex flex-wrap items-center gap-2 rounded-2xl bg-card px-4 py-2 text-base text-ink-2">
+      <span className="font-bold">Sample data:</span>
       {(Object.keys(FIXTURE_VARIANTS) as FixtureVariant[]).map((v) => (
         <Link
           key={v}
-          href={`/elders/${elderId}?fixture=${v}`}
-          className={`rounded-full px-3 py-0.5 ${v === current ? 'bg-ink text-paper' : 'hover:bg-white'}`}
+          href={`/elders/${elderId}?fixture=${v}${tab === 'doing' ? '&tab=doing' : ''}`}
+          scroll={false}
+          className={`rounded-full px-3 py-0.5 ${v === current ? 'bg-ink text-white' : 'hover:bg-ground'}`}
         >
           {v}
         </Link>
@@ -51,8 +44,9 @@ export function TimelineView({
   params, searchParams,
 }: { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { id } = use(params);
-  const fixture = use(searchParams).fixture;
-  const variant: FixtureVariant = isFixtureVariant(fixture) ? fixture : 'drift';
+  const query = use(searchParams);
+  const variant: FixtureVariant = isFixtureVariant(query.fixture) ? query.fixture : 'drift';
+  const tab = query.tab === 'doing' ? 'doing' : 'chats';
 
   const [timeline, setTimeline] = useState<Timeline | null>(null);
   const [elder, setElder] = useState<ElderProfile | null>(null);
@@ -104,18 +98,22 @@ export function TimelineView({
 
   if (!timeline) {
     return (
-      <main className="mx-auto max-w-6xl px-5 py-10">
-        <p className="text-ink-soft" role="status">{error ? `Couldn’t load: ${error}` : 'Loading…'}</p>
-      </main>
+      <>
+        <SiteNav variant="app" />
+        <main className="mx-auto max-w-[1200px] px-4 py-8 md:px-8">
+          <p className="text-ink-2" role="status">{error ? `Couldn’t load ${id}: ${error}` : 'Loading…'}</p>
+        </main>
+      </>
     );
   }
 
   const name = timeline.elder.preferredName;
   const confirmed = timeline.consent.elderConfirmed;
-  const lastCall = timeline.calls[0];
+  const [newest, ...earlier] = timeline.calls;
   const nudges = timeline.nudges.filter((n) => !hiddenNudges.has(n.id));
-  const calls = showAll ? timeline.calls : timeline.calls.slice(0, CALLS_SHOWN);
+  const shownEarlier = showAll ? earlier : earlier.slice(0, EARLIER_SHOWN);
   const anySimulated = timeline.calls.some((c) => c.isSimulated);
+  const photos = elder?.photos ?? [];
 
   const hide = (nudgeId: string) => {
     setHiddenNudges((prev) => new Set(prev).add(nudgeId));
@@ -123,75 +121,90 @@ export function TimelineView({
   };
 
   return (
-    <main className="mx-auto max-w-6xl space-y-10 px-5 py-8 sm:py-10">
-      {USE_FIXTURES && <FixtureBar elderId={id} current={variant} />}
+    <>
+      <SiteNav variant="app" />
+      <main className="mx-auto max-w-[1200px] space-y-8 px-4 pb-16 md:px-8">
+        {USE_FIXTURES && <FixtureBar elderId={id} current={variant} tab={tab} />}
 
-      <header className="space-y-2">
-        <p className="text-ink-soft">{timeline.elder.displayName}</p>
-        <h1 className="font-display text-4xl font-semibold tracking-tight sm:text-5xl">{name}’s chats</h1>
-        <p className="text-ink-soft">
-          {lastCall ? `Last chat ${formatRelative(lastCall.startedAt)}` : 'No chats yet.'}
-          {timeline.processing && <span className="ml-2 font-semibold text-accent">· Remi is writing up a chat…</span>}
-        </p>
-        {anySimulated && (
-          <p className="text-sm text-ink-soft">
-            Chats marked <span className="font-bold uppercase tracking-wider">Simulated</span> are demo history created for this presentation.
+        <header className="space-y-3">
+          <h1 className="text-[40px] font-black leading-[1.1] tracking-tight md:text-[60px]">{name}’s chats</h1>
+          <p className="text-ink-2">
+            {timeline.elder.displayName}
+            {newest ? ` · Last chat ${formatRelative(newest.startedAt)}` : ' · No chats yet'}
+            {timeline.processing && <span className="font-bold text-ink"> · Remi is writing up a chat…</span>}
           </p>
+          {anySimulated && (
+            <p className="text-base text-ink-2">Chats marked Simulated are demo history created for this presentation.</p>
+          )}
+          {error && <p className="text-base text-ink" role="status">Having trouble refreshing. Showing the last update.</p>}
+          <TimelineTabs elderId={id} tab={tab} fixture={USE_FIXTURES ? variant : undefined} />
+        </header>
+
+        {tab === 'doing' ? (
+          <HowHesDoing timeline={timeline} />
+        ) : (
+          <>
+            {!confirmed && <p className="rounded-[20px] border border-line bg-card p-5">{copy.notYetConfirmed(name)}</p>}
+
+            <div className="grid items-start gap-8 lg:grid-cols-[1.4fr_1fr]">
+              <div className="space-y-8">
+              {newest ? (
+                <SnapshotCard
+                  key={`${newest.id}:${newest.status}`}
+                  call={newest} variant="feature" isNew={newIds.has(newest.id)}
+                  confirmed={confirmed} photos={photos} name={name}
+                />
+              ) : (
+                <p className="rounded-[20px] border border-line bg-card p-5">
+                  No chats yet. Once {name} calls Remi, his first snapshot shows up here.
+                </p>
+              )}
+
+              {nudges.map((n) => (
+                <GentleNote key={n.id} nudge={n} onDismiss={() => hide(n.id)} />
+              ))}
+
+              {earlier.length > 0 && (
+                <section aria-labelledby="earlier" className="space-y-3">
+                  <h2 id="earlier" className="text-[30px] font-black tracking-tight">Earlier chats</h2>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {shownEarlier.map((c) => (
+                      <SnapshotCard
+                        key={`${c.id}:${c.status}`}
+                        call={c} variant="compact" isNew={newIds.has(c.id)}
+                        confirmed={confirmed} photos={photos} name={name}
+                      />
+                    ))}
+                  </div>
+                  {earlier.length > EARLIER_SHOWN && (
+                    <button
+                      type="button"
+                      onClick={() => setShowAll((v) => !v)}
+                      className="rounded-full border border-line bg-card px-5 py-2.5 font-bold hover:border-ink-2"
+                    >
+                      {showAll ? 'Show fewer' : `Show all ${earlier.length} earlier chats`}
+                    </button>
+                  )}
+                </section>
+              )}
+              </div>
+              <div className="space-y-6">
+                {elder && <QuestionsWaiting questions={elder.questions} name={name} />}
+                {confirmed && (
+                  <section aria-labelledby="facts" className="space-y-3">
+                    <h2 id="facts" className="text-[30px] font-black tracking-tight">Fun facts</h2>
+                    <FunFacts facts={timeline.funFacts} newIds={newIds} />
+                  </section>
+                )}
+              </div>
+            </div>
+          </>
         )}
-        {error && <p className="text-sm text-amber-ink" role="status">Having trouble refreshing — showing the last update.</p>}
-      </header>
 
-      {!confirmed && (
-        <p className="rounded-3xl border border-line bg-card p-5 text-[1.05rem]">{copy.notYetConfirmed(name)}</p>
-      )}
-
-      {nudges.map((n) => (
-        <NudgeCard key={n.id} nudge={n} onDismiss={() => hide(n.id)} />
-      ))}
-
-      <div className="grid gap-10 lg:grid-cols-[3fr_2fr]">
-        <Section title="Recent chats" id="recent">
-          <div className="space-y-4">
-            {calls.map((c) => (
-              <CallCardView key={c.id} call={c} name={name} confirmed={confirmed} isNew={newIds.has(c.id)} />
-            ))}
-          </div>
-          {timeline.calls.length > CALLS_SHOWN && (
-            <button
-              type="button"
-              onClick={() => setShowAll((v) => !v)}
-              className="rounded-full border border-line px-5 py-2.5 font-semibold text-accent transition hover:bg-card"
-            >
-              {showAll ? 'Show fewer' : `Show all ${timeline.calls.length} chats`}
-            </button>
-          )}
-        </Section>
-
-        <div className="space-y-10">
-          {elder && <QuestionsWaiting questions={elder.questions} name={name} />}
-          {confirmed && (
-            <Section title="Fun facts" id="facts">
-              <FunFacts facts={timeline.funFacts} newIds={newIds} />
-            </Section>
-          )}
-        </div>
-      </div>
-
-      {timeline.markers.length > 0 && (
-        <Section title={`How ${name}’s been talking`} id="trends">
-          <Trends markers={timeline.markers} name={name} />
-        </Section>
-      )}
-
-      {timeline.markers.length > 0 && (
-        <Section title="Stories told more than once in a week" id="repeats">
-          <Repeats repeats={timeline.repeats} />
-        </Section>
-      )}
-
-      <footer className="border-t border-line pt-6 text-sm text-ink-soft">
-        <p className="max-w-3xl">{copy.timelineFooter(name)}</p>
-      </footer>
-    </main>
+        <footer className="border-t border-line pt-5 text-base text-ink-2">
+          <p className="max-w-[75ch]">{copy.timelineFooter(name)}</p>
+        </footer>
+      </main>
+    </>
   );
 }

@@ -18,8 +18,9 @@ export function PhotoWindow({
       <img src={url} alt={caption ?? 'Family photo'} onError={() => setFailed(true)} className={`${height} w-full rounded-[4px] object-cover`} />
     );
   }
+  // No real photo: keep the stand-in short so it doesn't become dead space.
   return (
-    <div className={`${height} grid place-items-center rounded-[4px] bg-sky-soft text-[#3a6aa0]`} role="img" aria-label={caption ? `Photo: ${caption}` : 'Family photo'}>
+    <div className={`${size === 'feature' ? 'h-28' : 'h-20'} grid place-items-center rounded-[4px] bg-sky-soft text-[#3a6aa0]`} role="img" aria-label={caption ? `Photo: ${caption}` : 'Family photo'}>
       <svg width="48" height="40" viewBox="0 0 24 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <rect x="1.5" y="3.5" width="21" height="15" rx="2.5" />
         <path d="M8 3.5 9.5 1.5h5L16 3.5" />
